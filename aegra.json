@@ -1,0 +1,9 @@
+{
+  "name": "little-john-test",
+  "dependencies": [
+    "./src"
+  ],
+  "graphs": {
+    "little_john_test": "./src/little_john_test/graph.py:graph"
+  }
+}
