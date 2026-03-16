@@ -95,6 +95,11 @@ and streams progress back to the client.
 - Added CRUD endpoints for extraction templates and document categories in the global FastAPI app
 - Added a migration that renames the old `templates` table to `extraction_templates` and creates
   `document_categories`
+- Added `src/db/seed/` with idempotent startup seeds instead of putting reference data in
+  migrations
+- Added seeded default document categories for common broker and general business uploads
+- Added seeded starter extraction templates for vendor invoices, purchase orders, service
+  contracts, and a French supplier invoice
 - Added backend service tests for the new CRUD slices
 - Added a shared custom Alembic environment in `src/db/` using the existing
   `little_john_test_alembic_version` table

@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from src.core.database import check_database_connection, dispose_database
 from src.db.migration_runner import run_app_migrations_async
+from src.db.seed.runner import run_app_seeds_async
 from src.document_categories.router import router as document_categories_router
 from src.extraction_templates.router import router as extraction_templates_router
 
@@ -18,7 +19,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         raise RuntimeError("Database connection failed during startup")
 
     await run_app_migrations_async()
-    logging.info("Database connection established")
+    await run_app_seeds_async()
+    logging.info("Database connection established and seeds ensured")
 
     yield
     logging.info("Shutting down application...")
