@@ -24,7 +24,7 @@ pnpm dev
 pnpm build
 pnpm lint
 pnpm typecheck
-pnpm seed:templates
+pnpm seed:reference
 ```
 
 ## Files
@@ -107,11 +107,11 @@ common broker and general business documents:
 - `Purchase Order`
 - `Signed Contract`
 
-Example templates can be loaded with:
+Reference data can also be seeded manually with:
 
 ```bash
 cd apps/api
-pnpm seed:templates
+pnpm seed:reference
 ```
 
 Custom application migrations are global and live under `src/db/`. They currently include the
