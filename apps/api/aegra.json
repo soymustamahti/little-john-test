@@ -1,9 +1,10 @@
 {
   "name": "little-john-test",
-  "dependencies": [
-    "./src"
-  ],
+  "dependencies": ["./src"],
   "graphs": {
-    "little_john_test": "./src/little_john_test/graph.py:graph"
+    "little_john_test": "./src/agents/little_john_test/graph.py:graph"
+  },
+  "http": {
+    "app": "./src/main.py:app"
   }
 }
