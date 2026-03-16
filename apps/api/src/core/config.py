@@ -57,7 +57,7 @@ class Settings(BaseSettings):
 
     @property
     def is_production(self) -> bool:
-        return self.env == "production"
+        return self.env_mode == "PRODUCTION"
 
 
 @lru_cache
