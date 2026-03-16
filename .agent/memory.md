@@ -2,8 +2,8 @@
 
 ## Status
 
-- Phase: context and planning only
-- Product implementation has not started yet
+- Phase: implementation started
+- Current backend work is limited to stabilizing the Aegra package/layout integration
 - Repo structure is already a PNPM monorepo with `apps/api` and `apps/web`
 - Root quality commands currently work for the existing scaffold
 
@@ -78,14 +78,8 @@ and streams progress back to the client.
 
 ## Immediate Next Step
 
-Wait for the user to explicitly approve implementation work.
-
-When implementation starts:
-
-1. Finalize package and module layout in `apps/api`
-2. Install frontend UI and state libraries in `apps/web`
-3. Design the LangGraph ingestion, retrieval, and correction graph boundaries
-4. Define PostgreSQL, pgvector, and R2 persistence models
-5. Implement the template and extraction domain models first
-6. Add tests alongside each backend subsystem from the beginning
-7. Commit and push each clean milestone once it is stable
+1. Keep the global FastAPI app separate from graph modules inside `apps/api`
+2. Use Aegra source as the reference when import/loading behavior is unclear
+3. Avoid root-level Alembic overrides in `apps/api` unless custom migrations are deliberately
+   taking over that responsibility
+4. Implement the first real backend feature slices on top of the stabilized package layout

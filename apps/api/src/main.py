@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from core.database import check_database_connection, dispose_database
+from src.core.database import check_database_connection, dispose_database
 
 
 @asynccontextmanager
