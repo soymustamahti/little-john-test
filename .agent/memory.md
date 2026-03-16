@@ -2,8 +2,8 @@
 
 ## Status
 
-- Phase: context and planning only
-- Product implementation has not started yet
+- Phase: implementation started
+- Current backend work includes the first real feature slice: `templates`
 - Repo structure is already a PNPM monorepo with `apps/api` and `apps/web`
 - Root quality commands currently work for the existing scaffold
 
@@ -78,14 +78,16 @@ and streams progress back to the client.
 
 ## Immediate Next Step
 
-Wait for the user to explicitly approve implementation work.
+1. Keep the global FastAPI app separate from graph modules inside `apps/api`
+2. Use Aegra source as the reference when import/loading behavior is unclear
+3. Avoid root-level Alembic overrides in `apps/api` unless custom migrations are deliberately
+   taking over that responsibility
+4. Continue building the remaining backend slices on top of the new `templates` feature pattern
 
-When implementation starts:
+## Latest Milestone
 
-1. Finalize package and module layout in `apps/api`
-2. Install frontend UI and state libraries in `apps/web`
-3. Design the LangGraph ingestion, retrieval, and correction graph boundaries
-4. Define PostgreSQL, pgvector, and R2 persistence models
-5. Implement the template and extraction domain models first
-6. Add tests alongside each backend subsystem from the beginning
-7. Commit and push each clean milestone once it is stable
+- Added `src/templates/` as a self-contained feature slice
+- Added CRUD endpoints for templates in the global FastAPI app
+- Added a shared custom Alembic environment in `src/db/` using the existing
+  `little_john_test_alembic_version` table
+- Kept Aegra's own root migration chain untouched
