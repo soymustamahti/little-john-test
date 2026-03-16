@@ -15,6 +15,7 @@ import {
   useTemplateQuery,
   useUpdateTemplateMutation,
 } from "@/hooks/use-templates";
+import { useLocale } from "@/providers/locale-provider";
 import {
   cloneDraft,
   createEmptyModule,
@@ -31,7 +32,7 @@ import {
   type TemplateModule,
 } from "@/types/templates";
 
-function getErrorMessage(error: unknown) {
+function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.detail ?? error.message;
   }
@@ -40,7 +41,7 @@ function getErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "Something went wrong while talking to the API.";
+  return fallbackMessage;
 }
 
 export function ExtractionTemplateEditorScreen({
@@ -49,6 +50,7 @@ export function ExtractionTemplateEditorScreen({
   templateId?: string;
 }) {
   const router = useRouter();
+  const { messages, formatText } = useLocale();
   const templateQuery = useTemplateQuery(templateId);
   const createTemplateMutation = useCreateTemplateMutation();
   const updateTemplateMutation = useUpdateTemplateMutation();
@@ -62,10 +64,11 @@ export function ExtractionTemplateEditorScreen({
   const mode = templateId ? "edit" : "create";
   const editorDraft =
     draft ?? (template ? templateToDraft(template) : createEmptyTemplateDraft());
+  const draftLabels = messages.templateShared;
 
   const isSaving = createTemplateMutation.isPending || updateTemplateMutation.isPending;
   const isDeleting = deleteTemplateMutation.isPending;
-  const validationError = getDraftValidationError(editorDraft);
+  const validationError = getDraftValidationError(editorDraft, draftLabels.validation);
 
   function replaceDraft(nextDraft: TemplateDraft) {
     setDraft(nextDraft);
@@ -78,13 +81,13 @@ export function ExtractionTemplateEditorScreen({
   function resetDraft() {
     if (template) {
       replaceDraft(templateToDraft(template));
-      setStatusMessage("Changes reset to the last saved version.");
+      setStatusMessage(messages.templateEditorScreen.status.reset);
       setStatusTone("neutral");
       return;
     }
 
     replaceDraft(createEmptyTemplateDraft());
-    setStatusMessage("Draft cleared.");
+    setStatusMessage(messages.templateEditorScreen.status.cleared);
     setStatusTone("neutral");
   }
 
@@ -104,17 +107,25 @@ export function ExtractionTemplateEditorScreen({
           payload,
         });
         replaceDraft(templateToDraft(updatedTemplate));
-        setStatusMessage(`Saved "${updatedTemplate.name}".`);
+        setStatusMessage(
+          formatText(messages.templateEditorScreen.status.saved, {
+            name: updatedTemplate.name,
+          }),
+        );
         setStatusTone("success");
         return;
       }
 
       const createdTemplate = await createTemplateMutation.mutateAsync(payload);
-      setStatusMessage(`Created "${createdTemplate.name}".`);
+      setStatusMessage(
+        formatText(messages.templateEditorScreen.status.created, {
+          name: createdTemplate.name,
+        }),
+      );
       setStatusTone("success");
       router.replace(`/extraction-templates/${createdTemplate.id}`);
     } catch (error) {
-      setStatusMessage(getErrorMessage(error));
+      setStatusMessage(getErrorMessage(error, messages.common.apiError));
       setStatusTone("danger");
     }
   }
@@ -124,7 +135,11 @@ export function ExtractionTemplateEditorScreen({
       return;
     }
 
-    const confirmed = window.confirm(`Delete "${template.name}"?`);
+    const confirmed = window.confirm(
+      formatText(messages.templateEditorScreen.confirmDelete, {
+        name: template.name,
+      }),
+    );
     if (!confirmed) {
       return;
     }
@@ -133,7 +148,7 @@ export function ExtractionTemplateEditorScreen({
       await deleteTemplateMutation.mutateAsync(templateId);
       router.push("/extraction-templates");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error));
+      setStatusMessage(getErrorMessage(error, messages.common.apiError));
       setStatusTone("danger");
     }
   }
@@ -148,7 +163,10 @@ export function ExtractionTemplateEditorScreen({
   function addModule() {
     updateDraft((current) => ({
       ...current,
-      modules: [...current.modules, createEmptyModule(current.modules.length + 1)],
+      modules: [
+        ...current.modules,
+        createEmptyModule(current.modules.length + 1, draftLabels),
+      ],
     }));
   }
 
@@ -164,8 +182,8 @@ export function ExtractionTemplateEditorScreen({
       const moduleItem = current.modules[moduleIndex];
       const nextField =
         kind === "table"
-          ? createEmptyTableField(moduleItem.fields.length + 1)
-          : createEmptyScalarField(moduleItem.fields.length + 1);
+          ? createEmptyTableField(moduleItem.fields.length + 1, draftLabels)
+          : createEmptyScalarField(moduleItem.fields.length + 1, draftLabels);
       moduleItem.fields.push(nextField);
       return current;
     });
@@ -194,7 +212,7 @@ export function ExtractionTemplateEditorScreen({
         return current;
       }
 
-      field.columns.push(createEmptyTableColumn(field.columns.length + 1));
+      field.columns.push(createEmptyTableColumn(field.columns.length + 1, draftLabels));
       return current;
     });
   }
@@ -233,7 +251,7 @@ export function ExtractionTemplateEditorScreen({
       <div className="px-4 py-6 sm:px-6">
         <Card>
           <CardContent className="p-6 text-sm text-[color:var(--color-muted)]">
-            Loading extraction template...
+            {messages.templateEditorScreen.loading}
           </CardContent>
         </Card>
       </div>
@@ -248,14 +266,16 @@ export function ExtractionTemplateEditorScreen({
           onClick={() => router.push("/extraction-templates")}
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to extraction templates
+          {messages.templateEditorScreen.backToTemplates}
         </Button>
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Unable to load extraction template</CardTitle>
+            <CardTitle className="text-xl">
+              {messages.templateEditorScreen.errorTitle}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-[color:var(--color-accent-warm)]">
-            {getErrorMessage(templateQuery.error)}
+            {getErrorMessage(templateQuery.error, messages.common.apiError)}
           </CardContent>
         </Card>
       </div>
@@ -267,24 +287,28 @@ export function ExtractionTemplateEditorScreen({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm text-[color:var(--color-muted)]">
-            Workspace / Extraction templates / {mode === "create" ? "New" : template?.name ?? "Edit"}
+            {messages.common.labels.workspace} / {messages.templateEditorScreen.breadcrumbSection} /{" "}
+            {mode === "create"
+              ? messages.templateEditorScreen.breadcrumbCreate
+              : template?.name ?? messages.templateEditorScreen.breadcrumbEditFallback}
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-[color:var(--color-ink)]">
-            {mode === "create" ? "New extraction template" : editorDraft.name || "Edit extraction template"}
+            {mode === "create"
+              ? messages.templateEditorScreen.titleCreate
+              : editorDraft.name || messages.templateEditorScreen.titleEditFallback}
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            Open one extraction template at a time, review its modules and fields,
-            then save changes without juggling a second panel beside the table.
+            {messages.templateEditorScreen.description}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="accent">Extraction schema</Badge>
+          <Badge variant="accent">{messages.templateEditorScreen.badge}</Badge>
           <Button
             variant="secondary"
             onClick={() => router.push("/extraction-templates")}
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to list
+            {messages.common.actions.backToList}
           </Button>
         </div>
       </div>

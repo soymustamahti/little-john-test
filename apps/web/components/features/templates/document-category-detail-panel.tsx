@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLocale } from "@/providers/locale-provider";
 import type { DocumentCategoryDraft } from "@/types/document-categories";
 
 export function DocumentCategoryDetailPanel({
@@ -38,6 +39,7 @@ export function DocumentCategoryDetailPanel({
   onSave: () => void;
   onDelete: () => void;
 }) {
+  const { messages } = useLocale();
   const validationClassName =
     "rounded-xl border border-[color:var(--color-warm-soft)] bg-[color:var(--color-background)] px-4 py-3 text-sm text-[color:var(--color-accent-warm)]";
 
@@ -55,35 +57,42 @@ export function DocumentCategoryDetailPanel({
           <div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="warm">
-                {mode === "create" ? "New category" : "Category details"}
+                {mode === "create"
+                  ? messages.documentCategoryDetailPanel.badges.new
+                  : messages.documentCategoryDetailPanel.badges.details}
               </Badge>
-              <Badge>Routing target</Badge>
+              <Badge>{messages.documentCategoryDetailPanel.badges.routingTarget}</Badge>
             </div>
             <CardTitle className="mt-3 text-2xl">
               {mode === "create"
-                ? "Create document category"
-                : draft.name || "Edit document category"}
+                ? messages.documentCategoryDetailPanel.titleCreate
+                : draft.name || messages.documentCategoryDetailPanel.titleEditFallback}
             </CardTitle>
             <CardDescription>
-              Keep categories broad enough to be reusable, but specific enough to
-              drive classification and routing decisions.
+              {messages.documentCategoryDetailPanel.description}
             </CardDescription>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={onReset}>
               <RefreshCcw className="h-4 w-4" />
-              Reset
+              {messages.common.actions.reset}
             </Button>
             {mode === "edit" ? (
               <Button type="button" variant="danger" onClick={onDelete} disabled={isDeleting}>
                 <Trash2 className="h-4 w-4" />
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting
+                  ? messages.common.actions.deleting
+                  : messages.common.actions.delete}
               </Button>
             ) : null}
             <Button type="button" onClick={onSave} disabled={Boolean(validationError) || isSaving}>
               <Save className="h-4 w-4" />
-              {isSaving ? "Saving..." : mode === "create" ? "Create" : "Save"}
+              {isSaving
+                ? messages.common.actions.saving
+                : mode === "create"
+                  ? messages.common.actions.create
+                  : messages.common.actions.save}
             </Button>
           </div>
         </div>
@@ -92,26 +101,25 @@ export function DocumentCategoryDetailPanel({
       <CardContent className="space-y-6 pt-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
           <div className="space-y-2">
-            <Label>Category name</Label>
+            <Label>{messages.documentCategoryDetailPanel.fields.name}</Label>
             <Input value={draft.name} onChange={(event) => onNameChange(event.target.value)} />
           </div>
 
           <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/55 p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
               <Tags className="h-4 w-4 text-[color:var(--color-accent-warm)]" />
-              Classification preview
+              {messages.documentCategoryDetailPanel.preview.title}
             </div>
             <p className="mt-3 text-sm text-[color:var(--color-muted)]">
-              The classifier can return this label when an uploaded document best
-              matches this type.
+              {messages.documentCategoryDetailPanel.preview.description}
             </p>
             <div className="mt-4 rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">
               <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                Normalized label
+                {messages.documentCategoryDetailPanel.preview.normalizedLabel}
               </div>
               <div className="mt-2 flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
                 <FolderInput className="h-4 w-4 text-[color:var(--color-accent)]" />
-                {draft.name.trim() || "Untitled category"}
+                {draft.name.trim() || messages.documentCategoryDetailPanel.preview.untitled}
               </div>
             </div>
           </div>

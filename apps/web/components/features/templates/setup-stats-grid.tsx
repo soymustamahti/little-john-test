@@ -1,6 +1,7 @@
 import { FileStack, ListChecks, Shapes, Tag } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { useLocale } from "@/providers/locale-provider";
 
 export function SetupStatsGrid({
   extractionTemplateCount,
@@ -13,13 +14,15 @@ export function SetupStatsGrid({
   totalModules: number;
   totalFields: number;
 }) {
+  const { messages } = useLocale();
+
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Card>
         <CardContent className="p-5">
           <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
             <Shapes className="h-4 w-4" />
-            Extraction templates
+            {messages.stats.extractionTemplates}
           </div>
           <p className="mt-3 text-3xl font-semibold text-[color:var(--color-ink)]">
             {extractionTemplateCount}
@@ -30,7 +33,7 @@ export function SetupStatsGrid({
         <CardContent className="p-5">
           <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
             <Tag className="h-4 w-4" />
-            Document categories
+            {messages.stats.documentCategories}
           </div>
           <p className="mt-3 text-3xl font-semibold text-[color:var(--color-ink)]">
             {documentCategoryCount}
@@ -41,7 +44,7 @@ export function SetupStatsGrid({
         <CardContent className="p-5">
           <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
             <ListChecks className="h-4 w-4" />
-            Modules
+            {messages.stats.modules}
           </div>
           <p className="mt-3 text-3xl font-semibold text-[color:var(--color-ink)]">
             {totalModules}
@@ -52,7 +55,7 @@ export function SetupStatsGrid({
         <CardContent className="p-5">
           <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
             <FileStack className="h-4 w-4" />
-            Fields
+            {messages.stats.fields}
           </div>
           <p className="mt-3 text-3xl font-semibold text-[color:var(--color-ink)]">
             {totalFields}

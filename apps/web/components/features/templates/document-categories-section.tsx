@@ -8,9 +8,10 @@ import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import { useTemplatesQuery } from "@/hooks/use-templates";
+import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats } from "@/types/templates";
 
-function getErrorMessage(error: unknown) {
+function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.detail ?? error.message;
   }
@@ -19,11 +20,12 @@ function getErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "Something went wrong while talking to the API.";
+  return fallbackMessage;
 }
 
 export function DocumentCategoriesSection() {
   const router = useRouter();
+  const { messages, formatText } = useLocale();
   const categoriesQuery = useDocumentCategoriesQuery();
   const templatesQuery = useTemplatesQuery();
 
@@ -42,16 +44,19 @@ export function DocumentCategoriesSection() {
     <div className="space-y-6 px-4 py-6 sm:px-6">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="warm">Classification layer</Badge>
-          <Badge>{categories.length} routing targets</Badge>
+          <Badge variant="warm">{messages.documentCategoriesSection.badges.layer}</Badge>
+          <Badge>
+            {formatText(messages.documentCategoriesSection.badges.routingTargets, {
+              count: categories.length,
+            })}
+          </Badge>
         </div>
         <div>
           <h2 className="text-3xl font-semibold text-[color:var(--color-ink)]">
-            Document categories
+            {messages.documentCategoriesSection.title}
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            Manage the classifier output labels in a single list, then open each
-            category on its own page to rename it, save changes, or delete it.
+            {messages.documentCategoriesSection.description}
           </p>
         </div>
       </div>
@@ -68,7 +73,9 @@ export function DocumentCategoriesSection() {
         selectedCategoryId={null}
         isLoading={categoriesQuery.isLoading}
         errorMessage={
-          categoriesQuery.error ? getErrorMessage(categoriesQuery.error) : null
+          categoriesQuery.error
+            ? getErrorMessage(categoriesQuery.error, messages.common.apiError)
+            : null
         }
         onCreate={() => router.push("/document-categories/new")}
         onSelect={(category) => router.push(`/document-categories/${category.id}`)}

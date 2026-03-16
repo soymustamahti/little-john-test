@@ -2,15 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats, type Template } from "@/types/templates";
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 export function TemplatesTable({
   templates,
@@ -27,27 +20,36 @@ export function TemplatesTable({
   onCreate: () => void;
   onSelect: (template: Template) => void;
 }) {
+  const { messages, formatDate, formatText } = useLocale();
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="accent">Extraction layer</Badge>
-              <Badge>{templates.length} schemas</Badge>
+              <Badge variant="accent">{messages.templatesTable.badges.layer}</Badge>
+              <Badge>
+                {formatText(messages.templatesTable.badges.schemas, {
+                  count: templates.length,
+                })}
+              </Badge>
             </div>
-            <CardTitle className="mt-3 text-2xl">Extraction templates</CardTitle>
+            <CardTitle className="mt-3 text-2xl">
+              {messages.templatesTable.title}
+            </CardTitle>
             <CardDescription>
-              Manage the schemas that define which fields should be captured once
-              a document has been classified.
+              {messages.templatesTable.description}
             </CardDescription>
           </div>
-          <Button onClick={onCreate}>Create extraction template</Button>
+          <Button onClick={onCreate}>{messages.templatesTable.createAction}</Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="p-6 text-sm text-[color:var(--color-muted)]">Loading templates...</div>
+          <div className="p-6 text-sm text-[color:var(--color-muted)]">
+            {messages.templatesTable.loading}
+          </div>
         ) : null}
 
         {!isLoading && errorMessage ? (
@@ -58,8 +60,7 @@ export function TemplatesTable({
 
         {!isLoading && !errorMessage && !templates.length ? (
           <div className="border-t border-[color:var(--color-line)] p-6 text-sm text-[color:var(--color-muted)]">
-            No extraction templates yet. Start from the seeded examples or create
-            one from scratch.
+            {messages.templatesTable.empty}
           </div>
         ) : null}
 
@@ -68,12 +69,24 @@ export function TemplatesTable({
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[color:var(--color-background)]/70 text-[color:var(--color-muted)]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Locale</th>
-                  <th className="px-4 py-3 font-medium">Modules</th>
-                  <th className="px-4 py-3 font-medium">Fields</th>
-                  <th className="px-4 py-3 font-medium">Updated</th>
-                  <th className="px-4 py-3 font-medium">Open</th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.name}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.locale}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.modules}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.fields}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.updated}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.open}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -96,7 +109,7 @@ export function TemplatesTable({
                             {template.name}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            {template.description ?? "No description"}
+                            {template.description ?? messages.templatesTable.noDescription}
                           </div>
                         </div>
                       </td>
@@ -124,7 +137,7 @@ export function TemplatesTable({
                             onSelect(template);
                           }}
                         >
-                          View
+                          {messages.common.actions.view}
                         </Button>
                       </td>
                     </tr>

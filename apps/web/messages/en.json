@@ -1,0 +1,244 @@
+{
+  "metadata": {
+    "title": "Little John Workspace",
+    "description": "Document setup workspace for classification and extraction configuration."
+  },
+  "common": {
+    "apiError": "Something went wrong while talking to the API.",
+    "language": {
+      "label": "Language",
+      "english": "English",
+      "french": "French"
+    },
+    "actions": {
+      "create": "Create",
+      "save": "Save",
+      "saving": "Saving...",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "reset": "Reset",
+      "view": "View",
+      "backToList": "Back to list"
+    },
+    "labels": {
+      "workspace": "Workspace",
+      "new": "New",
+      "edit": "Edit"
+    }
+  },
+  "shell": {
+    "title": "Little John",
+    "workspaceLabel": "Workspace",
+    "description": "Operator workspace for extraction setup and classification routing.",
+    "documentSetup": "Document Setup",
+    "extractionTemplates": "Extraction Templates",
+    "documentCategories": "Document Categories",
+    "documents": "Documents",
+    "starterSetupTitle": "Starter setup",
+    "starterSetupDescription": "Seeded extraction templates and document categories are loaded automatically after the API starts."
+  },
+  "stats": {
+    "extractionTemplates": "Extraction templates",
+    "documentCategories": "Document categories",
+    "modules": "Modules",
+    "fields": "Fields"
+  },
+  "templateShared": {
+    "localeNames": {
+      "en": "English",
+      "fr": "French"
+    },
+    "valueTypes": {
+      "string": "String",
+      "number": "Number",
+      "date": "Date",
+      "boolean": "Boolean"
+    },
+    "fieldKinds": {
+      "scalar": "Scalar",
+      "table": "Table"
+    },
+    "defaults": {
+      "module": "Module",
+      "field": "Field",
+      "table": "Table",
+      "column": "Column"
+    },
+    "validation": {
+      "nameRequired": "Extraction template name is required.",
+      "moduleKeyLabelRequired": "Each module needs both a key and a label.",
+      "fieldKeyLabelRequired": "Each field needs both a key and a label.",
+      "columnKeyLabelRequired": "Each table column needs both a key and a label."
+    }
+  },
+  "templatesDashboard": {
+    "badges": {
+      "layer": "Extraction layer",
+      "activeTemplates": "{count} active templates"
+    },
+    "title": "Extraction templates",
+    "description": "Keep the catalog visible as a table, then open one template at a time to review fields, update modules, or remove the schema."
+  },
+  "templatesTable": {
+    "badges": {
+      "layer": "Extraction layer",
+      "schemas": "{count} schemas"
+    },
+    "title": "Extraction templates",
+    "description": "Manage the schemas that define which fields should be captured once a document has been classified.",
+    "createAction": "Create extraction template",
+    "loading": "Loading templates...",
+    "empty": "No extraction templates yet. Start from the seeded examples or create one from scratch.",
+    "noDescription": "No description",
+    "headers": {
+      "name": "Name",
+      "locale": "Locale",
+      "modules": "Modules",
+      "fields": "Fields",
+      "updated": "Updated",
+      "open": "Open"
+    }
+  },
+  "templateEditorScreen": {
+    "loading": "Loading extraction template...",
+    "errorTitle": "Unable to load extraction template",
+    "backToTemplates": "Back to extraction templates",
+    "badge": "Extraction schema",
+    "breadcrumbSection": "Extraction templates",
+    "breadcrumbCreate": "New",
+    "breadcrumbEditFallback": "Edit",
+    "titleCreate": "New extraction template",
+    "titleEditFallback": "Edit extraction template",
+    "description": "Open one extraction template at a time, review its modules and fields, then save changes without juggling a second panel beside the table.",
+    "status": {
+      "reset": "Changes reset to the last saved version.",
+      "cleared": "Draft cleared.",
+      "saved": "Saved \"{name}\".",
+      "created": "Created \"{name}\"."
+    },
+    "confirmDelete": "Delete \"{name}\"?"
+  },
+  "templateDetailPanel": {
+    "badges": {
+      "new": "New extraction template",
+      "details": "Extraction details"
+    },
+    "titleCreate": "Create extraction template",
+    "titleEditFallback": "Edit extraction template",
+    "description": "Define the structured fields that should be extracted after a document has been classified into the right category.",
+    "fields": {
+      "name": "Extraction template name",
+      "locale": "Locale",
+      "description": "Description"
+    },
+    "modules": {
+      "title": "Modules",
+      "description": "Group fields by business area like vendor info, payment details, or line items.",
+      "add": "Add module",
+      "empty": "No modules yet. Add one to start defining fields."
+    },
+    "module": {
+      "title": "Module",
+      "fieldCount": "{count} fields",
+      "remove": "Remove module",
+      "key": "Module key",
+      "label": "Module label",
+      "fields": "Fields",
+      "addScalar": "Add scalar",
+      "addTable": "Add table",
+      "empty": "No fields in this module yet."
+    },
+    "field": {
+      "table": "Table field",
+      "scalar": "Scalar field",
+      "remove": "Remove field",
+      "key": "Key",
+      "label": "Label",
+      "kind": "Kind",
+      "minimumRows": "Minimum rows",
+      "valueType": "Value type",
+      "description": "Description",
+      "required": "Required field",
+      "columns": "Columns",
+      "addColumn": "Add column",
+      "emptyColumns": "Add at least one column for this table field."
+    },
+    "column": {
+      "title": "Column",
+      "remove": "Remove",
+      "key": "Key",
+      "label": "Label",
+      "type": "Type",
+      "description": "Description",
+      "required": "Required column"
+    }
+  },
+  "documentCategoriesSection": {
+    "badges": {
+      "layer": "Classification layer",
+      "routingTargets": "{count} routing targets"
+    },
+    "title": "Document categories",
+    "description": "Manage the classifier output labels in a single list, then open each category on its own page to rename it, save changes, or delete it."
+  },
+  "documentCategoriesTable": {
+    "badges": {
+      "layer": "Classification layer",
+      "categories": "{count} categories",
+      "classifierOutput": "Classifier output"
+    },
+    "title": "Document categories",
+    "description": "Define the normalized document types your classifier can assign before routing and extraction.",
+    "createAction": "Create category",
+    "loading": "Loading categories...",
+    "empty": "No categories yet. Add a few normalized document types so uploads can be classified before extraction.",
+    "normalizedRoutingTarget": "Used as a normalized routing target.",
+    "headers": {
+      "category": "Category",
+      "role": "Role",
+      "updated": "Updated",
+      "open": "Open"
+    }
+  },
+  "documentCategoryValidation": {
+    "nameRequired": "Category name is required."
+  },
+  "documentCategoryEditorScreen": {
+    "loading": "Loading document category...",
+    "errorTitle": "Unable to load document category",
+    "backToCategories": "Back to document categories",
+    "badge": "Classification target",
+    "breadcrumbSection": "Document categories",
+    "breadcrumbCreate": "New",
+    "breadcrumbEditFallback": "Edit",
+    "titleCreate": "New document category",
+    "titleEditFallback": "Edit document category",
+    "description": "Review one classification target at a time, then save or delete it from a dedicated detail view instead of splitting the screen.",
+    "status": {
+      "reset": "Changes reset to the last saved version.",
+      "cleared": "Draft cleared.",
+      "saved": "Saved \"{name}\".",
+      "created": "Created \"{name}\"."
+    },
+    "confirmDelete": "Delete \"{name}\"?"
+  },
+  "documentCategoryDetailPanel": {
+    "badges": {
+      "new": "New category",
+      "details": "Category details",
+      "routingTarget": "Routing target"
+    },
+    "titleCreate": "Create document category",
+    "titleEditFallback": "Edit document category",
+    "description": "Keep categories broad enough to be reusable, but specific enough to drive classification and routing decisions.",
+    "fields": {
+      "name": "Category name"
+    },
+    "preview": {
+      "title": "Classification preview",
+      "description": "The classifier can return this label when an uploaded document best matches this type.",
+      "normalizedLabel": "Normalized label",
+      "untitled": "Untitled category"
+    }
+  }
+}

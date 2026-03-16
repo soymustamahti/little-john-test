@@ -1,0 +1,244 @@
+{
+  "metadata": {
+    "title": "Espace Little John",
+    "description": "Espace de configuration documentaire pour la classification et l'extraction."
+  },
+  "common": {
+    "apiError": "Une erreur s'est produite lors de la communication avec l'API.",
+    "language": {
+      "label": "Langue",
+      "english": "Anglais",
+      "french": "Français"
+    },
+    "actions": {
+      "create": "Créer",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "delete": "Supprimer",
+      "deleting": "Suppression...",
+      "reset": "Réinitialiser",
+      "view": "Voir",
+      "backToList": "Retour à la liste"
+    },
+    "labels": {
+      "workspace": "Espace",
+      "new": "Nouveau",
+      "edit": "Modifier"
+    }
+  },
+  "shell": {
+    "title": "Little John",
+    "workspaceLabel": "Espace",
+    "description": "Espace opérateur pour la configuration de l'extraction et du routage de classification.",
+    "documentSetup": "Configuration documentaire",
+    "extractionTemplates": "Modèles d'extraction",
+    "documentCategories": "Catégories documentaires",
+    "documents": "Documents",
+    "starterSetupTitle": "Configuration de départ",
+    "starterSetupDescription": "Les modèles d'extraction et les catégories documentaires préchargés sont chargés automatiquement après le démarrage de l'API."
+  },
+  "stats": {
+    "extractionTemplates": "Modèles d'extraction",
+    "documentCategories": "Catégories documentaires",
+    "modules": "Modules",
+    "fields": "Champs"
+  },
+  "templateShared": {
+    "localeNames": {
+      "en": "Anglais",
+      "fr": "Français"
+    },
+    "valueTypes": {
+      "string": "Texte",
+      "number": "Nombre",
+      "date": "Date",
+      "boolean": "Booléen"
+    },
+    "fieldKinds": {
+      "scalar": "Scalaire",
+      "table": "Tableau"
+    },
+    "defaults": {
+      "module": "Module",
+      "field": "Champ",
+      "table": "Tableau",
+      "column": "Colonne"
+    },
+    "validation": {
+      "nameRequired": "Le nom du modèle d'extraction est obligatoire.",
+      "moduleKeyLabelRequired": "Chaque module doit avoir une clé et un libellé.",
+      "fieldKeyLabelRequired": "Chaque champ doit avoir une clé et un libellé.",
+      "columnKeyLabelRequired": "Chaque colonne de tableau doit avoir une clé et un libellé."
+    }
+  },
+  "templatesDashboard": {
+    "badges": {
+      "layer": "Couche d'extraction",
+      "activeTemplates": "{count} modèles actifs"
+    },
+    "title": "Modèles d'extraction",
+    "description": "Gardez le catalogue visible sous forme de tableau, puis ouvrez un modèle à la fois pour revoir les champs, mettre à jour les modules ou supprimer le schéma."
+  },
+  "templatesTable": {
+    "badges": {
+      "layer": "Couche d'extraction",
+      "schemas": "{count} schémas"
+    },
+    "title": "Modèles d'extraction",
+    "description": "Gérez les schémas qui définissent les champs à capturer une fois le document classé.",
+    "createAction": "Créer un modèle d'extraction",
+    "loading": "Chargement des modèles...",
+    "empty": "Aucun modèle d'extraction pour l'instant. Commencez avec les exemples préchargés ou créez-en un depuis zéro.",
+    "noDescription": "Aucune description",
+    "headers": {
+      "name": "Nom",
+      "locale": "Langue",
+      "modules": "Modules",
+      "fields": "Champs",
+      "updated": "Mis à jour",
+      "open": "Ouvrir"
+    }
+  },
+  "templateEditorScreen": {
+    "loading": "Chargement du modèle d'extraction...",
+    "errorTitle": "Impossible de charger le modèle d'extraction",
+    "backToTemplates": "Retour aux modèles d'extraction",
+    "badge": "Schéma d'extraction",
+    "breadcrumbSection": "Modèles d'extraction",
+    "breadcrumbCreate": "Nouveau",
+    "breadcrumbEditFallback": "Modifier",
+    "titleCreate": "Nouveau modèle d'extraction",
+    "titleEditFallback": "Modifier le modèle d'extraction",
+    "description": "Ouvrez un modèle d'extraction à la fois, revoyez ses modules et ses champs, puis enregistrez les modifications sans gérer un second panneau à côté du tableau.",
+    "status": {
+      "reset": "Les modifications ont été réinitialisées à la dernière version enregistrée.",
+      "cleared": "Brouillon vidé.",
+      "saved": "\"{name}\" a été enregistré.",
+      "created": "\"{name}\" a été créé."
+    },
+    "confirmDelete": "Supprimer \"{name}\" ?"
+  },
+  "templateDetailPanel": {
+    "badges": {
+      "new": "Nouveau modèle d'extraction",
+      "details": "Détails de l'extraction"
+    },
+    "titleCreate": "Créer un modèle d'extraction",
+    "titleEditFallback": "Modifier le modèle d'extraction",
+    "description": "Définissez les champs structurés à extraire après qu'un document a été classé dans la bonne catégorie.",
+    "fields": {
+      "name": "Nom du modèle d'extraction",
+      "locale": "Langue",
+      "description": "Description"
+    },
+    "modules": {
+      "title": "Modules",
+      "description": "Regroupez les champs par domaine métier comme les informations fournisseur, les détails de paiement ou les lignes d'article.",
+      "add": "Ajouter un module",
+      "empty": "Aucun module pour l'instant. Ajoutez-en un pour commencer à définir les champs."
+    },
+    "module": {
+      "title": "Module",
+      "fieldCount": "{count} champs",
+      "remove": "Supprimer le module",
+      "key": "Clé du module",
+      "label": "Libellé du module",
+      "fields": "Champs",
+      "addScalar": "Ajouter un scalaire",
+      "addTable": "Ajouter un tableau",
+      "empty": "Aucun champ dans ce module pour l'instant."
+    },
+    "field": {
+      "table": "Champ tableau",
+      "scalar": "Champ scalaire",
+      "remove": "Supprimer le champ",
+      "key": "Clé",
+      "label": "Libellé",
+      "kind": "Type",
+      "minimumRows": "Nombre minimum de lignes",
+      "valueType": "Type de valeur",
+      "description": "Description",
+      "required": "Champ obligatoire",
+      "columns": "Colonnes",
+      "addColumn": "Ajouter une colonne",
+      "emptyColumns": "Ajoutez au moins une colonne pour ce champ tableau."
+    },
+    "column": {
+      "title": "Colonne",
+      "remove": "Supprimer",
+      "key": "Clé",
+      "label": "Libellé",
+      "type": "Type",
+      "description": "Description",
+      "required": "Colonne obligatoire"
+    }
+  },
+  "documentCategoriesSection": {
+    "badges": {
+      "layer": "Couche de classification",
+      "routingTargets": "{count} cibles de routage"
+    },
+    "title": "Catégories documentaires",
+    "description": "Gérez les libellés de sortie du classifieur dans une seule liste, puis ouvrez chaque catégorie sur sa propre page pour la renommer, enregistrer les modifications ou la supprimer."
+  },
+  "documentCategoriesTable": {
+    "badges": {
+      "layer": "Couche de classification",
+      "categories": "{count} catégories",
+      "classifierOutput": "Sortie du classifieur"
+    },
+    "title": "Catégories documentaires",
+    "description": "Définissez les types de documents normalisés que votre classifieur peut attribuer avant le routage et l'extraction.",
+    "createAction": "Créer une catégorie",
+    "loading": "Chargement des catégories...",
+    "empty": "Aucune catégorie pour l'instant. Ajoutez quelques types de documents normalisés pour que les téléversements puissent être classés avant l'extraction.",
+    "normalizedRoutingTarget": "Utilisée comme cible de routage normalisée.",
+    "headers": {
+      "category": "Catégorie",
+      "role": "Rôle",
+      "updated": "Mis à jour",
+      "open": "Ouvrir"
+    }
+  },
+  "documentCategoryValidation": {
+    "nameRequired": "Le nom de la catégorie est obligatoire."
+  },
+  "documentCategoryEditorScreen": {
+    "loading": "Chargement de la catégorie documentaire...",
+    "errorTitle": "Impossible de charger la catégorie documentaire",
+    "backToCategories": "Retour aux catégories documentaires",
+    "badge": "Cible de classification",
+    "breadcrumbSection": "Catégories documentaires",
+    "breadcrumbCreate": "Nouvelle",
+    "breadcrumbEditFallback": "Modifier",
+    "titleCreate": "Nouvelle catégorie documentaire",
+    "titleEditFallback": "Modifier la catégorie documentaire",
+    "description": "Revoyez une cible de classification à la fois, puis enregistrez-la ou supprimez-la depuis une vue détaillée dédiée plutôt que de partager l'écran.",
+    "status": {
+      "reset": "Les modifications ont été réinitialisées à la dernière version enregistrée.",
+      "cleared": "Brouillon vidé.",
+      "saved": "\"{name}\" a été enregistré.",
+      "created": "\"{name}\" a été créée."
+    },
+    "confirmDelete": "Supprimer \"{name}\" ?"
+  },
+  "documentCategoryDetailPanel": {
+    "badges": {
+      "new": "Nouvelle catégorie",
+      "details": "Détails de la catégorie",
+      "routingTarget": "Cible de routage"
+    },
+    "titleCreate": "Créer une catégorie documentaire",
+    "titleEditFallback": "Modifier la catégorie documentaire",
+    "description": "Gardez les catégories assez larges pour être réutilisables, mais assez précises pour guider la classification et les décisions de routage.",
+    "fields": {
+      "name": "Nom de la catégorie"
+    },
+    "preview": {
+      "title": "Aperçu de classification",
+      "description": "Le classifieur peut renvoyer ce libellé lorsqu'un document téléversé correspond le mieux à ce type.",
+      "normalizedLabel": "Libellé normalisé",
+      "untitled": "Catégorie sans titre"
+    }
+  }
+}

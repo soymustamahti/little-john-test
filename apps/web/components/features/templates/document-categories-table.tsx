@@ -8,15 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/providers/locale-provider";
 import type { DocumentCategory } from "@/types/document-categories";
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 export function DocumentCategoriesTable({
   categories,
@@ -33,30 +26,37 @@ export function DocumentCategoriesTable({
   onCreate: () => void;
   onSelect: (category: DocumentCategory) => void;
 }) {
+  const { messages, formatDate, formatText } = useLocale();
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="warm">Classification layer</Badge>
-              <Badge>{categories.length} categories</Badge>
+              <Badge variant="warm">{messages.documentCategoriesTable.badges.layer}</Badge>
+              <Badge>
+                {formatText(messages.documentCategoriesTable.badges.categories, {
+                  count: categories.length,
+                })}
+              </Badge>
             </div>
-            <CardTitle className="mt-3 text-2xl">Document categories</CardTitle>
+            <CardTitle className="mt-3 text-2xl">
+              {messages.documentCategoriesTable.title}
+            </CardTitle>
             <CardDescription>
-              Define the normalized document types your classifier can assign
-              before routing and extraction.
+              {messages.documentCategoriesTable.description}
             </CardDescription>
           </div>
           <Button variant="secondary" onClick={onCreate}>
-            Create category
+            {messages.documentCategoriesTable.createAction}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
           <div className="p-6 text-sm text-[color:var(--color-muted)]">
-            Loading categories...
+            {messages.documentCategoriesTable.loading}
           </div>
         ) : null}
 
@@ -68,8 +68,7 @@ export function DocumentCategoriesTable({
 
         {!isLoading && !errorMessage && !categories.length ? (
           <div className="border-t border-[color:var(--color-line)] p-6 text-sm text-[color:var(--color-muted)]">
-            No categories yet. Add a few normalized document types so uploads can
-            be classified before extraction.
+            {messages.documentCategoriesTable.empty}
           </div>
         ) : null}
 
@@ -78,10 +77,18 @@ export function DocumentCategoriesTable({
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[color:var(--color-background)]/70 text-[color:var(--color-muted)]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Category</th>
-                  <th className="px-4 py-3 font-medium">Role</th>
-                  <th className="px-4 py-3 font-medium">Updated</th>
-                  <th className="px-4 py-3 font-medium">Open</th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.documentCategoriesTable.headers.category}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.documentCategoriesTable.headers.role}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.documentCategoriesTable.headers.updated}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.documentCategoriesTable.headers.open}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -103,12 +110,14 @@ export function DocumentCategoriesTable({
                             {category.name}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            Used as a normalized routing target.
+                            {messages.documentCategoriesTable.normalizedRoutingTarget}
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <Badge variant="accent">Classifier output</Badge>
+                        <Badge variant="accent">
+                          {messages.documentCategoriesTable.badges.classifierOutput}
+                        </Badge>
                       </td>
                       <td className="px-4 py-4 align-top text-[color:var(--color-muted)]">
                         {formatDate(category.updated_at)}
@@ -123,7 +132,7 @@ export function DocumentCategoriesTable({
                             onSelect(category);
                           }}
                         >
-                          View
+                          {messages.common.actions.view}
                         </Button>
                       </td>
                     </tr>

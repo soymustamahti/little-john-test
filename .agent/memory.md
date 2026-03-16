@@ -114,3 +114,6 @@ and streams progress back to the client.
 - Split the frontend workspace into route-based list and detail pages for `extraction-templates`
   and `document-categories`, with a working sidebar and dedicated edit screens instead of the old
   split-pane layout
+- Added frontend i18n scaffolding for static copy in `apps/web` with English and French JSON
+  dictionaries, a shared locale provider, and a persisted language switcher wired through the
+  Next.js layout via cookie-backed initial rendering plus local storage mirroring

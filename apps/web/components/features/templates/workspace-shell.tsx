@@ -9,8 +9,10 @@ import {
   Tag,
 } from "lucide-react";
 
+import { LanguageSwitcher } from "@/components/features/templates/language-switcher";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/providers/locale-provider";
 
 function NavLink({
   href,
@@ -45,6 +47,7 @@ export function WorkspaceShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { messages } = useLocale();
 
   return (
     <main className="min-h-screen bg-[color:var(--color-background)]">
@@ -53,47 +56,48 @@ export function WorkspaceShell({
           <div className="space-y-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                Workspace
+                {messages.shell.workspaceLabel}
               </p>
               <h1 className="mt-2 text-2xl font-semibold text-[color:var(--color-ink)]">
-                Little John
+                {messages.shell.title}
               </h1>
               <p className="mt-2 text-sm text-[color:var(--color-muted)]">
-                Operator workspace for extraction setup and classification routing.
+                {messages.shell.description}
               </p>
             </div>
 
             <nav className="space-y-2">
               <div className="px-4 pt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                Document Setup
+                {messages.shell.documentSetup}
               </div>
               <NavLink
                 href="/extraction-templates"
                 icon={Shapes}
-                label="Extraction Templates"
+                label={messages.shell.extractionTemplates}
                 isActive={pathname.startsWith("/extraction-templates")}
               />
               <NavLink
                 href="/document-categories"
                 icon={Tag}
-                label="Document Categories"
+                label={messages.shell.documentCategories}
                 isActive={pathname.startsWith("/document-categories")}
               />
               <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-[color:var(--color-muted)]">
                 <FileStack className="h-4 w-4" />
-                Documents
+                {messages.shell.documents}
               </div>
             </nav>
+
+            <LanguageSwitcher />
 
             <Card className="border-dashed">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
                   <Sparkles className="h-4 w-4 text-[color:var(--color-accent)]" />
-                  Starter setup
+                  {messages.shell.starterSetupTitle}
                 </div>
                 <p className="mt-2 text-sm text-[color:var(--color-muted)]">
-                  Seeded extraction templates and document categories are loaded
-                  automatically after the API starts.
+                  {messages.shell.starterSetupDescription}
                 </p>
               </CardContent>
             </Card>

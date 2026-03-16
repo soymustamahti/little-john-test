@@ -8,9 +8,10 @@ import { TemplatesTable } from "@/components/features/templates/templates-table"
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import { useTemplatesQuery } from "@/hooks/use-templates";
+import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats } from "@/types/templates";
 
-function getErrorMessage(error: unknown) {
+function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.detail ?? error.message;
   }
@@ -19,11 +20,12 @@ function getErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "Something went wrong while talking to the API.";
+  return fallbackMessage;
 }
 
 export function TemplatesDashboard() {
   const router = useRouter();
+  const { messages, formatText } = useLocale();
   const templatesQuery = useTemplatesQuery();
   const documentCategoriesQuery = useDocumentCategoriesQuery();
 
@@ -42,16 +44,19 @@ export function TemplatesDashboard() {
     <div className="space-y-6 px-4 py-6 sm:px-6">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="accent">Extraction layer</Badge>
-          <Badge>{templates.length} active templates</Badge>
+          <Badge variant="accent">{messages.templatesDashboard.badges.layer}</Badge>
+          <Badge>
+            {formatText(messages.templatesDashboard.badges.activeTemplates, {
+              count: templates.length,
+            })}
+          </Badge>
         </div>
         <div>
           <h2 className="text-3xl font-semibold text-[color:var(--color-ink)]">
-            Extraction templates
+            {messages.templatesDashboard.title}
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            Keep the catalog visible as a table, then open one template at a
-            time to review fields, update modules, or remove the schema.
+            {messages.templatesDashboard.description}
           </p>
         </div>
       </div>
@@ -68,7 +73,9 @@ export function TemplatesDashboard() {
         selectedTemplateId={null}
         isLoading={templatesQuery.isLoading}
         errorMessage={
-          templatesQuery.error ? getErrorMessage(templatesQuery.error) : null
+          templatesQuery.error
+            ? getErrorMessage(templatesQuery.error, messages.common.apiError)
+            : null
         }
         onCreate={() => router.push("/extraction-templates/new")}
         onSelect={(template) => router.push(`/extraction-templates/${template.id}`)}

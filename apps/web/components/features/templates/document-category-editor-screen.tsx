@@ -24,7 +24,9 @@ import {
   type DocumentCategoryDraft,
 } from "@/types/document-categories";
 
-function getErrorMessage(error: unknown) {
+import { useLocale } from "@/providers/locale-provider";
+
+function getErrorMessage(error: unknown, fallbackMessage: string) {
   if (axios.isAxiosError(error)) {
     return error.response?.data?.detail ?? error.message;
   }
@@ -33,7 +35,7 @@ function getErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "Something went wrong while talking to the API.";
+  return fallbackMessage;
 }
 
 export function DocumentCategoryEditorScreen({
@@ -42,6 +44,7 @@ export function DocumentCategoryEditorScreen({
   categoryId?: string;
 }) {
   const router = useRouter();
+  const { messages, formatText } = useLocale();
   const categoryQuery = useDocumentCategoryQuery(categoryId);
   const createCategoryMutation = useCreateDocumentCategoryMutation();
   const updateCategoryMutation = useUpdateDocumentCategoryMutation();
@@ -58,7 +61,10 @@ export function DocumentCategoryEditorScreen({
 
   const isSaving = createCategoryMutation.isPending || updateCategoryMutation.isPending;
   const isDeleting = deleteCategoryMutation.isPending;
-  const validationError = getDocumentCategoryValidationError(editorDraft);
+  const validationError = getDocumentCategoryValidationError(
+    editorDraft,
+    messages.documentCategoryValidation.nameRequired,
+  );
 
   function replaceDraft(nextDraft: DocumentCategoryDraft) {
     setDraft(nextDraft);
@@ -71,13 +77,13 @@ export function DocumentCategoryEditorScreen({
   function resetDraft() {
     if (category) {
       replaceDraft(documentCategoryToDraft(category));
-      setStatusMessage("Changes reset to the last saved version.");
+      setStatusMessage(messages.documentCategoryEditorScreen.status.reset);
       setStatusTone("neutral");
       return;
     }
 
     replaceDraft(createEmptyDocumentCategoryDraft());
-    setStatusMessage("Draft cleared.");
+    setStatusMessage(messages.documentCategoryEditorScreen.status.cleared);
     setStatusTone("neutral");
   }
 
@@ -97,17 +103,25 @@ export function DocumentCategoryEditorScreen({
           payload,
         });
         replaceDraft(documentCategoryToDraft(updatedCategory));
-        setStatusMessage(`Saved "${updatedCategory.name}".`);
+        setStatusMessage(
+          formatText(messages.documentCategoryEditorScreen.status.saved, {
+            name: updatedCategory.name,
+          }),
+        );
         setStatusTone("success");
         return;
       }
 
       const createdCategory = await createCategoryMutation.mutateAsync(payload);
-      setStatusMessage(`Created "${createdCategory.name}".`);
+      setStatusMessage(
+        formatText(messages.documentCategoryEditorScreen.status.created, {
+          name: createdCategory.name,
+        }),
+      );
       setStatusTone("success");
       router.replace(`/document-categories/${createdCategory.id}`);
     } catch (error) {
-      setStatusMessage(getErrorMessage(error));
+      setStatusMessage(getErrorMessage(error, messages.common.apiError));
       setStatusTone("danger");
     }
   }
@@ -117,7 +131,11 @@ export function DocumentCategoryEditorScreen({
       return;
     }
 
-    const confirmed = window.confirm(`Delete "${category.name}"?`);
+    const confirmed = window.confirm(
+      formatText(messages.documentCategoryEditorScreen.confirmDelete, {
+        name: category.name,
+      }),
+    );
     if (!confirmed) {
       return;
     }
@@ -126,7 +144,7 @@ export function DocumentCategoryEditorScreen({
       await deleteCategoryMutation.mutateAsync(categoryId);
       router.push("/document-categories");
     } catch (error) {
-      setStatusMessage(getErrorMessage(error));
+      setStatusMessage(getErrorMessage(error, messages.common.apiError));
       setStatusTone("danger");
     }
   }
@@ -136,7 +154,7 @@ export function DocumentCategoryEditorScreen({
       <div className="px-4 py-6 sm:px-6">
         <Card>
           <CardContent className="p-6 text-sm text-[color:var(--color-muted)]">
-            Loading document category...
+            {messages.documentCategoryEditorScreen.loading}
           </CardContent>
         </Card>
       </div>
@@ -151,14 +169,16 @@ export function DocumentCategoryEditorScreen({
           onClick={() => router.push("/document-categories")}
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to document categories
+          {messages.documentCategoryEditorScreen.backToCategories}
         </Button>
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Unable to load document category</CardTitle>
+            <CardTitle className="text-xl">
+              {messages.documentCategoryEditorScreen.errorTitle}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-[color:var(--color-accent-warm)]">
-            {getErrorMessage(categoryQuery.error)}
+            {getErrorMessage(categoryQuery.error, messages.common.apiError)}
           </CardContent>
         </Card>
       </div>
@@ -170,24 +190,28 @@ export function DocumentCategoryEditorScreen({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm text-[color:var(--color-muted)]">
-            Workspace / Document categories / {mode === "create" ? "New" : category?.name ?? "Edit"}
+            {messages.common.labels.workspace} / {messages.documentCategoryEditorScreen.breadcrumbSection} /{" "}
+            {mode === "create"
+              ? messages.documentCategoryEditorScreen.breadcrumbCreate
+              : category?.name ?? messages.documentCategoryEditorScreen.breadcrumbEditFallback}
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-[color:var(--color-ink)]">
-            {mode === "create" ? "New document category" : editorDraft.name || "Edit document category"}
+            {mode === "create"
+              ? messages.documentCategoryEditorScreen.titleCreate
+              : editorDraft.name || messages.documentCategoryEditorScreen.titleEditFallback}
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            Review one classification target at a time, then save or delete it
-            from a dedicated detail view instead of splitting the screen.
+            {messages.documentCategoryEditorScreen.description}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="warm">Classification target</Badge>
+          <Badge variant="warm">{messages.documentCategoryEditorScreen.badge}</Badge>
           <Button
             variant="secondary"
             onClick={() => router.push("/document-categories")}
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to list
+            {messages.common.actions.backToList}
           </Button>
         </div>
       </div>

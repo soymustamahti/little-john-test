@@ -43,9 +43,10 @@ export function draftToDocumentCategoryPayload(
 
 export function getDocumentCategoryValidationError(
   draft: DocumentCategoryDraft,
+  nameRequiredMessage = "Category name is required.",
 ): string | null {
   if (!draft.name.trim()) {
-    return "Category name is required.";
+    return nameRequiredMessage;
   }
 
   return null;
