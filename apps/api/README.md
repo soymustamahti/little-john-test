@@ -78,6 +78,10 @@ currently include:
 
 The document category feature is implemented as a parallel slice under `src/document_categories/`.
 It stores the predefined document types that later classification will map uploaded files onto.
+Each category now keeps:
+
+- `name`: the classifier-facing label, which can remain in English for model prompts
+- `label_key`: the stable frontend translation key used to render a localized label in the UI
 
 Available endpoints:
 

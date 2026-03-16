@@ -12,7 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale } from "@/providers/locale-provider";
-import type { DocumentCategoryDraft } from "@/types/document-categories";
+import {
+  getDocumentCategoryDisplayName,
+  type DocumentCategoryDraft,
+} from "@/types/document-categories";
 
 export function DocumentCategoryDetailPanel({
   draft,
@@ -23,6 +26,7 @@ export function DocumentCategoryDetailPanel({
   isSaving,
   isDeleting,
   onNameChange,
+  onLabelKeyChange,
   onReset,
   onSave,
   onDelete,
@@ -35,11 +39,13 @@ export function DocumentCategoryDetailPanel({
   isSaving: boolean;
   isDeleting: boolean;
   onNameChange: (value: string) => void;
+  onLabelKeyChange: (value: string) => void;
   onReset: () => void;
   onSave: () => void;
   onDelete: () => void;
 }) {
   const { messages } = useLocale();
+  const displayName = getDocumentCategoryDisplayName(draft, messages);
   const validationClassName =
     "rounded-xl border border-[color:var(--color-warm-soft)] bg-[color:var(--color-background)] px-4 py-3 text-sm text-[color:var(--color-accent-warm)]";
 
@@ -66,7 +72,7 @@ export function DocumentCategoryDetailPanel({
             <CardTitle className="mt-3 text-2xl">
               {mode === "create"
                 ? messages.documentCategoryDetailPanel.titleCreate
-                : draft.name || messages.documentCategoryDetailPanel.titleEditFallback}
+                : displayName || messages.documentCategoryDetailPanel.titleEditFallback}
             </CardTitle>
             <CardDescription>
               {messages.documentCategoryDetailPanel.description}
@@ -100,9 +106,18 @@ export function DocumentCategoryDetailPanel({
 
       <CardContent className="space-y-6 pt-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <div className="space-y-2">
-            <Label>{messages.documentCategoryDetailPanel.fields.name}</Label>
-            <Input value={draft.name} onChange={(event) => onNameChange(event.target.value)} />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{messages.documentCategoryDetailPanel.fields.name}</Label>
+              <Input value={draft.name} onChange={(event) => onNameChange(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>{messages.documentCategoryDetailPanel.fields.labelKey}</Label>
+              <Input
+                value={draft.label_key}
+                onChange={(event) => onLabelKeyChange(event.target.value)}
+              />
+            </div>
           </div>
 
           <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/55 p-4">
@@ -113,13 +128,31 @@ export function DocumentCategoryDetailPanel({
             <p className="mt-3 text-sm text-[color:var(--color-muted)]">
               {messages.documentCategoryDetailPanel.preview.description}
             </p>
-            <div className="mt-4 rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">
-              <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                {messages.documentCategoryDetailPanel.preview.normalizedLabel}
+            <div className="mt-4 space-y-3">
+              <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                  {messages.documentCategoryDetailPanel.preview.translatedLabel}
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
+                  <FolderInput className="h-4 w-4 text-[color:var(--color-accent)]" />
+                  {displayName || messages.documentCategoryDetailPanel.preview.untitled}
+                </div>
               </div>
-              <div className="mt-2 flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
-                <FolderInput className="h-4 w-4 text-[color:var(--color-accent)]" />
-                {draft.name.trim() || messages.documentCategoryDetailPanel.preview.untitled}
+              <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                  {messages.documentCategoryDetailPanel.preview.classifierName}
+                </div>
+                <div className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
+                  {draft.name.trim() || messages.documentCategoryDetailPanel.preview.untitled}
+                </div>
+              </div>
+              <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">
+                <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                  {messages.documentCategoryDetailPanel.preview.labelKey}
+                </div>
+                <div className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
+                  {draft.label_key.trim() || "-"}
+                </div>
               </div>
             </div>
           </div>

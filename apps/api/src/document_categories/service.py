@@ -37,7 +37,10 @@ class DocumentCategoryService:
         except IntegrityError as exc:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Document category '{payload.name}' already exists.",
+                detail=(
+                    "A document category with the same name or label key already exists: "
+                    f"name='{payload.name}', label_key='{payload.label_key}'."
+                ),
             ) from exc
 
         return DocumentCategoryRead.model_validate(category)
@@ -58,9 +61,13 @@ class DocumentCategoryService:
             updated_category = await self._repository.update(category, payload)
         except IntegrityError as exc:
             attempted_name = payload.name or category.name
+            attempted_label_key = payload.label_key or category.label_key
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Document category '{attempted_name}' already exists.",
+                detail=(
+                    "A document category with the same name or label key already exists: "
+                    f"name='{attempted_name}', label_key='{attempted_label_key}'."
+                ),
             ) from exc
 
         return DocumentCategoryRead.model_validate(updated_category)

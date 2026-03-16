@@ -20,7 +20,9 @@ import {
   createEmptyDocumentCategoryDraft,
   documentCategoryToDraft,
   draftToDocumentCategoryPayload,
+  getDocumentCategoryDisplayName,
   getDocumentCategoryValidationError,
+  slugifyDocumentCategoryLabelKey,
   type DocumentCategoryDraft,
 } from "@/types/document-categories";
 
@@ -58,12 +60,13 @@ export function DocumentCategoryEditorScreen({
   const mode = categoryId ? "edit" : "create";
   const editorDraft =
     draft ?? (category ? documentCategoryToDraft(category) : createEmptyDocumentCategoryDraft());
+  const displayName = getDocumentCategoryDisplayName(editorDraft, messages);
 
   const isSaving = createCategoryMutation.isPending || updateCategoryMutation.isPending;
   const isDeleting = deleteCategoryMutation.isPending;
   const validationError = getDocumentCategoryValidationError(
     editorDraft,
-    messages.documentCategoryValidation.nameRequired,
+    messages.documentCategoryValidation,
   );
 
   function replaceDraft(nextDraft: DocumentCategoryDraft) {
@@ -193,12 +196,12 @@ export function DocumentCategoryEditorScreen({
             {messages.common.labels.workspace} / {messages.documentCategoryEditorScreen.breadcrumbSection} /{" "}
             {mode === "create"
               ? messages.documentCategoryEditorScreen.breadcrumbCreate
-              : category?.name ?? messages.documentCategoryEditorScreen.breadcrumbEditFallback}
+              : displayName || messages.documentCategoryEditorScreen.breadcrumbEditFallback}
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-[color:var(--color-ink)]">
             {mode === "create"
               ? messages.documentCategoryEditorScreen.titleCreate
-              : editorDraft.name || messages.documentCategoryEditorScreen.titleEditFallback}
+              : displayName || messages.documentCategoryEditorScreen.titleEditFallback}
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-muted)]">
             {messages.documentCategoryEditorScreen.description}
@@ -225,9 +228,24 @@ export function DocumentCategoryEditorScreen({
         isSaving={isSaving}
         isDeleting={isDeleting}
         onNameChange={(value) =>
+          updateDraft((current) => {
+            const currentAutoKey = slugifyDocumentCategoryLabelKey(current.name);
+            const shouldSyncLabelKey =
+              !current.label_key.trim() || current.label_key === currentAutoKey;
+
+            return {
+              ...current,
+              name: value,
+              label_key: shouldSyncLabelKey
+                ? slugifyDocumentCategoryLabelKey(value)
+                : current.label_key,
+            };
+          })
+        }
+        onLabelKeyChange={(value) =>
           updateDraft((current) => ({
             ...current,
-            name: value,
+            label_key: slugifyDocumentCategoryLabelKey(value),
           }))
         }
         onReset={resetDraft}

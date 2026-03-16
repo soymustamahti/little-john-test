@@ -193,6 +193,7 @@
     "loading": "Loading categories...",
     "empty": "No categories yet. Add a few normalized document types so uploads can be classified before extraction.",
     "normalizedRoutingTarget": "Used as a normalized routing target.",
+    "classifierName": "Classifier name: {name}",
     "headers": {
       "category": "Category",
       "role": "Role",
@@ -201,7 +202,9 @@
     }
   },
   "documentCategoryValidation": {
-    "nameRequired": "Category name is required."
+    "nameRequired": "Category name is required.",
+    "labelKeyRequired": "Label key is required.",
+    "labelKeyPattern": "Label key must use lowercase snake_case."
   },
   "documentCategoryEditorScreen": {
     "loading": "Loading document category...",
@@ -230,15 +233,36 @@
     },
     "titleCreate": "Create document category",
     "titleEditFallback": "Edit document category",
-    "description": "Keep categories broad enough to be reusable, but specific enough to drive classification and routing decisions.",
+    "description": "Keep categories broad enough to be reusable, but specific enough to drive classification and routing decisions. The label key is the stable frontend translation handle.",
     "fields": {
-      "name": "Category name"
+      "name": "Classifier name",
+      "labelKey": "Label key"
     },
     "preview": {
-      "title": "Classification preview",
-      "description": "The classifier can return this label when an uploaded document best matches this type.",
-      "normalizedLabel": "Normalized label",
+      "title": "Localized preview",
+      "description": "The frontend uses the translated label for this key when one exists. The classifier can still use the English name.",
+      "translatedLabel": "Translated label",
+      "classifierName": "Classifier name",
+      "labelKey": "Label key",
       "untitled": "Untitled category"
     }
+  },
+  "documentCategoryLabels": {
+    "identity_document": "Identity Document",
+    "proof_of_address": "Proof of Address",
+    "bank_statement": "Bank Statement",
+    "payslip": "Payslip",
+    "tax_notice": "Tax Notice",
+    "employment_contract": "Employment Contract",
+    "purchase_agreement": "Purchase Agreement",
+    "loan_application": "Loan Application",
+    "loan_offer": "Loan Offer",
+    "insurance_certificate": "Insurance Certificate",
+    "property_valuation_report": "Property Valuation Report",
+    "company_registration_extract": "Company Registration Extract",
+    "invoice": "Invoice",
+    "receipt": "Receipt",
+    "purchase_order": "Purchase Order",
+    "signed_contract": "Signed Contract"
   }
 }

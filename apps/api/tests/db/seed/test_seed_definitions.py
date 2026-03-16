@@ -12,10 +12,14 @@ from src.db.seed.extraction_templates import (
 
 def test_document_category_seeds_have_unique_names() -> None:
     category_names = [seed.name for seed in DOCUMENT_CATEGORY_SEEDS]
+    label_keys = [seed.label_key for seed in DOCUMENT_CATEGORY_SEEDS]
 
     assert len(category_names) == len(set(category_names))
+    assert len(label_keys) == len(set(label_keys))
     assert "Loan Application" in category_names
     assert "Insurance Certificate" in category_names
+    assert "loan_application" in label_keys
+    assert "insurance_certificate" in label_keys
 
 
 def test_extraction_template_seeds_match_expected_starter_templates() -> None:
@@ -37,13 +41,18 @@ def test_extraction_template_seeds_match_expected_starter_templates() -> None:
 
 
 def test_document_category_seed_filtering_skips_existing_names() -> None:
-    missing_seeds = get_missing_document_category_seeds({"Identity Document", "Invoice"})
+    missing_seeds = get_missing_document_category_seeds(
+        {"identity_document", "invoice"}
+    )
 
     missing_names = [seed.name for seed in missing_seeds]
+    missing_label_keys = [seed.label_key for seed in missing_seeds]
 
     assert "Identity Document" not in missing_names
     assert "Invoice" not in missing_names
     assert "Loan Offer" in missing_names
+    assert "identity_document" not in missing_label_keys
+    assert "invoice" not in missing_label_keys
 
 
 def test_extraction_template_seed_filtering_skips_existing_ids_and_names() -> None:

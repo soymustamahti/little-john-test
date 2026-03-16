@@ -12,3 +12,4 @@ class DocumentCategoryModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    label_key: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)

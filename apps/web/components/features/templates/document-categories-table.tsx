@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
-import type { DocumentCategory } from "@/types/document-categories";
+import {
+  getDocumentCategoryDisplayName,
+  type DocumentCategory,
+} from "@/types/document-categories";
 
 export function DocumentCategoriesTable({
   categories,
@@ -26,7 +29,13 @@ export function DocumentCategoriesTable({
   onCreate: () => void;
   onSelect: (category: DocumentCategory) => void;
 }) {
-  const { messages, formatDate, formatText } = useLocale();
+  const { locale, messages, formatDate, formatText } = useLocale();
+  const sortedCategories = [...categories].sort((left, right) =>
+    getDocumentCategoryDisplayName(left, messages).localeCompare(
+      getDocumentCategoryDisplayName(right, messages),
+      locale,
+    ),
+  );
 
   return (
     <Card className="overflow-hidden">
@@ -92,8 +101,9 @@ export function DocumentCategoriesTable({
                 </tr>
               </thead>
               <tbody>
-                {categories.map((category) => {
+                {sortedCategories.map((category) => {
                   const isSelected = selectedCategoryId === category.id;
+                  const displayName = getDocumentCategoryDisplayName(category, messages);
 
                   return (
                     <tr
@@ -107,10 +117,12 @@ export function DocumentCategoriesTable({
                       <td className="px-4 py-4 align-top">
                         <div className="space-y-1">
                           <div className="font-medium text-[color:var(--color-ink)]">
-                            {category.name}
+                            {displayName}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            {messages.documentCategoriesTable.normalizedRoutingTarget}
+                            {formatText(messages.documentCategoriesTable.classifierName, {
+                              name: category.name,
+                            })}
                           </div>
                         </div>
                       </td>

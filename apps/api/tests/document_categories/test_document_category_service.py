@@ -13,6 +13,7 @@ from src.document_categories.service import DocumentCategoryService
 class FakeDocumentCategoryRecord:
     id: UUID
     name: str
+    label_key: str
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -28,7 +29,11 @@ class FakeDocumentCategoryRepository:
         return self._records.get(category_id)
 
     async def create(self, payload: DocumentCategoryCreate) -> FakeDocumentCategoryRecord:
-        if any(record.name.lower() == payload.name.lower() for record in self._records.values()):
+        if any(
+            record.name.lower() == payload.name.lower()
+            or record.label_key.lower() == payload.label_key.lower()
+            for record in self._records.values()
+        ):
             raise IntegrityError(None, None, Exception("duplicate key"))
 
         record = FakeDocumentCategoryRecord(id=uuid4(), **payload.model_dump(mode="json"))
@@ -41,8 +46,13 @@ class FakeDocumentCategoryRepository:
         payload: DocumentCategoryUpdate,
     ) -> FakeDocumentCategoryRecord:
         next_name = payload.name or category.name
+        next_label_key = payload.label_key or category.label_key
         if any(
-            record.id != category.id and record.name.lower() == next_name.lower()
+            record.id != category.id
+            and (
+                record.name.lower() == next_name.lower()
+                or record.label_key.lower() == next_label_key.lower()
+            )
             for record in self._records.values()
         ):
             raise IntegrityError(None, None, Exception("duplicate key"))
@@ -61,8 +71,10 @@ async def test_list_document_categories_is_sorted_by_name() -> None:
     repository = FakeDocumentCategoryRepository()
     service = DocumentCategoryService(repository)
 
-    await repository.create(DocumentCategoryCreate(name="Receipt"))
-    await repository.create(DocumentCategoryCreate(name="Bank Statement"))
+    await repository.create(DocumentCategoryCreate(name="Receipt", label_key="receipt"))
+    await repository.create(
+        DocumentCategoryCreate(name="Bank Statement", label_key="bank_statement")
+    )
 
     categories = await service.list_document_categories()
 
@@ -74,10 +86,14 @@ async def test_create_document_category_returns_conflict_on_duplicate_name() -> 
     repository = FakeDocumentCategoryRepository()
     service = DocumentCategoryService(repository)
 
-    await service.create_document_category(DocumentCategoryCreate(name="Invoice"))
+    await service.create_document_category(
+        DocumentCategoryCreate(name="Invoice", label_key="invoice")
+    )
 
     with pytest.raises(HTTPException) as exc_info:
-        await service.create_document_category(DocumentCategoryCreate(name="Invoice"))
+        await service.create_document_category(
+            DocumentCategoryCreate(name="Invoice", label_key="invoice_duplicate")
+        )
 
     assert exc_info.value.status_code == 409
     assert "already exists" in exc_info.value.detail

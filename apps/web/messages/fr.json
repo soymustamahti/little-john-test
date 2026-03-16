@@ -193,6 +193,7 @@
     "loading": "Chargement des catégories...",
     "empty": "Aucune catégorie pour l'instant. Ajoutez quelques types de documents normalisés pour que les téléversements puissent être classés avant l'extraction.",
     "normalizedRoutingTarget": "Utilisée comme cible de routage normalisée.",
+    "classifierName": "Nom du classifieur : {name}",
     "headers": {
       "category": "Catégorie",
       "role": "Rôle",
@@ -201,7 +202,9 @@
     }
   },
   "documentCategoryValidation": {
-    "nameRequired": "Le nom de la catégorie est obligatoire."
+    "nameRequired": "Le nom de la catégorie est obligatoire.",
+    "labelKeyRequired": "La clé d'étiquette est obligatoire.",
+    "labelKeyPattern": "La clé d'étiquette doit utiliser le format snake_case en minuscules."
   },
   "documentCategoryEditorScreen": {
     "loading": "Chargement de la catégorie documentaire...",
@@ -230,15 +233,36 @@
     },
     "titleCreate": "Créer une catégorie documentaire",
     "titleEditFallback": "Modifier la catégorie documentaire",
-    "description": "Gardez les catégories assez larges pour être réutilisables, mais assez précises pour guider la classification et les décisions de routage.",
+    "description": "Gardez les catégories assez larges pour être réutilisables, mais assez précises pour guider la classification et les décisions de routage. La clé d'étiquette est l'identifiant stable utilisé par l'interface pour la traduction.",
     "fields": {
-      "name": "Nom de la catégorie"
+      "name": "Nom du classifieur",
+      "labelKey": "Clé d'étiquette"
     },
     "preview": {
-      "title": "Aperçu de classification",
-      "description": "Le classifieur peut renvoyer ce libellé lorsqu'un document téléversé correspond le mieux à ce type.",
-      "normalizedLabel": "Libellé normalisé",
+      "title": "Aperçu localisé",
+      "description": "L'interface utilise le libellé traduit associé à cette clé lorsqu'il existe. Le classifieur peut continuer à utiliser le nom anglais.",
+      "translatedLabel": "Libellé traduit",
+      "classifierName": "Nom du classifieur",
+      "labelKey": "Clé d'étiquette",
       "untitled": "Catégorie sans titre"
     }
+  },
+  "documentCategoryLabels": {
+    "identity_document": "Pièce d'identité",
+    "proof_of_address": "Justificatif de domicile",
+    "bank_statement": "Relevé bancaire",
+    "payslip": "Bulletin de salaire",
+    "tax_notice": "Avis d'imposition",
+    "employment_contract": "Contrat de travail",
+    "purchase_agreement": "Contrat d'achat",
+    "loan_application": "Demande de prêt",
+    "loan_offer": "Offre de prêt",
+    "insurance_certificate": "Attestation d'assurance",
+    "property_valuation_report": "Rapport d'évaluation immobilière",
+    "company_registration_extract": "Extrait d'immatriculation de l'entreprise",
+    "invoice": "Facture",
+    "receipt": "Reçu",
+    "purchase_order": "Bon de commande",
+    "signed_contract": "Contrat signé"
   }
 }

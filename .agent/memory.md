@@ -117,3 +117,9 @@ and streams progress back to the client.
 - Added frontend i18n scaffolding for static copy in `apps/web` with English and French JSON
   dictionaries, a shared locale provider, and a persisted language switcher wired through the
   Next.js layout via cookie-backed initial rendering plus local storage mirroring
+- Added `label_key` to document categories across the backend model/API/seed path so seeded
+  categories now expose a stable frontend translation handle while keeping `name` available as the
+  classifier-facing English label
+- Generated and applied Alembic revision `8147a5a57d83` to add `document_categories.label_key`,
+  updated the reference seeds to key off `label_key`, and wired the frontend document category UI
+  to display translated labels by key with fallback to the stored name
