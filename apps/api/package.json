@@ -8,6 +8,7 @@
     "serve": "uv run aegra serve",
     "build": "uv build",
     "lint": "uv run ruff check .",
+    "test": "uv run pytest",
     "typecheck": "uv run mypy src",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down"

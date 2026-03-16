@@ -3,7 +3,8 @@
 ## Status
 
 - Phase: implementation started
-- Current backend work includes the first real feature slice: `templates`
+- Current backend work includes the first real feature slices: `extraction_templates` and
+  `document_categories`
 - Repo structure is already a PNPM monorepo with `apps/api` and `apps/web`
 - Root quality commands currently work for the existing scaffold
 
@@ -82,12 +83,19 @@ and streams progress back to the client.
 2. Use Aegra source as the reference when import/loading behavior is unclear
 3. Avoid root-level Alembic overrides in `apps/api` unless custom migrations are deliberately
    taking over that responsibility
-4. Continue building the remaining backend slices on top of the new `templates` feature pattern
+4. Build classification results and routing on top of the new `extraction_templates` and
+   `document_categories` slices
 
 ## Latest Milestone
 
-- Added `src/templates/` as a self-contained feature slice
-- Added CRUD endpoints for templates in the global FastAPI app
+- Renamed the original template persistence model to `extraction_templates` to reflect that it
+  defines extraction requirements, not document types
+- Added `src/document_categories/` as a separate self-contained feature slice for predefined
+  classification targets
+- Added CRUD endpoints for extraction templates and document categories in the global FastAPI app
+- Added a migration that renames the old `templates` table to `extraction_templates` and creates
+  `document_categories`
+- Added backend service tests for the new CRUD slices
 - Added a shared custom Alembic environment in `src/db/` using the existing
   `little_john_test_alembic_version` table
 - Kept Aegra's own root migration chain untouched

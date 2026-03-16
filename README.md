@@ -6,11 +6,11 @@ correct mistakes through chat, and stream progress in real time.
 
 ## Current Status
 
-This repository is currently in a context-and-planning phase.
+This repository has moved into implementation.
 
 - The monorepo structure is ready
-- Agent guidance files are now part of the repository
-- Product implementation has not started yet
+- Backend implementation has started in `apps/api`
+- The current backend foundation includes extraction template CRUD and document category CRUD
 
 ## Product Goal
 

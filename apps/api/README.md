@@ -32,7 +32,8 @@ pnpm typecheck
 - `pyproject.toml`: Python dependencies and tooling
 - `src/main.py`: global FastAPI app mounted by Aegra
 - `src/agents/extract_agent/graph.py`: current LangGraph definition
-- `src/templates/`: template feature slice with CRUD
+- `src/extraction_templates/`: extraction template feature slice with CRUD
+- `src/document_categories/`: document category feature slice with CRUD
 - `src/db/`: shared database base and global custom Alembic environment
 - `docker-compose.yml`: local PostgreSQL + API stack
 
@@ -44,9 +45,10 @@ pnpm typecheck
 - Avoid adding a root `alembic.ini` in `apps/api` unless you intentionally want to override
   Aegra's own migration chain.
 
-## Templates
+## Extraction Templates
 
-The `templates` feature is implemented as a self-contained slice under `src/templates/`:
+The extraction template feature is implemented as a self-contained slice under
+`src/extraction_templates/`:
 
 - `model.py`: SQLAlchemy template model
 - `schemas.py`: request and response contracts
@@ -56,14 +58,27 @@ The `templates` feature is implemented as a self-contained slice under `src/temp
 
 Available endpoints:
 
-- `GET /api/templates`
-- `POST /api/templates`
-- `GET /api/templates/{template_id}`
-- `PATCH /api/templates/{template_id}`
-- `DELETE /api/templates/{template_id}`
+- `GET /api/extraction-templates`
+- `POST /api/extraction-templates`
+- `GET /api/extraction-templates/{template_id}`
+- `PATCH /api/extraction-templates/{template_id}`
+- `DELETE /api/extraction-templates/{template_id}`
+
+## Document Categories
+
+The document category feature is implemented as a parallel slice under `src/document_categories/`.
+It stores the predefined document types that later classification will map uploaded files onto.
+
+Available endpoints:
+
+- `GET /api/document-categories`
+- `POST /api/document-categories`
+- `GET /api/document-categories/{category_id}`
+- `PATCH /api/document-categories/{category_id}`
+- `DELETE /api/document-categories/{category_id}`
 
 Custom application migrations are global and live under `src/db/`. They currently include the
-`templates` table and can be inspected with:
+`extraction_templates` and `document_categories` tables and can be inspected with:
 
 ```bash
 cd apps/api

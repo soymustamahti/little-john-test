@@ -62,18 +62,18 @@ class TemplateBase(BaseModel):
     modules: list[TemplateModule] = Field(default_factory=list)
 
 
-class TemplateCreate(TemplateBase):
+class ExtractionTemplateCreate(TemplateBase):
     pass
 
 
-class TemplateUpdate(BaseModel):
+class ExtractionTemplateUpdate(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=200)] | None = None
     description: str | None = None
     locale: TemplateLocale | None = None
     modules: list[TemplateModule] | None = None
 
 
-class TemplateRead(TemplateBase):
+class ExtractionTemplateRead(TemplateBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
