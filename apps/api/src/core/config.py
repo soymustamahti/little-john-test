@@ -12,14 +12,14 @@ class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        env_prefix="DATABASE_",
+        env_prefix="POSTGRES_",
         extra="ignore",
     )
 
     host: str = Field(default="localhost", description="Database host")
-    port: str = Field(default="5423", description="Databse port")
-    db: str = Field(default="postgres", description="Databse name")
-    user: str = Field(default="postgres", description="Databse username")
+    port: str = Field(default="5432", description="Database port")
+    db: str = Field(default="postgres", description="Database name")
+    user: str = Field(default="postgres", description="Database username")
     password: SecretStr = Field(default=SecretStr("postgres"), description="Database password")
 
     ssl: bool = Field(default=False, description="Use SSL connection")
@@ -30,16 +30,16 @@ class DatabaseSettings(BaseSettings):
     def url(self) -> str:
         ssl_param = "?sslmode=require" if self.ssl else ""
         return (
-            f"postgresql://{self.username}:{self.password.get_secret_value()}"
-            f"@{self.host}:{self.port}/{self.name}{ssl_param}"
+            f"postgresql://{self.user}:{self.password.get_secret_value()}"
+            f"@{self.host}:{self.port}/{self.db}{ssl_param}"
         )
 
     @property
     def async_url(self) -> str:
         ssl_param = "?sslmode=require" if self.ssl else ""
         return (
-            f"postgresql+asyncpg://{self.username}:{self.password.get_secret_value()}"
-            f"@{self.host}:{self.port}/{self.name}{ssl_param}"
+            f"postgresql+asyncpg://{self.user}:{self.password.get_secret_value()}"
+            f"@{self.host}:{self.port}/{self.db}{ssl_param}"
         )
 
 
