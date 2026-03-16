@@ -43,6 +43,10 @@ and streams progress back to the client.
 - If a database materially improves the platform, use one
 - Default persistence choice should be PostgreSQL
 - Future deviations from the prompt should be documented explicitly in the README
+- The user will create working branches
+- Commit and push should happen throughout implementation, but only for clean, committable
+  milestones
+- Do not push work-in-progress states just to save progress
 
 ## Architecture Direction
 
@@ -70,6 +74,7 @@ and streams progress back to the client.
 - The user wants a LangGraph-heavy backend with ingestion, retrieval, and correction workflows
 - The user expects OCR, chunking, embeddings, durable retrieval storage, and deep-agent retrieval
   planning
+- The user wants a visible sequence of meaningful commits across the branch history
 
 ## Immediate Next Step
 
@@ -83,3 +88,4 @@ When implementation starts:
 4. Define PostgreSQL, pgvector, and R2 persistence models
 5. Implement the template and extraction domain models first
 6. Add tests alongside each backend subsystem from the beginning
+7. Commit and push each clean milestone once it is stable

@@ -61,6 +61,14 @@ Then read the relevant repo-local skill files:
   evaluator-friendly
 - When building later, update `.agent/memory.md` after each meaningful milestone
 
+## Git Workflow
+
+- The user will create the branch
+- Work on the branch the user provides
+- Commit only when the current work is coherent, runnable, and reviewable
+- Push only completed milestones, not half-finished work
+- Prefer a visible sequence of clean commits over one giant final commit
+
 ## Interview Priorities
 
 If time becomes constrained later, prioritize in this order:

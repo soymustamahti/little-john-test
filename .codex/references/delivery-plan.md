@@ -70,6 +70,21 @@ A part is only done when:
 - the API or UI surface is coherent
 - README and design notes reflect the implementation
 
+## Commit And Push Cadence
+
+When implementation starts:
+
+- work on the branch the user created
+- commit only coherent, reviewable slices
+- push after the slice is stable enough to stand on its own
+- do not push half-finished or knowingly broken work
+
+Good commit points:
+
+- a backend subsystem with tests passing
+- a frontend feature with its data flow and UI states wired correctly
+- a schema or migration set that matches the code using it
+
 ## What Not To Do
 
 - Do not add a database unless the user explicitly changes the constraint
