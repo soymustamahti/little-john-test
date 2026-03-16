@@ -26,7 +26,7 @@ def get_async_engine() -> AsyncEngine:
             max_overflow=settings.database.max_overflow,
             pool_pre_ping=True,
             pool_recycle=3600,
-            echo=settings.debug,
+            echo=settings.db_echo_log,
         )
         logging.info("Async engine created successfully")
 

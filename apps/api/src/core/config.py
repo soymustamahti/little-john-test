@@ -51,6 +51,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
     debug: bool = Field(default=False, description="Enable debug mode")
+    db_echo_log: bool = Field(default=False, alias="DB_ECHO_LOG")
     log_level: LogLevel = Field(default="INFO", description="Logging level")
     env_mode: EnvLevel = Field(default="LOCAL")
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)

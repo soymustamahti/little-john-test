@@ -104,3 +104,6 @@ and streams progress back to the client.
 - Added a shared custom Alembic environment in `src/db/` using the existing
   `little_john_test_alembic_version` table
 - Kept Aegra's own root migration chain untouched
+- Added an idempotent template seed command under `apps/api`
+- Started the frontend implementation in `apps/web` with Axios, TanStack Query, and a
+  template CRUD workspace UI

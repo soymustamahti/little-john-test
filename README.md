@@ -6,11 +6,12 @@ correct mistakes through chat, and stream progress in real time.
 
 ## Current Status
 
-This repository has moved into implementation.
+This repository is now in early implementation.
 
 - The monorepo structure is ready
-- Backend implementation has started in `apps/api`
-- The current backend foundation includes extraction template CRUD and document category CRUD
+- `apps/api` already exposes template CRUD with PostgreSQL-backed persistence
+- `apps/web` now includes the first real operator UI for template management
+- Agent guidance files remain part of the repository so future slices follow the same constraints
 
 ## Product Goal
 
