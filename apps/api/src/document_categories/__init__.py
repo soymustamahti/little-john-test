@@ -1,0 +1,1 @@
+"""Document category feature slice."""
