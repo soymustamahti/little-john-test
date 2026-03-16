@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +21,22 @@ class DocumentCategoryRepository:
     async def get(self, category_id: UUID) -> DocumentCategoryModel | None:
         result = await self._session.execute(
             select(DocumentCategoryModel).where(DocumentCategoryModel.id == category_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_name(self, normalized_name: str) -> DocumentCategoryModel | None:
+        result = await self._session.execute(
+            select(DocumentCategoryModel).where(
+                func.lower(DocumentCategoryModel.name) == normalized_name.lower()
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_label_key(self, normalized_label_key: str) -> DocumentCategoryModel | None:
+        result = await self._session.execute(
+            select(DocumentCategoryModel).where(
+                func.lower(DocumentCategoryModel.label_key) == normalized_label_key.lower()
+            )
         )
         return result.scalar_one_or_none()
 

@@ -94,6 +94,74 @@ class DocumentUploadSettings(BaseSettings):
         ge=1,
         description="Maximum accepted upload size in bytes",
     )
+    max_concurrent_ingestion_jobs: int = Field(
+        default=4,
+        ge=1,
+        le=32,
+        description="Maximum number of concurrent background ingestion jobs",
+    )
+    classification_excerpt_chars: int = Field(
+        default=8_000,
+        ge=500,
+        le=40_000,
+        description="Maximum number of extracted characters sent to classification",
+    )
+    chunk_max_characters: int = Field(
+        default=1_200,
+        ge=200,
+        le=8_000,
+        description="Maximum number of characters per stored retrieval chunk",
+    )
+    chunk_min_characters: int = Field(
+        default=250,
+        ge=50,
+        le=4_000,
+        description="Target minimum chunk size before flushing the current chunk",
+    )
+    pdf_direct_text_min_characters: int = Field(
+        default=120,
+        ge=1,
+        description="Minimum extracted PDF text before OCR fallback is considered unnecessary",
+    )
+    pdf_direct_text_min_average_characters_per_page: int = Field(
+        default=60,
+        ge=1,
+        description="Minimum average extracted PDF text per page before OCR fallback is skipped",
+    )
+
+
+class OpenAIProviderSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="OPENAI_",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    api_key: SecretStr = Field(default=SecretStr(""), description="OpenAI API key")
+    classification_model: str = Field(
+        default="gpt-4o-mini",
+        description="Model used for document classification",
+    )
+    embedding_model: str = Field(
+        default="text-embedding-3-small",
+        description="Model used for chunk embeddings",
+    )
+    ocr_model: str = Field(
+        default="gpt-4o",
+        description="Model used for OCR and document transcription",
+    )
+    request_timeout_seconds: int = Field(
+        default=60,
+        ge=5,
+        le=300,
+        description="Timeout for OpenAI API requests",
+    )
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.api_key.get_secret_value().strip())
 
 
 class Settings(BaseSettings):
@@ -110,6 +178,7 @@ class Settings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     r2: R2Settings = Field(default_factory=R2Settings)
     documents: DocumentUploadSettings = Field(default_factory=DocumentUploadSettings)
+    openai_provider: OpenAIProviderSettings = Field(default_factory=OpenAIProviderSettings)
 
     @property
     def is_production(self) -> bool:
