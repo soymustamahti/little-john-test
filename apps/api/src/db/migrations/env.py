@@ -1,5 +1,3 @@
-from logging.config import fileConfig
-
 import src.db.models  # noqa: F401
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -9,9 +7,6 @@ from src.db.base import Base
 VERSION_TABLE = "little_john_test_alembic_version"
 
 config = context.config
-
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
 
 config.set_main_option("sqlalchemy.url", get_settings().database.url)
 target_metadata = Base.metadata
