@@ -83,8 +83,8 @@ and streams progress back to the client.
 2. Use Aegra source as the reference when import/loading behavior is unclear
 3. Avoid root-level Alembic overrides in `apps/api` unless custom migrations are deliberately
    taking over that responsibility
-4. Build classification results and routing on top of the new `extraction_templates` and
-   `document_categories` slices
+4. Build classification results and routing on top of the new document ingestion slice plus the
+   existing `extraction_templates` and `document_categories` modules
 
 ## Latest Milestone
 
@@ -105,6 +105,15 @@ and streams progress back to the client.
   `little_john_test_alembic_version` table
 - Kept Aegra's own root migration chain untouched
 - Added an idempotent template seed command under `apps/api`
+- Added `src/documents/` as a dedicated backend ingestion slice for upload, list, get, and delete
+  operations
+- Added a Cloudflare R2 storage adapter under `src/storage/` so original files are stored in object
+  storage while PostgreSQL keeps the document metadata
+- Added strict upload validation for PDF, common document images, DOCX, and spreadsheet formats
+  (`.xlsx`, `.xls`, `.ods`, `.csv`), with Google Sheets expected to arrive as exported spreadsheet
+  files
+- Added a documents migration plus backend service tests covering validation failures and storage
+  cleanup on persistence failure
 - Started the frontend implementation in `apps/web` with Axios, TanStack Query, and a
   template CRUD workspace UI
 - Refined the frontend workspace so extraction templates and document categories are presented as

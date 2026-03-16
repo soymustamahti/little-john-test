@@ -10,6 +10,8 @@ This repository is now in early implementation.
 
 - The monorepo structure is ready
 - `apps/api` already exposes template CRUD with PostgreSQL-backed persistence
+- `apps/api` now also exposes document upload, list, get, and delete endpoints with PostgreSQL
+  metadata persistence plus Cloudflare R2 object storage
 - `apps/web` now includes the first real operator UI for template management
 - Agent guidance files remain part of the repository so future slices follow the same constraints
 

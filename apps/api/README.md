@@ -35,6 +35,8 @@ pnpm seed:reference
 - `src/agents/extract_agent/graph.py`: current LangGraph definition
 - `src/extraction_templates/`: extraction template feature slice with CRUD
 - `src/document_categories/`: document category feature slice with CRUD
+- `src/documents/`: document ingestion feature slice with upload, list, get, and delete flows
+- `src/storage/`: object-storage abstractions and the Cloudflare R2 adapter
 - `src/db/`: shared database base and global custom Alembic environment
 - `src/db/seed/`: idempotent reference data seeds applied after migrations
 - `docker-compose.yml`: local PostgreSQL + API stack
@@ -130,3 +132,38 @@ set -a
 set +a
 uv run alembic -c src/db/alembic.ini current
 ```
+
+## Documents
+
+The document ingestion feature is implemented as a dedicated slice under `src/documents/`.
+Uploaded files are stored in Cloudflare R2, while document metadata stays in PostgreSQL.
+
+Available endpoints:
+
+- `GET /api/documents`
+- `POST /api/documents`
+- `GET /api/documents/{document_id}`
+- `DELETE /api/documents/{document_id}`
+
+The upload endpoint accepts multipart form data with a single `file` field and validates:
+
+- PDFs: `.pdf`
+- Images: `.png`, `.jpg`, `.jpeg`, `.webp`, `.tif`, `.tiff`, `.bmp`
+- Word documents: `.docx`
+- Spreadsheets: `.xlsx`, `.xls`, `.ods`, `.csv`
+
+Google Sheets uploads are supported through exported spreadsheet files such as `.xlsx`, `.ods`, or
+`.csv`. Native Google Drive document identifiers are not part of this endpoint yet.
+
+Environment settings used by this slice:
+
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_BUCKET_NAME`
+- `R2_PUBLIC_URL`
+- `DOCUMENTS_MAX_UPLOAD_SIZE_BYTES`
+
+`R2_PUBLIC_URL` is optional and should point to a true public bucket base URL, such as a custom
+domain or an `r2.dev` URL. If it points at the S3 API endpoint instead, the API will keep
+`public_url` empty for uploaded documents.

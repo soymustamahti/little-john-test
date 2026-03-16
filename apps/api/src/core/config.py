@@ -43,6 +43,59 @@ class DatabaseSettings(BaseSettings):
         )
 
 
+class R2Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="R2_",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    account_id: str = Field(default="", description="Cloudflare account identifier")
+    access_key_id: str = Field(default="", description="R2 access key identifier")
+    secret_access_key: SecretStr = Field(
+        default=SecretStr(""),
+        description="R2 secret access key",
+    )
+    bucket_name: str = Field(default="", description="R2 bucket name")
+    public_url: str | None = Field(
+        default=None,
+        description="Optional public bucket base URL (custom domain or r2.dev)",
+    )
+
+    @property
+    def endpoint_url(self) -> str:
+        return f"https://{self.account_id}.r2.cloudflarestorage.com"
+
+    @property
+    def is_configured(self) -> bool:
+        return all(
+            [
+                self.account_id.strip(),
+                self.access_key_id.strip(),
+                self.secret_access_key.get_secret_value().strip(),
+                self.bucket_name.strip(),
+            ]
+        )
+
+
+class DocumentUploadSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="DOCUMENTS_",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    max_upload_size_bytes: int = Field(
+        default=25 * 1024 * 1024,
+        ge=1,
+        description="Maximum accepted upload size in bytes",
+    )
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -55,6 +108,8 @@ class Settings(BaseSettings):
     log_level: LogLevel = Field(default="INFO", description="Logging level")
     env_mode: EnvLevel = Field(default="LOCAL")
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
+    r2: R2Settings = Field(default_factory=R2Settings)
+    documents: DocumentUploadSettings = Field(default_factory=DocumentUploadSettings)
 
     @property
     def is_production(self) -> bool:
