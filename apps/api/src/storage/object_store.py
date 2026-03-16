@@ -14,6 +14,12 @@ class StoredObject:
     public_url: str | None = None
 
 
+@dataclass(frozen=True)
+class RetrievedObject:
+    content: bytes
+    content_type: str | None = None
+
+
 class ObjectStorage(Protocol):
     async def upload_object(
         self,
@@ -25,3 +31,5 @@ class ObjectStorage(Protocol):
     ) -> StoredObject: ...
 
     async def delete_object(self, *, key: str) -> None: ...
+
+    async def download_object(self, *, key: str) -> RetrievedObject: ...

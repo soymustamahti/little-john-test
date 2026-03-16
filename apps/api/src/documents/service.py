@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import dataclass
 from uuid import UUID, uuid4
@@ -11,7 +12,7 @@ from src.documents.validation import (
     build_storage_key,
     validate_uploaded_document,
 )
-from src.storage.object_store import ObjectStorage, ObjectStorageError
+from src.storage.object_store import ObjectStorage, ObjectStorageError, RetrievedObject
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,13 @@ class UploadedDocumentInput:
     filename: str
     content_type: str | None
     content: bytes
+
+
+@dataclass(frozen=True)
+class DocumentContentRead:
+    content: bytes
+    content_type: str
+    original_filename: str
 
 
 class DocumentService:
@@ -52,7 +60,8 @@ class DocumentService:
 
     async def upload_document(self, upload: UploadedDocumentInput) -> DocumentRead:
         try:
-            validated = validate_uploaded_document(
+            validated = await asyncio.to_thread(
+                validate_uploaded_document,
                 filename=upload.filename,
                 content_type=upload.content_type,
                 content=upload.content,
@@ -129,3 +138,27 @@ class DocumentService:
             ) from exc
 
         await self._repository.delete(document)
+
+    async def get_document_content(self, document_id: UUID) -> DocumentContentRead:
+        document = await self._repository.get(document_id)
+        if document is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document {document_id} was not found.",
+            )
+
+        try:
+            stored_object: RetrievedObject = await self._object_storage.download_object(
+                key=document.storage_key
+            )
+        except ObjectStorageError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=str(exc),
+            ) from exc
+
+        return DocumentContentRead(
+            content=stored_object.content,
+            content_type=stored_object.content_type or document.content_type,
+            original_filename=document.original_filename,
+        )

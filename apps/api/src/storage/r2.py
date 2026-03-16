@@ -3,12 +3,17 @@ import logging
 from typing import Any, Mapping
 from urllib.parse import urlparse
 
-import boto3
+from boto3.session import Session
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from src.core.config import R2Settings
-from src.storage.object_store import ObjectStorage, ObjectStorageError, StoredObject
+from src.storage.object_store import (
+    ObjectStorage,
+    ObjectStorageError,
+    RetrievedObject,
+    StoredObject,
+)
 
 
 class R2ObjectStorage(ObjectStorage):
@@ -16,6 +21,7 @@ class R2ObjectStorage(ObjectStorage):
 
     def __init__(self, settings: R2Settings) -> None:
         self._settings = settings
+        self._client = self._build_client()
 
     async def upload_object(
         self,
@@ -53,6 +59,14 @@ class R2ObjectStorage(ObjectStorage):
         except (BotoCoreError, ClientError) as exc:
             raise ObjectStorageError("Failed to delete document from Cloudflare R2.") from exc
 
+    async def download_object(self, *, key: str) -> RetrievedObject:
+        self._ensure_configured()
+
+        try:
+            return await asyncio.to_thread(self._get_object, key=key)
+        except (BotoCoreError, ClientError) as exc:
+            raise ObjectStorageError("Failed to fetch document from Cloudflare R2.") from exc
+
     def _put_object(
         self,
         *,
@@ -61,8 +75,7 @@ class R2ObjectStorage(ObjectStorage):
         content_type: str,
         metadata: Mapping[str, str] | None,
     ) -> None:
-        client = self._build_client()
-        client.put_object(
+        self._client.put_object(
             Bucket=self._settings.bucket_name,
             Key=key,
             Body=content,
@@ -71,11 +84,23 @@ class R2ObjectStorage(ObjectStorage):
         )
 
     def _delete_object(self, *, key: str) -> None:
-        client = self._build_client()
-        client.delete_object(Bucket=self._settings.bucket_name, Key=key)
+        self._client.delete_object(Bucket=self._settings.bucket_name, Key=key)
+
+    def _get_object(self, *, key: str) -> RetrievedObject:
+        response = self._client.get_object(Bucket=self._settings.bucket_name, Key=key)
+        body = response["Body"]
+        try:
+            content = body.read()
+        finally:
+            body.close()
+
+        return RetrievedObject(
+            content=content,
+            content_type=response.get("ContentType"),
+        )
 
     def _build_client(self) -> Any:
-        return boto3.client(
+        return Session().client(
             service_name="s3",
             endpoint_url=self._settings.endpoint_url,
             aws_access_key_id=self._settings.access_key_id,

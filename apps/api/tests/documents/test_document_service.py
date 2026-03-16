@@ -7,8 +7,8 @@ from uuid import UUID
 import pytest
 from fastapi import HTTPException
 from src.documents.schemas import DocumentCreateRecord, DocumentKind
-from src.documents.service import DocumentService, UploadedDocumentInput
-from src.storage.object_store import ObjectStorageError, StoredObject
+from src.documents.service import DocumentContentRead, DocumentService, UploadedDocumentInput
+from src.storage.object_store import ObjectStorageError, RetrievedObject, StoredObject
 
 
 @dataclass
@@ -57,6 +57,7 @@ class FakeObjectStorage:
         self.deleted_keys: list[str] = []
         self.fail_on_upload = False
         self.fail_on_delete = False
+        self.fail_on_download = False
 
     async def upload_object(
         self,
@@ -83,6 +84,15 @@ class FakeObjectStorage:
 
         self.deleted_keys.append(key)
         self.objects.pop(key, None)
+
+    async def download_object(self, *, key: str) -> RetrievedObject:
+        if self.fail_on_download:
+            raise ObjectStorageError("download failed")
+
+        return RetrievedObject(
+            content=self.objects[key],
+            content_type="application/pdf",
+        )
 
 
 def build_service(
@@ -211,3 +221,22 @@ async def test_upload_document_cleans_up_object_when_repository_create_fails() -
     assert "database write failed" in str(exc_info.value)
     assert storage.objects == {}
     assert len(storage.deleted_keys) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_document_content_returns_bytes_for_existing_document() -> None:
+    service, _, _ = build_service()
+    created_document = await service.upload_document(
+        UploadedDocumentInput(
+            filename="invoice.pdf",
+            content_type="application/pdf",
+            content=b"%PDF-1.4\npreview",
+        )
+    )
+
+    content = await service.get_document_content(created_document.id)
+
+    assert isinstance(content, DocumentContentRead)
+    assert content.content == b"%PDF-1.4\npreview"
+    assert content.content_type == "application/pdf"
+    assert content.original_filename == "invoice.pdf"

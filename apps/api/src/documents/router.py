@@ -1,3 +1,4 @@
+from functools import lru_cache
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
@@ -13,15 +14,20 @@ from src.storage.r2 import R2ObjectStorage
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 
+@lru_cache
+def get_r2_object_storage() -> R2ObjectStorage:
+    settings = get_settings()
+    return R2ObjectStorage(settings.r2)
+
+
 def get_document_service(
     session: AsyncSession = Depends(get_async_db_session),
 ) -> DocumentService:
     settings = get_settings()
     repository = DocumentRepository(session)
-    object_storage = R2ObjectStorage(settings.r2)
     return DocumentService(
         repository,
-        object_storage,
+        get_r2_object_storage(),
         max_upload_size_bytes=settings.documents.max_upload_size_bytes,
     )
 
@@ -70,6 +76,22 @@ async def get_document(
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentRead:
     return await service.get_document(document_id)
+
+
+@router.get("/{document_id}/content")
+async def get_document_content(
+    document_id: UUID,
+    service: DocumentService = Depends(get_document_service),
+) -> Response:
+    document = await service.get_document_content(document_id)
+    return Response(
+        content=document.content,
+        media_type=document.content_type,
+        headers={
+            "Content-Disposition": f'inline; filename="{document.original_filename}"',
+            "Cache-Control": "private, max-age=60",
+        },
+    )
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
