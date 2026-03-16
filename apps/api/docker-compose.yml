@@ -5,7 +5,6 @@
 services:
   postgres:
     image: pgvector/pgvector:pg18
-    container_name: little_john_test-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-little_john_test}
@@ -23,7 +22,6 @@ services:
 
   little_john_test:
     build: .
-    container_name: little_john_test-api
     restart: unless-stopped
     ports:
       - "${PORT:-2026}:${PORT:-2026}"

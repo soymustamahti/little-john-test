@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 
 from langchain_core.messages import SystemMessage
 from langgraph.graph import StateGraph
-from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 
 from little_john_test.context import Context
@@ -24,7 +23,7 @@ async def chatbot(state: State, runtime: Runtime[Context]) -> dict:
     return {"messages": [response]}
 
 
-graph: CompiledStateGraph = (
+graph = (
     StateGraph(State, input_schema=InputState, context_schema=Context)
     .add_node("chatbot", chatbot)
     .add_edge("__start__", "chatbot")

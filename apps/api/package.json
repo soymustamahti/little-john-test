@@ -1,0 +1,15 @@
+{
+  "name": "@little-john-test/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "deps:sync": "uv sync",
+    "dev": "uv run aegra dev",
+    "serve": "uv run aegra serve",
+    "build": "uv build",
+    "lint": "uv run ruff check .",
+    "typecheck": "uv run mypy src",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "little-john-test",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.18.3"
+  },
+  "scripts": {
+    "setup": "pnpm install && pnpm api:deps",
+    "dev": "pnpm -r --parallel --filter @little-john-test/api --filter @little-john-test/web dev",
+    "dev:api": "pnpm --filter @little-john-test/api dev",
+    "dev:web": "pnpm --filter @little-john-test/web dev",
+    "build": "pnpm -r --if-present build",
+    "build:api": "pnpm --filter @little-john-test/api build",
+    "build:web": "pnpm --filter @little-john-test/web build",
+    "lint": "pnpm -r --if-present lint",
+    "lint:api": "pnpm --filter @little-john-test/api lint",
+    "lint:web": "pnpm --filter @little-john-test/web lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "typecheck:api": "pnpm --filter @little-john-test/api typecheck",
+    "typecheck:web": "pnpm --filter @little-john-test/web typecheck",
+    "check": "pnpm lint && pnpm typecheck && pnpm build",
+    "api:deps": "pnpm --filter @little-john-test/api deps:sync",
+    "docker:up": "pnpm --filter @little-john-test/api docker:up",
+    "docker:down": "pnpm --filter @little-john-test/api docker:down"
+  }
+}
