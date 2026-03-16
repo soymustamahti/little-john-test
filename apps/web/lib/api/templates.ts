@@ -6,6 +6,13 @@ export async function listTemplates() {
   return response.data;
 }
 
+export async function getTemplate(templateId: string) {
+  const response = await apiClient.get<Template>(
+    `/api/extraction-templates/${templateId}`,
+  );
+  return response.data;
+}
+
 export async function createTemplate(payload: TemplatePayload) {
   const response = await apiClient.post<Template>(
     "/api/extraction-templates",

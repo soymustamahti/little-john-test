@@ -474,14 +474,19 @@ export function TemplateDetailPanel({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="accent">{mode === "create" ? "New template" : "Template details"}</Badge>
+              <Badge variant="accent">
+                {mode === "create" ? "New extraction template" : "Extraction details"}
+              </Badge>
               <Badge>{draft.locale.toUpperCase()}</Badge>
             </div>
             <CardTitle className="mt-3 text-2xl">
-              {mode === "create" ? "Create template" : draft.name || "Edit template"}
+              {mode === "create"
+                ? "Create extraction template"
+                : draft.name || "Edit extraction template"}
             </CardTitle>
             <CardDescription>
-              Add modules and fields directly from the form. No JSON editing needed.
+              Define the structured fields that should be extracted after a
+              document has been classified into the right category.
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -505,7 +510,7 @@ export function TemplateDetailPanel({
       <CardContent className="space-y-6 pt-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label>Template name</Label>
+            <Label>Extraction template name</Label>
             <Input value={draft.name} onChange={(event) => onNameChange(event.target.value)} />
           </div>
           <div className="space-y-2">

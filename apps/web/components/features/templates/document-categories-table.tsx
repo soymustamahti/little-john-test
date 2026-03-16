@@ -1,8 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { getTemplateStats, type Template } from "@/types/templates";
+import type { DocumentCategory } from "@/types/document-categories";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
@@ -12,20 +18,20 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function TemplatesTable({
-  templates,
-  selectedTemplateId,
+export function DocumentCategoriesTable({
+  categories,
+  selectedCategoryId,
   isLoading,
   errorMessage,
   onCreate,
   onSelect,
 }: {
-  templates: Template[];
-  selectedTemplateId: string | null;
+  categories: DocumentCategory[];
+  selectedCategoryId: string | null;
   isLoading: boolean;
   errorMessage: string | null;
   onCreate: () => void;
-  onSelect: (template: Template) => void;
+  onSelect: (category: DocumentCategory) => void;
 }) {
   return (
     <Card className="overflow-hidden">
@@ -33,21 +39,25 @@ export function TemplatesTable({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="accent">Extraction layer</Badge>
-              <Badge>{templates.length} schemas</Badge>
+              <Badge variant="warm">Classification layer</Badge>
+              <Badge>{categories.length} categories</Badge>
             </div>
-            <CardTitle className="mt-3 text-2xl">Extraction templates</CardTitle>
+            <CardTitle className="mt-3 text-2xl">Document categories</CardTitle>
             <CardDescription>
-              Manage the schemas that define which fields should be captured once
-              a document has been classified.
+              Define the normalized document types your classifier can assign
+              before routing and extraction.
             </CardDescription>
           </div>
-          <Button onClick={onCreate}>Create extraction template</Button>
+          <Button variant="secondary" onClick={onCreate}>
+            Create category
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="p-6 text-sm text-[color:var(--color-muted)]">Loading templates...</div>
+          <div className="p-6 text-sm text-[color:var(--color-muted)]">
+            Loading categories...
+          </div>
         ) : null}
 
         {!isLoading && errorMessage ? (
@@ -56,63 +66,52 @@ export function TemplatesTable({
           </div>
         ) : null}
 
-        {!isLoading && !errorMessage && !templates.length ? (
+        {!isLoading && !errorMessage && !categories.length ? (
           <div className="border-t border-[color:var(--color-line)] p-6 text-sm text-[color:var(--color-muted)]">
-            No extraction templates yet. Start from the seeded examples or create
-            one from scratch.
+            No categories yet. Add a few normalized document types so uploads can
+            be classified before extraction.
           </div>
         ) : null}
 
-        {!isLoading && templates.length ? (
+        {!isLoading && categories.length ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[color:var(--color-background)]/70 text-[color:var(--color-muted)]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Locale</th>
-                  <th className="px-4 py-3 font-medium">Modules</th>
-                  <th className="px-4 py-3 font-medium">Fields</th>
+                  <th className="px-4 py-3 font-medium">Category</th>
+                  <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Updated</th>
                   <th className="px-4 py-3 font-medium">Open</th>
                 </tr>
               </thead>
               <tbody>
-                {templates.map((template) => {
-                  const stats = getTemplateStats(template.modules);
-                  const isSelected = selectedTemplateId === template.id;
+                {categories.map((category) => {
+                  const isSelected = selectedCategoryId === category.id;
 
                   return (
                     <tr
-                      key={template.id}
+                      key={category.id}
                       className={cn(
                         "cursor-pointer border-t border-[color:var(--color-line)] transition hover:bg-[color:var(--color-background)]/70",
-                        isSelected ? "bg-[color:var(--color-accent-soft)]" : "bg-white",
+                        isSelected ? "bg-[color:var(--color-warm-soft)]/65" : "bg-white",
                       )}
-                      onClick={() => onSelect(template)}
+                      onClick={() => onSelect(category)}
                     >
                       <td className="px-4 py-4 align-top">
                         <div className="space-y-1">
                           <div className="font-medium text-[color:var(--color-ink)]">
-                            {template.name}
+                            {category.name}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            {template.description ?? "No description"}
+                            Used as a normalized routing target.
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <Badge variant={template.locale === "fr" ? "warm" : "accent"}>
-                          {template.locale.toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4 align-top text-[color:var(--color-ink)]">
-                        {stats.moduleCount}
-                      </td>
-                      <td className="px-4 py-4 align-top text-[color:var(--color-ink)]">
-                        {stats.fieldCount}
+                        <Badge variant="accent">Classifier output</Badge>
                       </td>
                       <td className="px-4 py-4 align-top text-[color:var(--color-muted)]">
-                        {formatDate(template.updated_at)}
+                        {formatDate(category.updated_at)}
                       </td>
                       <td className="px-4 py-4 align-top">
                         <Button
@@ -121,7 +120,7 @@ export function TemplatesTable({
                           variant="secondary"
                           onClick={(event) => {
                             event.stopPropagation();
-                            onSelect(template);
+                            onSelect(category);
                           }}
                         >
                           View

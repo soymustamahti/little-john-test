@@ -170,7 +170,7 @@ export function cloneDraft(draft: TemplateDraft): TemplateDraft {
 
 export function getDraftValidationError(draft: TemplateDraft): string | null {
   if (!draft.name.trim()) {
-    return "Template name is required.";
+    return "Extraction template name is required.";
   }
 
   for (const moduleItem of draft.modules) {

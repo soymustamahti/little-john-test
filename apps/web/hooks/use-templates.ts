@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createTemplate,
   deleteTemplate,
+  getTemplate,
   listTemplates,
   updateTemplate,
 } from "@/lib/api/templates";
@@ -16,6 +17,14 @@ export function useTemplatesQuery() {
   return useQuery({
     queryKey: TEMPLATES_QUERY_KEY,
     queryFn: listTemplates,
+  });
+}
+
+export function useTemplateQuery(templateId: string | undefined) {
+  return useQuery({
+    queryKey: [...TEMPLATES_QUERY_KEY, templateId],
+    queryFn: () => getTemplate(templateId as string),
+    enabled: Boolean(templateId),
   });
 }
 

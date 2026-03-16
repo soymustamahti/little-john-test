@@ -17,8 +17,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Little John Templates",
-  description: "Template operations workspace for the document intelligence platform.",
+  title: "Little John Workspace",
+  description: "Document setup workspace for classification and extraction configuration.",
 };
 
 export default function RootLayout({

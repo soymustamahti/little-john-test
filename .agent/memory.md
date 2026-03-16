@@ -107,3 +107,10 @@ and streams progress back to the client.
 - Added an idempotent template seed command under `apps/api`
 - Started the frontend implementation in `apps/web` with Axios, TanStack Query, and a
   template CRUD workspace UI
+- Refined the frontend workspace so extraction templates and document categories are presented as
+  separate configuration layers instead of a single generic "templates" screen
+- Added frontend CRUD data flow and UI for document categories alongside the existing extraction
+  template editor
+- Split the frontend workspace into route-based list and detail pages for `extraction-templates`
+  and `document-categories`, with a working sidebar and dedicated edit screens instead of the old
+  split-pane layout

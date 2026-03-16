@@ -1,5 +1,5 @@
-import { TemplatesDashboard } from "@/components/features/templates/templates-dashboard";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <TemplatesDashboard />;
+  redirect("/extraction-templates");
 }

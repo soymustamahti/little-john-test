@@ -3,8 +3,8 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+import { DocumentCategoriesTable } from "@/components/features/templates/document-categories-table";
 import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid";
-import { TemplatesTable } from "@/components/features/templates/templates-table";
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import { useTemplatesQuery } from "@/hooks/use-templates";
@@ -22,13 +22,13 @@ function getErrorMessage(error: unknown) {
   return "Something went wrong while talking to the API.";
 }
 
-export function TemplatesDashboard() {
+export function DocumentCategoriesSection() {
   const router = useRouter();
+  const categoriesQuery = useDocumentCategoriesQuery();
   const templatesQuery = useTemplatesQuery();
-  const documentCategoriesQuery = useDocumentCategoriesQuery();
 
+  const categories = categoriesQuery.data ?? [];
   const templates = templatesQuery.data ?? [];
-  const documentCategories = documentCategoriesQuery.data ?? [];
   const totalModules = templates.reduce(
     (count, template) => count + getTemplateStats(template.modules).moduleCount,
     0,
@@ -42,36 +42,36 @@ export function TemplatesDashboard() {
     <div className="space-y-6 px-4 py-6 sm:px-6">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="accent">Extraction layer</Badge>
-          <Badge>{templates.length} active templates</Badge>
+          <Badge variant="warm">Classification layer</Badge>
+          <Badge>{categories.length} routing targets</Badge>
         </div>
         <div>
           <h2 className="text-3xl font-semibold text-[color:var(--color-ink)]">
-            Extraction templates
+            Document categories
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-[color:var(--color-muted)]">
-            Keep the catalog visible as a table, then open one template at a
-            time to review fields, update modules, or remove the schema.
+            Manage the classifier output labels in a single list, then open each
+            category on its own page to rename it, save changes, or delete it.
           </p>
         </div>
       </div>
 
       <SetupStatsGrid
         extractionTemplateCount={templates.length}
-        documentCategoryCount={documentCategories.length}
+        documentCategoryCount={categories.length}
         totalModules={totalModules}
         totalFields={totalFields}
       />
 
-      <TemplatesTable
-        templates={templates}
-        selectedTemplateId={null}
-        isLoading={templatesQuery.isLoading}
+      <DocumentCategoriesTable
+        categories={categories}
+        selectedCategoryId={null}
+        isLoading={categoriesQuery.isLoading}
         errorMessage={
-          templatesQuery.error ? getErrorMessage(templatesQuery.error) : null
+          categoriesQuery.error ? getErrorMessage(categoriesQuery.error) : null
         }
-        onCreate={() => router.push("/extraction-templates/new")}
-        onSelect={(template) => router.push(`/extraction-templates/${template.id}`)}
+        onCreate={() => router.push("/document-categories/new")}
+        onSelect={(category) => router.push(`/document-categories/${category.id}`)}
       />
     </div>
   );
