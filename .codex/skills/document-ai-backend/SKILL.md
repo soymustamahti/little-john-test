@@ -90,6 +90,12 @@ Recommended durable data:
 - Test undo behavior explicitly
 - Test routing edge cases and validation edge cases
 
+## Framework Verification
+
+- Use `apps/aegra` as the first source of truth for Aegra-specific behavior
+- Read `apps/aegra/CLAUDE.md` before making framework-level assumptions
+- Check local docs and source before inventing Aegra integration details
+
 ## When In Doubt
 
 Read:
@@ -98,4 +104,5 @@ Read:
 - `.codex/references/interview-brief.md`
 - `.codex/references/architecture-target.md`
 - `.codex/references/langgraph-system-blueprint.md`
+- `.codex/references/local-reference-repos.md`
 - `.codex/references/delivery-plan.md`

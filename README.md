@@ -76,9 +76,20 @@ The repository now contains explicit context for future agent sessions:
 - [.codex/references/repo-overrides.md](./.codex/references/repo-overrides.md): user-approved deviations from the prompt
 - [.codex/references/architecture-target.md](./.codex/references/architecture-target.md): target architecture
 - [.codex/references/langgraph-system-blueprint.md](./.codex/references/langgraph-system-blueprint.md): LangGraph ingestion and retrieval blueprint
+- [.codex/references/local-reference-repos.md](./.codex/references/local-reference-repos.md): how to use the cloned framework and prompt repos
 - [.codex/references/delivery-plan.md](./.codex/references/delivery-plan.md): build order and scope rules
 - [.codex/references/acceptance-checklist.md](./.codex/references/acceptance-checklist.md): evaluator-ready checklist
 - `.codex/skills/*/SKILL.md`: repo-local implementation guides
+
+## Local Reference Repos
+
+Two local repos are intentionally present as reference material:
+
+- `apps/aegra`: framework source, docs, and implementation details
+- `apps/system-prompts-and-models-of-ai-tools`: prompt corpus used to derive stronger prompt patterns
+
+They are there so future implementation work can verify framework behavior directly and design
+prompts from a broader corpus instead of improvising from memory.
 
 ## Workspace
 

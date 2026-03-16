@@ -228,6 +228,18 @@ Current expected external integrations:
 Keep all provider interactions behind adapters so credentials and provider choices can be swapped
 without rewriting the core logic.
 
+## Framework Verification Rule
+
+This repo contains a local clone of Aegra in `apps/aegra`.
+
+When framework behavior is unclear:
+
+- inspect `apps/aegra/CLAUDE.md`
+- inspect `apps/aegra/docs/`
+- inspect `apps/aegra/libs/`
+
+Do not guess about Aegra integration when the source is available locally.
+
 ## Opinionated Recommendation
 
 For this project, the strongest production-ready path is:

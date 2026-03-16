@@ -35,6 +35,9 @@ and streams progress back to the client.
 - Retrieval should use both keyword and semantic search
 - Retrieval results should be reranked before final evidence is used
 - A deeper planning-capable LangGraph agent is expected for retrieval and correction
+- `apps/aegra` is available locally as framework source and documentation
+- `apps/system-prompts-and-models-of-ai-tools` is available locally as a prompt corpus
+- Prompt design should be based on repeated patterns across that corpus, not on copying one prompt
 - Authentication and a production-minded backend shape are expected later
 - The interview prompt is a lower bound, not a hard upper bound
 - If a database materially improves the platform, use one
@@ -49,6 +52,7 @@ and streams progress back to the client.
 - Prefer PostgreSQL plus pgvector for chunk and embedding storage
 - Prefer PostgreSQL full-text search for keyword retrieval
 - Keep LLM adapters isolated from domain logic
+- Use the local Aegra repo as the first stop when framework behavior is unclear
 - Add deterministic validation outside the LLM
 - Support small-document direct context and large-document retrieval-on-demand
 - Keep every correction mutation undoable
