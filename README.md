@@ -12,6 +12,8 @@ This repository is now in early implementation.
 - `apps/api` already exposes template CRUD with PostgreSQL-backed persistence
 - `apps/api` now also exposes document upload, list, get, and delete endpoints with PostgreSQL
   metadata persistence plus Cloudflare R2 object storage
+- `apps/web` now includes a documents workspace for upload, list, detail, and delete flows in
+  addition to the existing template and document-category screens
 - `apps/web` now includes the first real operator UI for template management
 - Agent guidance files remain part of the repository so future slices follow the same constraints
 

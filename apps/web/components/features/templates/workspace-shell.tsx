@@ -82,10 +82,12 @@ export function WorkspaceShell({
                 label={messages.shell.documentCategories}
                 isActive={pathname.startsWith("/document-categories")}
               />
-              <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-[color:var(--color-muted)]">
-                <FileStack className="h-4 w-4" />
-                {messages.shell.documents}
-              </div>
+              <NavLink
+                href="/documents"
+                icon={FileStack}
+                label={messages.shell.documents}
+                isActive={pathname.startsWith("/documents")}
+              />
             </nav>
 
             <LanguageSwitcher />

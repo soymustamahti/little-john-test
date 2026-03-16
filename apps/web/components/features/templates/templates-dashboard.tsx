@@ -1,36 +1,26 @@
 "use client";
-
-import axios from "axios";
 import { useRouter } from "next/navigation";
 
 import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid";
 import { TemplatesTable } from "@/components/features/templates/templates-table";
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
+import { useDocumentsQuery } from "@/hooks/use-documents";
 import { useTemplatesQuery } from "@/hooks/use-templates";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats } from "@/types/templates";
-
-function getErrorMessage(error: unknown, fallbackMessage: string) {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.detail ?? error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallbackMessage;
-}
 
 export function TemplatesDashboard() {
   const router = useRouter();
   const { messages, formatText } = useLocale();
   const templatesQuery = useTemplatesQuery();
   const documentCategoriesQuery = useDocumentCategoriesQuery();
+  const documentsQuery = useDocumentsQuery();
 
   const templates = templatesQuery.data ?? [];
   const documentCategories = documentCategoriesQuery.data ?? [];
+  const documents = documentsQuery.data ?? [];
   const totalModules = templates.reduce(
     (count, template) => count + getTemplateStats(template.modules).moduleCount,
     0,
@@ -64,6 +54,7 @@ export function TemplatesDashboard() {
       <SetupStatsGrid
         extractionTemplateCount={templates.length}
         documentCategoryCount={documentCategories.length}
+        documentCount={documents.length}
         totalModules={totalModules}
         totalFields={totalFields}
       />
@@ -74,7 +65,7 @@ export function TemplatesDashboard() {
         isLoading={templatesQuery.isLoading}
         errorMessage={
           templatesQuery.error
-            ? getErrorMessage(templatesQuery.error, messages.common.apiError)
+            ? getApiErrorMessage(templatesQuery.error, messages.common.apiError)
             : null
         }
         onCreate={() => router.push("/extraction-templates/new")}

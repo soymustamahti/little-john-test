@@ -16,6 +16,7 @@
       "saving": "Enregistrement...",
       "delete": "Supprimer",
       "deleting": "Suppression...",
+      "preview": "Aperçu",
       "reset": "Réinitialiser",
       "view": "Voir",
       "backToList": "Retour à la liste"
@@ -40,8 +41,17 @@
   "stats": {
     "extractionTemplates": "Modèles d'extraction",
     "documentCategories": "Catégories documentaires",
+    "documents": "Documents",
     "modules": "Modules",
     "fields": "Champs"
+  },
+  "documentsShared": {
+    "fileKinds": {
+      "pdf": "PDF",
+      "image": "Image",
+      "spreadsheet": "Tableur",
+      "docx": "Document Word"
+    }
   },
   "templateShared": {
     "localeNames": {
@@ -180,6 +190,94 @@
     },
     "title": "Catégories documentaires",
     "description": "Gérez les libellés de sortie du classifieur dans une seule liste, puis ouvrez chaque catégorie sur sa propre page pour la renommer, enregistrer les modifications ou la supprimer."
+  },
+  "documentsSection": {
+    "badges": {
+      "layer": "Couche d'ingestion",
+      "uploaded": "{count} fichiers téléversés"
+    },
+    "title": "Documents",
+    "description": "Faites entrer les fichiers sources dans l'espace, gardez la liste d'ingestion visible, puis ouvrez un document à la fois lorsque vous devez inspecter ses métadonnées ou le supprimer du stockage."
+  },
+  "documentUploadPanel": {
+    "badges": {
+      "intake": "Entrée sécurisée",
+      "secure": "Validé avant stockage"
+    },
+    "title": "Téléverser des documents",
+    "description": "Le téléverseur accepte les formats actuellement supportés et envoie les fichiers un par un afin qu'un seul onglet navigateur ne sature pas le backend.",
+    "uploadAction": "Téléverser {count} fichier(s)",
+    "uploadingAction": "Téléversement...",
+    "clearAction": "Effacer la sélection",
+    "dropzone": {
+      "title": "Choisissez un ou plusieurs documents",
+      "description": "Les PDF, images documentaires courantes, fichiers Word et exports de tableur sont acceptés."
+    },
+    "selection": {
+      "title": "Fichiers sélectionnés",
+      "empty": "Aucun fichier sélectionné pour l'instant."
+    },
+    "status": {
+      "title": "Résultats du téléversement",
+      "uploaded": "Téléversé avec succès.",
+      "successBadge": "Téléversé",
+      "errorBadge": "Échec"
+    }
+  },
+  "documentPreviewModal": {
+    "badge": "Aperçu du document",
+    "closeAction": "Fermer",
+    "loading": "Préparation de l'aperçu...",
+    "docx": {
+      "title": "Aperçu textuel du document",
+      "empty": "Aucun texte exploitable n'a été extrait de ce document Word."
+    },
+    "spreadsheet": {
+      "title": "Aperçu du tableur",
+      "empty": "Aucune donnée d'aperçu n'est disponible pour ce tableur.",
+      "emptySheet": "Cette feuille est vide.",
+      "truncated": "L'aperçu est volontairement limité aux premières feuilles, lignes et colonnes afin de garder de bonnes performances sur les grands classeurs."
+    }
+  },
+  "documentsTable": {
+    "badges": {
+      "layer": "Originaux stockés",
+      "files": "{count} fichiers"
+    },
+    "title": "Documents téléversés",
+    "description": "Revoyez les fichiers sources stockés avant la classification et l'extraction. Ouvrez une ligne pour inspecter ses métadonnées ou la supprimer.",
+    "loading": "Chargement des documents...",
+    "empty": "Aucun document téléversé pour l'instant. Ajoutez un ou plusieurs fichiers pour commencer à constituer le catalogue d'ingestion.",
+    "headers": {
+      "document": "Document",
+      "kind": "Type",
+      "size": "Taille",
+      "created": "Téléversé",
+      "preview": "Aperçu",
+      "open": "Ouvrir"
+    }
+  },
+  "documentDetailScreen": {
+    "loading": "Chargement du document...",
+    "errorTitle": "Impossible de charger le document",
+    "backToDocuments": "Retour aux documents",
+    "breadcrumbSection": "Documents",
+    "badge": "Original stocké",
+    "description": "Gardez les métadonnées du fichier source visibles avant que les futurs traitements d'ingestion, d'OCR et de routage ne s'appuient dessus.",
+    "cardTitle": "Métadonnées du document",
+    "summaryTitle": "Résumé du téléversement",
+    "summaryDescription": "Cet enregistrement représente le fichier original actuellement stocké dans Cloudflare R2 ainsi que les métadonnées persistées dans PostgreSQL.",
+    "openPublicUrl": "Ouvrir l'URL publique",
+    "privateStorageNotice": "Ce document est bien stocké, mais aucune URL publique n'est exposée car le bucket est privé ou `R2_PUBLIC_URL` n'est pas configuré comme domaine public d'assets.",
+    "confirmDelete": "Supprimer \"{name}\" ?",
+    "fields": {
+      "kind": "Type",
+      "contentType": "Type MIME",
+      "size": "Taille",
+      "created": "Téléversé",
+      "updated": "Mis à jour",
+      "sha": "SHA-256"
+    }
   },
   "documentCategoriesTable": {
     "badges": {

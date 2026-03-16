@@ -16,6 +16,7 @@
       "saving": "Saving...",
       "delete": "Delete",
       "deleting": "Deleting...",
+      "preview": "Preview",
       "reset": "Reset",
       "view": "View",
       "backToList": "Back to list"
@@ -40,8 +41,17 @@
   "stats": {
     "extractionTemplates": "Extraction templates",
     "documentCategories": "Document categories",
+    "documents": "Documents",
     "modules": "Modules",
     "fields": "Fields"
+  },
+  "documentsShared": {
+    "fileKinds": {
+      "pdf": "PDF",
+      "image": "Image",
+      "spreadsheet": "Spreadsheet",
+      "docx": "Word document"
+    }
   },
   "templateShared": {
     "localeNames": {
@@ -180,6 +190,94 @@
     },
     "title": "Document categories",
     "description": "Manage the classifier output labels in a single list, then open each category on its own page to rename it, save changes, or delete it."
+  },
+  "documentsSection": {
+    "badges": {
+      "layer": "Ingestion layer",
+      "uploaded": "{count} uploaded files"
+    },
+    "title": "Documents",
+    "description": "Bring original files into the workspace, keep the intake list visible, and open one document at a time when you need to inspect metadata or remove it from storage."
+  },
+  "documentUploadPanel": {
+    "badges": {
+      "intake": "Secure intake",
+      "secure": "Validated before storage"
+    },
+    "title": "Upload documents",
+    "description": "The uploader accepts the current supported intake formats and sends files to the API one by one so a single browser tab does not flood the backend.",
+    "uploadAction": "Upload {count} file(s)",
+    "uploadingAction": "Uploading...",
+    "clearAction": "Clear selection",
+    "dropzone": {
+      "title": "Choose one or more documents",
+      "description": "PDFs, common document images, Word files, and spreadsheet exports are accepted."
+    },
+    "selection": {
+      "title": "Selected files",
+      "empty": "No files selected yet."
+    },
+    "status": {
+      "title": "Upload results",
+      "uploaded": "Uploaded successfully.",
+      "successBadge": "Uploaded",
+      "errorBadge": "Failed"
+    }
+  },
+  "documentPreviewModal": {
+    "badge": "Document preview",
+    "closeAction": "Close",
+    "loading": "Preparing preview...",
+    "docx": {
+      "title": "Document text preview",
+      "empty": "No previewable text was extracted from this Word document."
+    },
+    "spreadsheet": {
+      "title": "Spreadsheet preview",
+      "empty": "No preview data is available for this spreadsheet.",
+      "emptySheet": "This sheet is empty.",
+      "truncated": "The preview is intentionally limited to the first sheets, rows, and columns so large workbooks stay responsive."
+    }
+  },
+  "documentsTable": {
+    "badges": {
+      "layer": "Stored originals",
+      "files": "{count} files"
+    },
+    "title": "Uploaded documents",
+    "description": "Review the stored source files before classification and extraction. Open any row to inspect its metadata or remove it.",
+    "loading": "Loading documents...",
+    "empty": "No uploaded documents yet. Add one or more files to start building the ingestion catalog.",
+    "headers": {
+      "document": "Document",
+      "kind": "Kind",
+      "size": "Size",
+      "created": "Uploaded",
+      "preview": "Preview",
+      "open": "Open"
+    }
+  },
+  "documentDetailScreen": {
+    "loading": "Loading document...",
+    "errorTitle": "Unable to load document",
+    "backToDocuments": "Back to documents",
+    "breadcrumbSection": "Documents",
+    "badge": "Stored original",
+    "description": "Keep the original file metadata visible before later ingestion, OCR, and routing jobs build on top of it.",
+    "cardTitle": "Document metadata",
+    "summaryTitle": "Upload summary",
+    "summaryDescription": "This record represents the original file currently stored in Cloudflare R2 plus the metadata persisted in PostgreSQL.",
+    "openPublicUrl": "Open public URL",
+    "privateStorageNotice": "This document is stored successfully, but no public URL is exposed because the bucket is private or `R2_PUBLIC_URL` is not configured as a public asset domain.",
+    "confirmDelete": "Delete \"{name}\"?",
+    "fields": {
+      "kind": "Kind",
+      "contentType": "Content type",
+      "size": "Size",
+      "created": "Uploaded",
+      "updated": "Updated",
+      "sha": "SHA-256"
+    }
   },
   "documentCategoriesTable": {
     "badges": {

@@ -1,36 +1,26 @@
 "use client";
-
-import axios from "axios";
 import { useRouter } from "next/navigation";
 
 import { DocumentCategoriesTable } from "@/components/features/templates/document-categories-table";
 import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid";
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
+import { useDocumentsQuery } from "@/hooks/use-documents";
 import { useTemplatesQuery } from "@/hooks/use-templates";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats } from "@/types/templates";
-
-function getErrorMessage(error: unknown, fallbackMessage: string) {
-  if (axios.isAxiosError(error)) {
-    return error.response?.data?.detail ?? error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallbackMessage;
-}
 
 export function DocumentCategoriesSection() {
   const router = useRouter();
   const { messages, formatText } = useLocale();
   const categoriesQuery = useDocumentCategoriesQuery();
   const templatesQuery = useTemplatesQuery();
+  const documentsQuery = useDocumentsQuery();
 
   const categories = categoriesQuery.data ?? [];
   const templates = templatesQuery.data ?? [];
+  const documents = documentsQuery.data ?? [];
   const totalModules = templates.reduce(
     (count, template) => count + getTemplateStats(template.modules).moduleCount,
     0,
@@ -64,6 +54,7 @@ export function DocumentCategoriesSection() {
       <SetupStatsGrid
         extractionTemplateCount={templates.length}
         documentCategoryCount={categories.length}
+        documentCount={documents.length}
         totalModules={totalModules}
         totalFields={totalFields}
       />
@@ -74,7 +65,7 @@ export function DocumentCategoriesSection() {
         isLoading={categoriesQuery.isLoading}
         errorMessage={
           categoriesQuery.error
-            ? getErrorMessage(categoriesQuery.error, messages.common.apiError)
+            ? getApiErrorMessage(categoriesQuery.error, messages.common.apiError)
             : null
         }
         onCreate={() => router.push("/document-categories/new")}

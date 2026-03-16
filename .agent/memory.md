@@ -114,6 +114,17 @@ and streams progress back to the client.
   files
 - Added a documents migration plus backend service tests covering validation failures and storage
   cleanup on persistence failure
+- Added a frontend documents workspace under `apps/web` with upload, list, detail, and delete
+  flows wired through Axios, React Query, and localized copy
+- Replaced the placeholder documents nav item with a real workspace route and surfaced document
+  counts alongside templates and categories in the shared setup stats
+- Tightened backend upload concurrency behavior by moving validation off the event loop and
+  reusing a single long-lived R2 client instead of constructing a new boto3 client per request
+- Added a backend document content endpoint so the frontend can fetch stored originals for preview
+  without depending on the bucket being publicly readable
+- Added Gmail-style document preview modals in the frontend: inline iframe preview for PDFs,
+  inline image preview for images, raw-text preview for DOCX, and workbook-style preview for
+  spreadsheet formats
 - Started the frontend implementation in `apps/web` with Axios, TanStack Query, and a
   template CRUD workspace UI
 - Refined the frontend workspace so extraction templates and document categories are presented as
