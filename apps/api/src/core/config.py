@@ -30,7 +30,7 @@ class DatabaseSettings(BaseSettings):
     def url(self) -> str:
         ssl_param = "?sslmode=require" if self.ssl else ""
         return (
-            f"postgresql://{self.user}:{self.password.get_secret_value()}"
+            f"postgresql+psycopg://{self.user}:{self.password.get_secret_value()}"
             f"@{self.host}:{self.port}/{self.db}{ssl_param}"
         )
 

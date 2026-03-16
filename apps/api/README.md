@@ -31,7 +31,9 @@ pnpm typecheck
 - `aegra.json`: graph registration for Aegra
 - `pyproject.toml`: Python dependencies and tooling
 - `src/main.py`: global FastAPI app mounted by Aegra
-- `src/agents/little_john_test/graph.py`: current LangGraph definition
+- `src/agents/extract_agent/graph.py`: current LangGraph definition
+- `src/templates/`: template feature slice with CRUD
+- `src/db/`: shared database base and global custom Alembic environment
 - `docker-compose.yml`: local PostgreSQL + API stack
 
 ## Aegra Integration Notes
@@ -41,3 +43,32 @@ pnpm typecheck
 - Graphs remain file-based in `aegra.json`, which matches how Aegra loads graph exports.
 - Avoid adding a root `alembic.ini` in `apps/api` unless you intentionally want to override
   Aegra's own migration chain.
+
+## Templates
+
+The `templates` feature is implemented as a self-contained slice under `src/templates/`:
+
+- `model.py`: SQLAlchemy template model
+- `schemas.py`: request and response contracts
+- `repository.py`: persistence access
+- `service.py`: CRUD business logic
+- `router.py`: FastAPI endpoints
+
+Available endpoints:
+
+- `GET /api/templates`
+- `POST /api/templates`
+- `GET /api/templates/{template_id}`
+- `PATCH /api/templates/{template_id}`
+- `DELETE /api/templates/{template_id}`
+
+Custom application migrations are global and live under `src/db/`. They currently include the
+`templates` table and can be inspected with:
+
+```bash
+cd apps/api
+set -a
+. ./.env
+set +a
+uv run alembic -c src/db/alembic.ini current
+```
