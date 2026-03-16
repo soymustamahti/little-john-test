@@ -24,6 +24,7 @@ pnpm dev
 pnpm build
 pnpm lint
 pnpm typecheck
+pnpm seed:templates
 ```
 
 ## Files
@@ -61,6 +62,13 @@ Available endpoints:
 - `GET /api/templates/{template_id}`
 - `PATCH /api/templates/{template_id}`
 - `DELETE /api/templates/{template_id}`
+
+Example templates can be loaded with:
+
+```bash
+cd apps/api
+pnpm seed:templates
+```
 
 Custom application migrations are global and live under `src/db/`. They currently include the
 `templates` table and can be inspected with:
