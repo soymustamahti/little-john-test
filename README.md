@@ -6,11 +6,12 @@ correct mistakes through chat, and stream progress in real time.
 
 ## Current Status
 
-This repository is currently in a context-and-planning phase.
+This repository is now in early implementation.
 
 - The monorepo structure is ready
-- Agent guidance files are now part of the repository
-- Product implementation has not started yet
+- `apps/api` already exposes template CRUD with PostgreSQL-backed persistence
+- `apps/web` now includes the first real operator UI for template management
+- Agent guidance files remain part of the repository so future slices follow the same constraints
 
 ## Product Goal
 
