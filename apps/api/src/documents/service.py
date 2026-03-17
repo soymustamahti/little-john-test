@@ -13,7 +13,12 @@ from src.core.pagination import (
 )
 from src.documents.processing import DocumentProcessingError, DocumentProcessingService
 from src.documents.repository import DocumentRepository
-from src.documents.schemas import DocumentChunkCreateRecord, DocumentCreateRecord, DocumentRead
+from src.documents.schemas import (
+    DocumentChunkCreateRecord,
+    DocumentCreateRecord,
+    DocumentRead,
+    build_document_read,
+)
 from src.documents.validation import (
     DocumentValidationError,
     build_storage_key,
@@ -59,7 +64,7 @@ class DocumentService:
         pagination: PaginationParams,
     ) -> PaginatedResponse[DocumentRead]:
         result = await self._repository.list(pagination)
-        items = [DocumentRead.model_validate(document) for document in result.items]
+        items = [build_document_read(document) for document in result.items]
         return build_paginated_response(
             items=items,
             pagination=pagination,
@@ -73,7 +78,7 @@ class DocumentService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Document {document_id} was not found.",
             )
-        return DocumentRead.model_validate(document)
+        return build_document_read(document)
 
     async def upload_document(self, upload: UploadedDocumentInput) -> DocumentRead:
         try:
@@ -164,7 +169,7 @@ class DocumentService:
                 )
             raise
 
-        return DocumentRead.model_validate(document)
+        return build_document_read(document)
 
     async def delete_document(self, document_id: UUID) -> None:
         document = await self._repository.get(document_id)

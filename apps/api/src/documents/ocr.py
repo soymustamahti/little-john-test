@@ -1,4 +1,5 @@
 import base64
+from typing import Any, cast
 
 from openai import AsyncOpenAI, OpenAIError
 
@@ -67,7 +68,7 @@ class OpenAIDocumentOcrClient:
         try:
             response = await self._client.responses.create(
                 model=self._settings.ocr_model,
-                input=[{"role": "user", "content": input_items}],
+                input=cast(Any, [{"role": "user", "content": input_items}]),
             )
         except OpenAIError as exc:
             raise OcrError("OpenAI OCR request failed.") from exc

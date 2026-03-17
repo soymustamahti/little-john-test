@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -52,6 +55,12 @@ class DocumentCategoryRepository:
             )
         )
         return result.scalar_one_or_none()
+
+    async def list_all(self) -> Sequence[DocumentCategoryModel]:
+        result = await self._session.execute(
+            select(DocumentCategoryModel).order_by(DocumentCategoryModel.name.asc())
+        )
+        return list(result.scalars().all())
 
     async def create(self, payload: DocumentCategoryCreate) -> DocumentCategoryModel:
         category = DocumentCategoryModel(**payload.model_dump(mode="json"))

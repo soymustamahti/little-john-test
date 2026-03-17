@@ -13,5 +13,17 @@ class DocumentTextChunker:
         if not normalized_text:
             return []
 
-        chunks = self._chunker(normalized_text)
-        return [(chunk.text, chunk.start_index, chunk.end_index) for chunk in chunks]
+        raw_chunks = self._chunker(normalized_text)
+        if isinstance(raw_chunks, list):
+            chunk_items: list[object] = list(raw_chunks)
+        else:
+            chunk_items = [raw_chunks]
+
+        return [
+            (
+                str(getattr(chunk, "text")),
+                int(getattr(chunk, "start_index")),
+                int(getattr(chunk, "end_index")),
+            )
+            for chunk in chunk_items
+        ]
