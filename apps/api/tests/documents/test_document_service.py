@@ -1,5 +1,6 @@
 import io
 import zipfile
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from uuid import UUID
@@ -7,7 +8,9 @@ from uuid import UUID
 import pytest
 from fastapi import HTTPException
 from src.core.pagination import PaginatedResult, PaginationParams
-from src.documents.schemas import DocumentCreateRecord, DocumentKind
+from src.documents.processing import DocumentProcessingError
+from src.documents.processing_schemas import ChunkEmbedding, ProcessedDocumentContent
+from src.documents.schemas import DocumentChunkCreateRecord, DocumentCreateRecord, DocumentKind
 from src.documents.service import DocumentContentRead, DocumentService, UploadedDocumentInput
 from src.storage.object_store import ObjectStorageError, RetrievedObject, StoredObject
 
@@ -25,6 +28,10 @@ class FakeDocumentRecord:
     storage_bucket: str
     storage_key: str
     public_url: str | None
+    content_source: str | None = None
+    extracted_text: str | None = None
+    extraction_metadata: dict | None = None
+    processed_at: datetime | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -32,6 +39,7 @@ class FakeDocumentRecord:
 class FakeDocumentRepository:
     def __init__(self) -> None:
         self._records: dict[UUID, FakeDocumentRecord] = {}
+        self._chunks: dict[UUID, list[DocumentChunkCreateRecord]] = {}
         self.fail_on_create = False
 
     async def list(self, pagination: PaginationParams) -> PaginatedResult[FakeDocumentRecord]:
@@ -43,16 +51,23 @@ class FakeDocumentRepository:
     async def get(self, document_id: UUID) -> FakeDocumentRecord | None:
         return self._records.get(document_id)
 
-    async def create(self, payload: DocumentCreateRecord) -> FakeDocumentRecord:
+    async def create(
+        self,
+        payload: DocumentCreateRecord,
+        *,
+        chunks: Sequence[DocumentChunkCreateRecord] = (),
+    ) -> FakeDocumentRecord:
         if self.fail_on_create:
             raise RuntimeError("database write failed")
 
         record = FakeDocumentRecord(**payload.model_dump())
         self._records[record.id] = record
+        self._chunks[record.id] = list(chunks)
         return record
 
     async def delete(self, document: FakeDocumentRecord) -> None:
         self._records.pop(document.id, None)
+        self._chunks.pop(document.id, None)
 
 
 class FakeObjectStorage:
@@ -99,13 +114,62 @@ class FakeObjectStorage:
         )
 
 
+class FakeDocumentProcessingService:
+    async def process_document(
+        self,
+        *,
+        filename: str,
+        file_extension: str,
+        content_type: str,
+        content: bytes,
+    ) -> ProcessedDocumentContent:
+        return ProcessedDocumentContent(
+            text=f"processed::{filename}",
+            content_source=f"source::{file_extension}",
+            metadata={
+                "character_count": len(filename),
+                "chunk_count": 1,
+                "embedding_provider": "openai",
+                "embedding_model": "text-embedding-3-small",
+            },
+            chunks=[
+                ChunkEmbedding(
+                    chunk_index=0,
+                    content=f"chunk::{filename}",
+                    content_start_offset=0,
+                    content_end_offset=len(filename),
+                    embedding=[0.1, 0.2, 0.3],
+                )
+            ],
+        )
+
+
+class FailingDocumentProcessingService:
+    async def process_document(
+        self,
+        *,
+        filename: str,
+        file_extension: str,
+        content_type: str,
+        content: bytes,
+    ) -> ProcessedDocumentContent:
+        raise DocumentProcessingError("processing failed", status_code=422)
+
+
 def build_service(
     repository: FakeDocumentRepository | None = None,
     storage: FakeObjectStorage | None = None,
+    processing_service: FakeDocumentProcessingService | None = None,
 ) -> tuple[DocumentService, FakeDocumentRepository, FakeObjectStorage]:
     repository = repository or FakeDocumentRepository()
     storage = storage or FakeObjectStorage()
-    service = DocumentService(repository, storage, max_upload_size_bytes=1024 * 1024)
+    processing_service = processing_service or FakeDocumentProcessingService()
+    service = DocumentService(
+        repository,
+        storage,
+        processing_service,
+        max_upload_size_bytes=1024 * 1024,
+    )
     return service, repository, storage
 
 
@@ -178,7 +242,11 @@ async def test_upload_document_persists_pdf_metadata_and_object() -> None:
     assert created_document.file_extension == ".pdf"
     assert created_document.public_url is not None
     assert len(repository._records) == 1
-    assert list(storage.objects) == [next(iter(repository._records.values())).storage_key]
+    stored_record = next(iter(repository._records.values()))
+    assert stored_record.extracted_text == "processed::Invoice March 2026.pdf"
+    assert stored_record.content_source == "source::.pdf"
+    assert repository._chunks[stored_record.id][0].content == "chunk::Invoice March 2026.pdf"
+    assert list(storage.objects) == [stored_record.storage_key]
 
 
 @pytest.mark.asyncio
@@ -247,6 +315,28 @@ async def test_upload_document_rejects_invalid_pdf_signature() -> None:
 
     assert exc_info.value.status_code == 415
     assert "valid PDF header" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_upload_document_stops_before_object_upload_when_processing_fails() -> None:
+    storage = FakeObjectStorage()
+    service, _, _ = build_service(
+        storage=storage,
+        processing_service=FailingDocumentProcessingService(),
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.upload_document(
+            UploadedDocumentInput(
+                filename="invoice.pdf",
+                content_type="application/pdf",
+                content=b"%PDF-1.4\npayload",
+            )
+        )
+
+    assert exc_info.value.status_code == 422
+    assert "processing failed" in exc_info.value.detail
+    assert storage.objects == {}
 
 
 @pytest.mark.asyncio

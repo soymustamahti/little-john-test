@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
@@ -10,8 +11,9 @@ from src.core.pagination import (
     PaginationParams,
     build_paginated_response,
 )
+from src.documents.processing import DocumentProcessingError, DocumentProcessingService
 from src.documents.repository import DocumentRepository
-from src.documents.schemas import DocumentCreateRecord, DocumentRead
+from src.documents.schemas import DocumentChunkCreateRecord, DocumentCreateRecord, DocumentRead
 from src.documents.validation import (
     DocumentValidationError,
     build_storage_key,
@@ -39,11 +41,13 @@ class DocumentService:
         self,
         repository: DocumentRepository,
         object_storage: ObjectStorage,
+        processing_service: DocumentProcessingService,
         *,
         max_upload_size_bytes: int,
     ) -> None:
         self._repository = repository
         self._object_storage = object_storage
+        self._processing_service = processing_service
         self._max_upload_size_bytes = max_upload_size_bytes
 
     @property
@@ -91,6 +95,16 @@ class DocumentService:
         )
 
         try:
+            processed = await self._processing_service.process_document(
+                filename=validated.original_filename,
+                file_extension=validated.file_extension,
+                content_type=validated.content_type,
+                content=validated.content,
+            )
+        except DocumentProcessingError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+        try:
             stored_object = await self._object_storage.upload_object(
                 key=storage_key,
                 content=validated.content,
@@ -120,7 +134,25 @@ class DocumentService:
                     storage_bucket=stored_object.bucket,
                     storage_key=stored_object.key,
                     public_url=stored_object.public_url,
-                )
+                    content_source=processed.content_source,
+                    extracted_text=processed.text,
+                    extraction_metadata=processed.metadata,
+                    processed_at=datetime.now(UTC),
+                ),
+                chunks=[
+                    DocumentChunkCreateRecord(
+                        document_id=document_id,
+                        chunk_index=chunk.chunk_index,
+                        content=chunk.content,
+                        content_start_offset=chunk.content_start_offset,
+                        content_end_offset=chunk.content_end_offset,
+                        embedding_provider=processed.metadata["embedding_provider"],
+                        embedding_model=processed.metadata["embedding_model"],
+                        embedding_dimensions=len(chunk.embedding),
+                        embedding=chunk.embedding,
+                    )
+                    for chunk in processed.chunks
+                ],
             )
         except Exception:
             try:

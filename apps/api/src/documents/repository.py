@@ -1,11 +1,12 @@
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.pagination import PaginatedResult, PaginationParams
-from src.documents.model import DocumentModel
-from src.documents.schemas import DocumentCreateRecord
+from src.documents.model import DocumentChunkModel, DocumentModel
+from src.documents.schemas import DocumentChunkCreateRecord, DocumentCreateRecord
 
 
 class DocumentRepository:
@@ -31,9 +32,18 @@ class DocumentRepository:
         )
         return result.scalar_one_or_none()
 
-    async def create(self, payload: DocumentCreateRecord) -> DocumentModel:
+    async def create(
+        self,
+        payload: DocumentCreateRecord,
+        *,
+        chunks: Sequence[DocumentChunkCreateRecord] = (),
+    ) -> DocumentModel:
         document = DocumentModel(**payload.model_dump())
         self._session.add(document)
+
+        for chunk in chunks:
+            self._session.add(DocumentChunkModel(**chunk.model_dump()))
+
         await self._session.commit()
         await self._session.refresh(document)
         return document

@@ -25,6 +25,22 @@ class DocumentCreateRecord(BaseModel):
     storage_bucket: Annotated[str, Field(min_length=1, max_length=120)]
     storage_key: Annotated[str, Field(min_length=1, max_length=512)]
     public_url: str | None = None
+    content_source: Annotated[str, Field(min_length=1, max_length=64)] | None = None
+    extracted_text: str | None = None
+    extraction_metadata: dict | None = None
+    processed_at: datetime | None = None
+
+
+class DocumentChunkCreateRecord(BaseModel):
+    document_id: UUID
+    chunk_index: Annotated[int, Field(ge=0)]
+    content: Annotated[str, Field(min_length=1)]
+    content_start_offset: Annotated[int, Field(ge=0)]
+    content_end_offset: Annotated[int, Field(gt=0)]
+    embedding_provider: Annotated[str, Field(min_length=1, max_length=64)]
+    embedding_model: Annotated[str, Field(min_length=1, max_length=120)]
+    embedding_dimensions: Annotated[int, Field(gt=0)]
+    embedding: Annotated[list[float], Field(min_length=1)]
 
 
 class DocumentRead(BaseModel):

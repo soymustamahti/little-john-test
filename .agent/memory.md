@@ -31,7 +31,7 @@ and streams progress back to the client.
 - Prefer hook-driven API access and clear separation of concerns
 - Backend should remain Python-based and compatible with the current Aegra setup
 - Backend orchestration should use LangGraph
-- OCR direction is Mistral OCR
+- OCR direction is OpenAI OCR
 - Original files should be stored in R2
 - Retrieval should use both keyword and semantic search
 - Retrieval results should be reranked before final evidence is used
@@ -143,3 +143,12 @@ and streams progress back to the client.
 - Generated and applied Alembic revision `8147a5a57d83` to add `document_categories.label_key`,
   updated the reference seeds to key off `label_key`, and wired the frontend document category UI
   to display translated labels by key with fallback to the stored name
+- Added a simple document content-processing pipeline to `src/documents/` that runs during upload:
+  local PDF text extraction with OpenAI OCR fallback for low-text PDFs, OpenAI OCR for images,
+  local DOCX and spreadsheet parsing, Chonkie recursive chunking, and OpenAI embeddings
+- Added a documents migration that stores extracted text, processing metadata, and per-document
+  chunk embeddings in PostgreSQL
+- Kept the implementation intentionally small: synchronous processing inside upload for now,
+  without background orchestration or retrieval indexing yet
+- Added focused backend tests covering OCR fallback routing, DOCX/spreadsheet extraction, chunking,
+  embedding persistence wiring, and upload failure behavior when processing fails

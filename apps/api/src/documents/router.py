@@ -9,6 +9,7 @@ from src.core.config import get_settings
 from src.core.database import get_async_db_session
 from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
 from src.documents.repository import DocumentRepository
+from src.documents.runtime import get_document_processing_service
 from src.documents.schemas import DocumentRead
 from src.documents.service import DocumentService, UploadedDocumentInput
 from src.storage.r2 import R2ObjectStorage
@@ -30,6 +31,7 @@ def get_document_service(
     return DocumentService(
         repository,
         get_r2_object_storage(),
+        get_document_processing_service(),
         max_upload_size_bytes=settings.documents.max_upload_size_bytes,
     )
 
