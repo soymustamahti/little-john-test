@@ -77,9 +77,7 @@ ALLOWED_FILE_TYPES: dict[str, AllowedFileType] = {
     ),
     ".docx": AllowedFileType(
         kind=DocumentKind.DOCX,
-        content_types=(
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ),
+        content_types=("application/vnd.openxmlformats-officedocument.wordprocessingml.document",),
         default_content_type=(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         ),
@@ -194,6 +192,11 @@ def _normalize_filename(filename: str) -> str:
     normalized = (filename or "").replace("\\", "/").split("/")[-1].strip()
     if not normalized:
         raise DocumentValidationError("Uploaded file must include a filename.", status_code=400)
+    if any(ord(char) < 32 or ord(char) == 127 for char in normalized):
+        raise DocumentValidationError(
+            "Uploaded filename contains invalid control characters.",
+            status_code=400,
+        )
     return normalized
 
 

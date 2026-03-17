@@ -1,4 +1,5 @@
 from functools import lru_cache
+from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
@@ -42,6 +43,17 @@ async def read_upload_bytes(upload: UploadFile, max_size_bytes: int) -> bytes:
                 detail=f"Uploaded file exceeds the {max_size_bytes} byte limit.",
             )
     return bytes(content)
+
+
+def build_inline_content_disposition(filename: str) -> str:
+    ascii_fallback = "".join(
+        char if 32 <= ord(char) < 127 and char not in {'"', "\\"} else "_"
+        for char in filename
+    ).strip()
+    if not ascii_fallback:
+        ascii_fallback = "document"
+    encoded_filename = quote(filename, safe="")
+    return f'inline; filename="{ascii_fallback}"; filename*=UTF-8\'\'{encoded_filename}'
 
 
 @router.get("", response_model=list[DocumentRead])
@@ -88,7 +100,7 @@ async def get_document_content(
         content=document.content,
         media_type=document.content_type,
         headers={
-            "Content-Disposition": f'inline; filename="{document.original_filename}"',
+            "Content-Disposition": build_inline_content_disposition(document.original_filename),
             "Cache-Control": "private, max-age=60",
         },
     )

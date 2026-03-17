@@ -150,6 +150,23 @@ async def test_upload_document_accepts_docx_files() -> None:
 
 
 @pytest.mark.asyncio
+async def test_upload_document_rejects_filenames_with_control_characters() -> None:
+    service, _, _ = build_service()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.upload_document(
+            UploadedDocumentInput(
+                filename="invoice\n2026.pdf",
+                content_type="application/pdf",
+                content=b"%PDF-1.4\nexample payload",
+            )
+        )
+
+    assert exc_info.value.status_code == 400
+    assert "control characters" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
 async def test_upload_document_rejects_unsupported_extension() -> None:
     service, _, storage = build_service()
 
