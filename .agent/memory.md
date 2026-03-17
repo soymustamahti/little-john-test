@@ -88,6 +88,29 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Migrated the frontend document-classification streaming client from a hand-rolled `fetch`/SSE
+  parser to the official `@langchain/langgraph-sdk` browser client, including a shared
+  `apps/web/lib/langgraph/client.ts` singleton and SDK-backed thread creation/run streaming in the
+  web API layer
+- Refined the document classification graph topology so the HITL acceptance path is represented as
+  an explicit graph branch after `review_suggested_category`, which preserves behavior while making
+  the LangSmith Studio visualization easier to explain during the interview
+- Added a backend-focused walkthrough under `docs/backend-upload-and-process-document-walkthrough.md`
+  that explains the upload flow, the process-document flow, the LangGraph/Aegra classification
+  workflow, and the main design decisions behind the current implementation
+- Added document classification persistence directly on `documents` with a linked
+  `document_category_id`, lifecycle status, method, and lightweight JSON metadata for AI thread
+  state, rationale, and suggested categories
+- Added `DocumentClassificationService` plus document routes for manual classification and AI
+  session bootstrap
+- Replaced the placeholder Aegra graph registration with a real
+  `document_classification_agent` graph that samples stored chunks, classifies against the seeded
+  category catalog, streams progress with custom events, and interrupts for human review when a
+  new category should be created
+- Added the first frontend document-processing flow on the document detail page: upload now
+  redirects to the document detail route, operators can launch `Process Document`, manually assign
+  a category, or use the AI flow and review/accept/edit a suggested category inline
+- Added focused backend tests for the new classification service and document classification routes
 - Renamed the original template persistence model to `extraction_templates` to reflect that it
   defines extraction requirements, not document types
 - Added `src/document_categories/` as a separate self-contained feature slice for predefined

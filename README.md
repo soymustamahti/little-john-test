@@ -12,8 +12,13 @@ This repository is now in early implementation.
 - `apps/api` already exposes template CRUD with PostgreSQL-backed persistence
 - `apps/api` now also exposes document upload, list, get, and delete endpoints with PostgreSQL
   metadata persistence plus Cloudflare R2 object storage
+- `apps/api` now also exposes the first document-classification slice: manual category assignment,
+  AI classification session bootstrap, and an Aegra/LangGraph document-classification agent with
+  streamed progress plus human review for suggested new categories
 - `apps/web` now includes a documents workspace for upload, list, detail, and delete flows in
   addition to the existing template and document-category screens
+- `apps/web` now includes a document-processing flow on the document detail page for manual or AI
+  classification, including review of AI-suggested categories
 - `apps/web` now includes the first real operator UI for template management
 - Agent guidance files remain part of the repository so future slices follow the same constraints
 

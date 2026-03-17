@@ -32,10 +32,10 @@ pnpm seed:reference
 - `aegra.json`: graph registration for Aegra
 - `pyproject.toml`: Python dependencies and tooling
 - `src/main.py`: global FastAPI app mounted by Aegra
-- `src/agents/extract_agent/graph.py`: current LangGraph definition
+- `src/agents/document_classification_agent/graph.py`: document classification LangGraph workflow
 - `src/extraction_templates/`: extraction template feature slice with CRUD
 - `src/document_categories/`: document category feature slice with CRUD
-- `src/documents/`: document ingestion feature slice with upload, list, get, and delete flows
+- `src/documents/`: document ingestion plus classification feature slice
 - `src/storage/`: object-storage abstractions and the Cloudflare R2 adapter
 - `src/db/`: shared database base and global custom Alembic environment
 - `src/db/seed/`: idempotent reference data seeds applied after migrations
@@ -143,7 +143,26 @@ Available endpoints:
 - `GET /api/documents`
 - `POST /api/documents`
 - `GET /api/documents/{document_id}`
+- `POST /api/documents/{document_id}/classification/manual`
+- `POST /api/documents/{document_id}/classification/ai-session`
 - `DELETE /api/documents/{document_id}`
+
+The document detail record now also stores:
+
+- the final linked `document_category_id`
+- classification lifecycle state and method
+- lightweight classification metadata for AI thread state, rationale, and suggested categories
+
+The Aegra graph registered in `aegra.json` is now `document_classification_agent`. It reads the
+stored extracted text and persisted chunks, samples an excerpt based on
+`DOCUMENTS_CLASSIFICATION_EXCERPT_CHARS`, compares it against the current document category
+catalog, and then:
+
+- directly links the document to an existing category when a good match exists
+- or suggests a new category and pauses with a human-in-the-loop interrupt before creating it
+
+The frontend streams this graph through Aegra's `/threads/.../runs/stream` endpoint using custom
+progress events plus a review/resume step for pending category suggestions.
 
 The upload endpoint accepts multipart form data with a single `file` field and validates:
 
