@@ -6,11 +6,16 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import get_settings
-from src.core.database import get_async_db_session
+from src.core.database import get_async_db_session, get_async_session_factory
 from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
+from src.documents.classification_service import DocumentClassificationService
 from src.documents.repository import DocumentRepository
 from src.documents.runtime import get_document_processing_service
-from src.documents.schemas import DocumentRead
+from src.documents.schemas import (
+    DocumentClassificationSessionRead,
+    DocumentRead,
+    ManualDocumentClassificationRequest,
+)
 from src.documents.service import DocumentService, UploadedDocumentInput
 from src.storage.r2 import R2ObjectStorage
 
@@ -34,6 +39,11 @@ def get_document_service(
         get_document_processing_service(),
         max_upload_size_bytes=settings.documents.max_upload_size_bytes,
     )
+
+
+@lru_cache
+def get_document_classification_service() -> DocumentClassificationService:
+    return DocumentClassificationService(get_async_session_factory())
 
 
 async def read_upload_bytes(upload: UploadFile, max_size_bytes: int) -> bytes:
@@ -92,6 +102,29 @@ async def get_document(
     service: DocumentService = Depends(get_document_service),
 ) -> DocumentRead:
     return await service.get_document(document_id)
+
+
+@router.post(
+    "/{document_id}/classification/manual",
+    response_model=DocumentRead,
+)
+async def classify_document_manually(
+    document_id: UUID,
+    payload: ManualDocumentClassificationRequest,
+    service: DocumentClassificationService = Depends(get_document_classification_service),
+) -> DocumentRead:
+    return await service.apply_manual_classification(document_id, payload.category_id)
+
+
+@router.post(
+    "/{document_id}/classification/ai-session",
+    response_model=DocumentClassificationSessionRead,
+)
+async def create_document_ai_classification_session(
+    document_id: UUID,
+    service: DocumentClassificationService = Depends(get_document_classification_service),
+) -> DocumentClassificationSessionRead:
+    return await service.start_ai_classification_session(document_id)
 
 
 @router.get("/{document_id}/content")
