@@ -9,14 +9,20 @@ import {
   listDocumentCategories,
   updateDocumentCategory,
 } from "@/lib/api/document-categories";
+import type { PaginationParams } from "@/types/pagination";
 import type { DocumentCategoryPayload } from "@/types/document-categories";
 
 const DOCUMENT_CATEGORIES_QUERY_KEY = ["document-categories"];
 
-export function useDocumentCategoriesQuery() {
+export function useDocumentCategoriesQuery(pagination: PaginationParams) {
   return useQuery({
-    queryKey: DOCUMENT_CATEGORIES_QUERY_KEY,
-    queryFn: listDocumentCategories,
+    queryKey: [
+      ...DOCUMENT_CATEGORIES_QUERY_KEY,
+      pagination.page,
+      pagination.pageSize,
+    ],
+    queryFn: () => listDocumentCategories(pagination),
+    placeholderData: (previousData) => previousData,
   });
 }
 

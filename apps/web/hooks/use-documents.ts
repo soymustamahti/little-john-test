@@ -9,13 +9,15 @@ import {
   uploadDocumentBatch,
 } from "@/lib/api/documents";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import type { PaginationParams } from "@/types/pagination";
 
 const DOCUMENTS_QUERY_KEY = ["documents"];
 
-export function useDocumentsQuery() {
+export function useDocumentsQuery(pagination: PaginationParams) {
   return useQuery({
-    queryKey: DOCUMENTS_QUERY_KEY,
-    queryFn: listDocuments,
+    queryKey: [...DOCUMENTS_QUERY_KEY, pagination.page, pagination.pageSize],
+    queryFn: () => listDocuments(pagination),
+    placeholderData: (previousData) => previousData,
   });
 }
 

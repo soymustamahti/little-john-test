@@ -5,9 +5,15 @@ import type {
   DocumentUploadFailureResult,
   DocumentUploadSuccessResult,
 } from "@/types/documents";
+import type { PaginatedResponse, PaginationParams } from "@/types/pagination";
 
-export async function listDocuments() {
-  const response = await apiClient.get<Document[]>("/api/documents");
+export async function listDocuments(pagination: PaginationParams) {
+  const response = await apiClient.get<PaginatedResponse<Document>>("/api/documents", {
+    params: {
+      page: pagination.page,
+      page_size: pagination.pageSize,
+    },
+  });
   return response.data;
 }
 

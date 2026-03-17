@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+
 import { useRouter } from "next/navigation";
 
 import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid";
@@ -6,29 +8,29 @@ import { TemplatesTable } from "@/components/features/templates/templates-table"
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import { useDocumentsQuery } from "@/hooks/use-documents";
-import { useTemplatesQuery } from "@/hooks/use-templates";
+import { useTemplateMetricsQuery, useTemplatesQuery } from "@/hooks/use-templates";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
-import { getTemplateStats } from "@/types/templates";
+import { DEFAULT_PAGE_SIZE } from "@/types/pagination";
+
+const TEMPLATES_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export function TemplatesDashboard() {
   const router = useRouter();
   const { messages, formatText } = useLocale();
-  const templatesQuery = useTemplatesQuery();
-  const documentCategoriesQuery = useDocumentCategoriesQuery();
-  const documentsQuery = useDocumentsQuery();
+  const [page, setPage] = useState(1);
+  const templatesQuery = useTemplatesQuery({ page, pageSize: TEMPLATES_PAGE_SIZE });
+  const templateMetricsQuery = useTemplateMetricsQuery();
+  const documentCategoriesQuery = useDocumentCategoriesQuery({ page: 1, pageSize: 1 });
+  const documentsQuery = useDocumentsQuery({ page: 1, pageSize: 1 });
 
-  const templates = templatesQuery.data ?? [];
-  const documentCategories = documentCategoriesQuery.data ?? [];
-  const documents = documentsQuery.data ?? [];
-  const totalModules = templates.reduce(
-    (count, template) => count + getTemplateStats(template.modules).moduleCount,
-    0,
-  );
-  const totalFields = templates.reduce(
-    (count, template) => count + getTemplateStats(template.modules).fieldCount,
-    0,
-  );
+  const templates = templatesQuery.data?.items ?? [];
+  const templateCount = templatesQuery.data?.total_items ?? 0;
+  const totalPages = templatesQuery.data?.total_pages ?? 0;
+  const documentCategoryCount = documentCategoriesQuery.data?.total_items ?? 0;
+  const documentCount = documentsQuery.data?.total_items ?? 0;
+  const totalModules = templateMetricsQuery.data?.totalModules ?? 0;
+  const totalFields = templateMetricsQuery.data?.totalFields ?? 0;
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6">
@@ -37,7 +39,7 @@ export function TemplatesDashboard() {
           <Badge variant="accent">{messages.templatesDashboard.badges.layer}</Badge>
           <Badge>
             {formatText(messages.templatesDashboard.badges.activeTemplates, {
-              count: templates.length,
+              count: templateCount,
             })}
           </Badge>
         </div>
@@ -52,9 +54,9 @@ export function TemplatesDashboard() {
       </div>
 
       <SetupStatsGrid
-        extractionTemplateCount={templates.length}
-        documentCategoryCount={documentCategories.length}
-        documentCount={documents.length}
+        extractionTemplateCount={templateMetricsQuery.data?.totalItems ?? 0}
+        documentCategoryCount={documentCategoryCount}
+        documentCount={documentCount}
         totalModules={totalModules}
         totalFields={totalFields}
       />
@@ -68,6 +70,11 @@ export function TemplatesDashboard() {
             ? getApiErrorMessage(templatesQuery.error, messages.common.apiError)
             : null
         }
+        page={page}
+        pageSize={TEMPLATES_PAGE_SIZE}
+        totalItems={templateCount}
+        totalPages={totalPages}
+        onPageChange={setPage}
         onCreate={() => router.push("/extraction-templates/new")}
         onSelect={(template) => router.push(`/extraction-templates/${template.id}`)}
       />

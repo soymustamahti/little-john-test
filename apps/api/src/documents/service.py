@@ -5,6 +5,11 @@ from uuid import UUID, uuid4
 
 from fastapi import HTTPException, status
 
+from src.core.pagination import (
+    PaginatedResponse,
+    PaginationParams,
+    build_paginated_response,
+)
 from src.documents.repository import DocumentRepository
 from src.documents.schemas import DocumentCreateRecord, DocumentRead
 from src.documents.validation import (
@@ -45,9 +50,17 @@ class DocumentService:
     def max_upload_size_bytes(self) -> int:
         return self._max_upload_size_bytes
 
-    async def list_documents(self) -> list[DocumentRead]:
-        documents = await self._repository.list()
-        return [DocumentRead.model_validate(document) for document in documents]
+    async def list_documents(
+        self,
+        pagination: PaginationParams,
+    ) -> PaginatedResponse[DocumentRead]:
+        result = await self._repository.list(pagination)
+        items = [DocumentRead.model_validate(document) for document in result.items]
+        return build_paginated_response(
+            items=items,
+            pagination=pagination,
+            total_items=result.total_items,
+        )
 
     async def get_document(self, document_id: UUID) -> DocumentRead:
         document = await self._repository.get(document_id)

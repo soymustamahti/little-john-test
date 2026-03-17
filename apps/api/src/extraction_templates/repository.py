@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.pagination import PaginatedResult, PaginationParams
 from src.extraction_templates.model import ExtractionTemplateModel
 from src.extraction_templates.schemas import ExtractionTemplateCreate, ExtractionTemplateUpdate
 
@@ -11,11 +12,23 @@ class ExtractionTemplateRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def list(self) -> list[ExtractionTemplateModel]:
-        result = await self._session.execute(
-            select(ExtractionTemplateModel).order_by(ExtractionTemplateModel.created_at.desc())
+    async def list(
+        self,
+        pagination: PaginationParams,
+    ) -> PaginatedResult[ExtractionTemplateModel]:
+        total_items = await self._session.scalar(
+            select(func.count()).select_from(ExtractionTemplateModel)
         )
-        return list(result.scalars().all())
+        result = await self._session.execute(
+            select(ExtractionTemplateModel)
+            .order_by(ExtractionTemplateModel.created_at.desc())
+            .offset(pagination.offset)
+            .limit(pagination.page_size)
+        )
+        return PaginatedResult(
+            items=list(result.scalars().all()),
+            total_items=total_items or 0,
+        )
 
     async def get(self, template_id: UUID) -> ExtractionTemplateModel | None:
         result = await self._session.execute(

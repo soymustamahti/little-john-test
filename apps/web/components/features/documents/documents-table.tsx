@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
 import {
@@ -22,6 +23,11 @@ export function DocumentsTable({
   selectedDocumentId,
   isLoading,
   errorMessage,
+  page,
+  pageSize,
+  totalItems,
+  totalPages,
+  onPageChange,
   onPreview,
   onSelect,
 }: {
@@ -29,6 +35,11 @@ export function DocumentsTable({
   selectedDocumentId: string | null;
   isLoading: boolean;
   errorMessage: string | null;
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onPreview: (document: Document) => void;
   onSelect: (document: Document) => void;
 }) {
@@ -43,7 +54,7 @@ export function DocumentsTable({
               <Badge variant="accent">{messages.documentsTable.badges.layer}</Badge>
               <Badge>
                 {formatText(messages.documentsTable.badges.files, {
-                  count: documents.length,
+                  count: totalItems,
                 })}
               </Badge>
             </div>
@@ -166,6 +177,13 @@ export function DocumentsTable({
           </div>
         ) : null}
       </CardContent>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
     </Card>
   );
 }

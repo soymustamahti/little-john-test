@@ -3,10 +3,17 @@ import type {
   DocumentCategory,
   DocumentCategoryPayload,
 } from "@/types/document-categories";
+import type { PaginatedResponse, PaginationParams } from "@/types/pagination";
 
-export async function listDocumentCategories() {
-  const response = await apiClient.get<DocumentCategory[]>(
+export async function listDocumentCategories(pagination: PaginationParams) {
+  const response = await apiClient.get<PaginatedResponse<DocumentCategory>>(
     "/api/document-categories",
+    {
+      params: {
+        page: pagination.page,
+        page_size: pagination.pageSize,
+      },
+    },
   );
   return response.data;
 }

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import get_settings
 from src.core.database import get_async_db_session
+from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
 from src.documents.repository import DocumentRepository
 from src.documents.schemas import DocumentRead
 from src.documents.service import DocumentService, UploadedDocumentInput
@@ -56,11 +57,12 @@ def build_inline_content_disposition(filename: str) -> str:
     return f'inline; filename="{ascii_fallback}"; filename*=UTF-8\'\'{encoded_filename}'
 
 
-@router.get("", response_model=list[DocumentRead])
+@router.get("", response_model=PaginatedResponse[DocumentRead])
 async def list_documents(
+    pagination: PaginationParams = Depends(get_pagination_params),
     service: DocumentService = Depends(get_document_service),
-) -> list[DocumentRead]:
-    return await service.list_documents()
+) -> PaginatedResponse[DocumentRead]:
+    return await service.list_documents(pagination)
 
 
 @router.post("", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)

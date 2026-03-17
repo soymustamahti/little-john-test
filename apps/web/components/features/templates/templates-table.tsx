@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats, type Template } from "@/types/templates";
@@ -10,6 +11,11 @@ export function TemplatesTable({
   selectedTemplateId,
   isLoading,
   errorMessage,
+  page,
+  pageSize,
+  totalItems,
+  totalPages,
+  onPageChange,
   onCreate,
   onSelect,
 }: {
@@ -17,6 +23,11 @@ export function TemplatesTable({
   selectedTemplateId: string | null;
   isLoading: boolean;
   errorMessage: string | null;
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onCreate: () => void;
   onSelect: (template: Template) => void;
 }) {
@@ -31,7 +42,7 @@ export function TemplatesTable({
               <Badge variant="accent">{messages.templatesTable.badges.layer}</Badge>
               <Badge>
                 {formatText(messages.templatesTable.badges.schemas, {
-                  count: templates.length,
+                  count: totalItems,
                 })}
               </Badge>
             </div>
@@ -148,6 +159,13 @@ export function TemplatesTable({
           </div>
         ) : null}
       </CardContent>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
     </Card>
   );
 }

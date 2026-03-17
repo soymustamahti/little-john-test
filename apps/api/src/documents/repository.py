@@ -1,8 +1,9 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.pagination import PaginatedResult, PaginationParams
 from src.documents.model import DocumentModel
 from src.documents.schemas import DocumentCreateRecord
 
@@ -11,11 +12,18 @@ class DocumentRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def list(self) -> list[DocumentModel]:
+    async def list(self, pagination: PaginationParams) -> PaginatedResult[DocumentModel]:
+        total_items = await self._session.scalar(select(func.count()).select_from(DocumentModel))
         result = await self._session.execute(
-            select(DocumentModel).order_by(DocumentModel.created_at.desc())
+            select(DocumentModel)
+            .order_by(DocumentModel.created_at.desc())
+            .offset(pagination.offset)
+            .limit(pagination.page_size)
         )
-        return list(result.scalars().all())
+        return PaginatedResult(
+            items=list(result.scalars().all()),
+            total_items=total_items or 0,
+        )
 
     async def get(self, document_id: UUID) -> DocumentModel | None:
         result = await self._session.execute(

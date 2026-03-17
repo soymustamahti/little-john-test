@@ -3,6 +3,11 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
+from src.core.pagination import (
+    PaginatedResponse,
+    PaginationParams,
+    build_paginated_response,
+)
 from src.document_categories.repository import DocumentCategoryRepository
 from src.document_categories.schemas import (
     DocumentCategoryCreate,
@@ -15,9 +20,17 @@ class DocumentCategoryService:
     def __init__(self, repository: DocumentCategoryRepository) -> None:
         self._repository = repository
 
-    async def list_document_categories(self) -> list[DocumentCategoryRead]:
-        categories = await self._repository.list()
-        return [DocumentCategoryRead.model_validate(category) for category in categories]
+    async def list_document_categories(
+        self,
+        pagination: PaginationParams,
+    ) -> PaginatedResponse[DocumentCategoryRead]:
+        result = await self._repository.list(pagination)
+        items = [DocumentCategoryRead.model_validate(category) for category in result.items]
+        return build_paginated_response(
+            items=items,
+            pagination=pagination,
+            total_items=result.total_items,
+        )
 
     async def get_document_category(self, category_id: UUID) -> DocumentCategoryRead:
         category = await self._repository.get(category_id)

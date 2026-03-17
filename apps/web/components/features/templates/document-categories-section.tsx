@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+
 import { useRouter } from "next/navigation";
 
 import { DocumentCategoriesTable } from "@/components/features/templates/document-categories-table";
@@ -6,29 +8,30 @@ import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import { useDocumentsQuery } from "@/hooks/use-documents";
-import { useTemplatesQuery } from "@/hooks/use-templates";
+import { useTemplateMetricsQuery } from "@/hooks/use-templates";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
-import { getTemplateStats } from "@/types/templates";
+import { DEFAULT_PAGE_SIZE } from "@/types/pagination";
+
+const DOCUMENT_CATEGORIES_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export function DocumentCategoriesSection() {
   const router = useRouter();
   const { messages, formatText } = useLocale();
-  const categoriesQuery = useDocumentCategoriesQuery();
-  const templatesQuery = useTemplatesQuery();
-  const documentsQuery = useDocumentsQuery();
+  const [page, setPage] = useState(1);
+  const categoriesQuery = useDocumentCategoriesQuery({
+    page,
+    pageSize: DOCUMENT_CATEGORIES_PAGE_SIZE,
+  });
+  const templateMetricsQuery = useTemplateMetricsQuery();
+  const documentsQuery = useDocumentsQuery({ page: 1, pageSize: 1 });
 
-  const categories = categoriesQuery.data ?? [];
-  const templates = templatesQuery.data ?? [];
-  const documents = documentsQuery.data ?? [];
-  const totalModules = templates.reduce(
-    (count, template) => count + getTemplateStats(template.modules).moduleCount,
-    0,
-  );
-  const totalFields = templates.reduce(
-    (count, template) => count + getTemplateStats(template.modules).fieldCount,
-    0,
-  );
+  const categories = categoriesQuery.data?.items ?? [];
+  const categoryCount = categoriesQuery.data?.total_items ?? 0;
+  const totalPages = categoriesQuery.data?.total_pages ?? 0;
+  const documentCount = documentsQuery.data?.total_items ?? 0;
+  const totalModules = templateMetricsQuery.data?.totalModules ?? 0;
+  const totalFields = templateMetricsQuery.data?.totalFields ?? 0;
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6">
@@ -37,7 +40,7 @@ export function DocumentCategoriesSection() {
           <Badge variant="warm">{messages.documentCategoriesSection.badges.layer}</Badge>
           <Badge>
             {formatText(messages.documentCategoriesSection.badges.routingTargets, {
-              count: categories.length,
+              count: categoryCount,
             })}
           </Badge>
         </div>
@@ -52,9 +55,9 @@ export function DocumentCategoriesSection() {
       </div>
 
       <SetupStatsGrid
-        extractionTemplateCount={templates.length}
-        documentCategoryCount={categories.length}
-        documentCount={documents.length}
+        extractionTemplateCount={templateMetricsQuery.data?.totalItems ?? 0}
+        documentCategoryCount={categoryCount}
+        documentCount={documentCount}
         totalModules={totalModules}
         totalFields={totalFields}
       />
@@ -68,6 +71,11 @@ export function DocumentCategoriesSection() {
             ? getApiErrorMessage(categoriesQuery.error, messages.common.apiError)
             : null
         }
+        page={page}
+        pageSize={DOCUMENT_CATEGORIES_PAGE_SIZE}
+        totalItems={categoryCount}
+        totalPages={totalPages}
+        onPageChange={setPage}
         onCreate={() => router.push("/document-categories/new")}
         onSelect={(category) => router.push(`/document-categories/${category.id}`)}
       />

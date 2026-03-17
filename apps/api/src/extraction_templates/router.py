@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_async_db_session
+from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
 from src.extraction_templates.repository import ExtractionTemplateRepository
 from src.extraction_templates.schemas import (
     ExtractionTemplateCreate,
@@ -22,11 +23,12 @@ def get_extraction_template_service(
     return ExtractionTemplateService(repository)
 
 
-@router.get("", response_model=list[ExtractionTemplateRead])
+@router.get("", response_model=PaginatedResponse[ExtractionTemplateRead])
 async def list_extraction_templates(
+    pagination: PaginationParams = Depends(get_pagination_params),
     service: ExtractionTemplateService = Depends(get_extraction_template_service),
-) -> list[ExtractionTemplateRead]:
-    return await service.list_extraction_templates()
+) -> PaginatedResponse[ExtractionTemplateRead]:
+    return await service.list_extraction_templates(pagination)
 
 
 @router.post("", response_model=ExtractionTemplateRead, status_code=status.HTTP_201_CREATED)

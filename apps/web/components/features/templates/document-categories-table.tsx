@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
 import {
@@ -19,6 +20,11 @@ export function DocumentCategoriesTable({
   selectedCategoryId,
   isLoading,
   errorMessage,
+  page,
+  pageSize,
+  totalItems,
+  totalPages,
+  onPageChange,
   onCreate,
   onSelect,
 }: {
@@ -26,16 +32,15 @@ export function DocumentCategoriesTable({
   selectedCategoryId: string | null;
   isLoading: boolean;
   errorMessage: string | null;
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onCreate: () => void;
   onSelect: (category: DocumentCategory) => void;
 }) {
-  const { locale, messages, formatDate, formatText } = useLocale();
-  const sortedCategories = [...categories].sort((left, right) =>
-    getDocumentCategoryDisplayName(left, messages).localeCompare(
-      getDocumentCategoryDisplayName(right, messages),
-      locale,
-    ),
-  );
+  const { messages, formatDate, formatText } = useLocale();
 
   return (
     <Card className="overflow-hidden">
@@ -46,7 +51,7 @@ export function DocumentCategoriesTable({
               <Badge variant="warm">{messages.documentCategoriesTable.badges.layer}</Badge>
               <Badge>
                 {formatText(messages.documentCategoriesTable.badges.categories, {
-                  count: categories.length,
+                  count: totalItems,
                 })}
               </Badge>
             </div>
@@ -101,7 +106,7 @@ export function DocumentCategoriesTable({
                 </tr>
               </thead>
               <tbody>
-                {sortedCategories.map((category) => {
+                {categories.map((category) => {
                   const isSelected = selectedCategoryId === category.id;
                   const displayName = getDocumentCategoryDisplayName(category, messages);
 
@@ -155,6 +160,13 @@ export function DocumentCategoriesTable({
           </div>
         ) : null}
       </CardContent>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
     </Card>
   );
 }

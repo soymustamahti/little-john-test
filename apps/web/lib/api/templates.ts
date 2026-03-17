@@ -1,8 +1,17 @@
 import { apiClient } from "@/lib/api/client";
+import type { PaginatedResponse, PaginationParams } from "@/types/pagination";
 import type { Template, TemplatePayload } from "@/types/templates";
 
-export async function listTemplates() {
-  const response = await apiClient.get<Template[]>("/api/extraction-templates");
+export async function listTemplates(pagination: PaginationParams) {
+  const response = await apiClient.get<PaginatedResponse<Template>>(
+    "/api/extraction-templates",
+    {
+      params: {
+        page: pagination.page,
+        page_size: pagination.pageSize,
+      },
+    },
+  );
   return response.data;
 }
 

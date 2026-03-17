@@ -2,6 +2,11 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from src.core.pagination import (
+    PaginatedResponse,
+    PaginationParams,
+    build_paginated_response,
+)
 from src.extraction_templates.repository import ExtractionTemplateRepository
 from src.extraction_templates.schemas import (
     ExtractionTemplateCreate,
@@ -14,9 +19,17 @@ class ExtractionTemplateService:
     def __init__(self, repository: ExtractionTemplateRepository) -> None:
         self._repository = repository
 
-    async def list_extraction_templates(self) -> list[ExtractionTemplateRead]:
-        templates = await self._repository.list()
-        return [ExtractionTemplateRead.model_validate(template) for template in templates]
+    async def list_extraction_templates(
+        self,
+        pagination: PaginationParams,
+    ) -> PaginatedResponse[ExtractionTemplateRead]:
+        result = await self._repository.list(pagination)
+        items = [ExtractionTemplateRead.model_validate(template) for template in result.items]
+        return build_paginated_response(
+            items=items,
+            pagination=pagination,
+            total_items=result.total_items,
+        )
 
     async def get_extraction_template(self, template_id: UUID) -> ExtractionTemplateRead:
         template = await self._repository.get(template_id)

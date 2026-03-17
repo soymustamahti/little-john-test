@@ -6,6 +6,7 @@ from uuid import UUID
 
 import pytest
 from fastapi import HTTPException
+from src.core.pagination import PaginatedResult, PaginationParams
 from src.documents.schemas import DocumentCreateRecord, DocumentKind
 from src.documents.service import DocumentContentRead, DocumentService, UploadedDocumentInput
 from src.storage.object_store import ObjectStorageError, RetrievedObject, StoredObject
@@ -33,8 +34,11 @@ class FakeDocumentRepository:
         self._records: dict[UUID, FakeDocumentRecord] = {}
         self.fail_on_create = False
 
-    async def list(self) -> list[FakeDocumentRecord]:
-        return sorted(self._records.values(), key=lambda record: record.created_at, reverse=True)
+    async def list(self, pagination: PaginationParams) -> PaginatedResult[FakeDocumentRecord]:
+        items = sorted(self._records.values(), key=lambda record: record.created_at, reverse=True)
+        start = pagination.offset
+        end = start + pagination.page_size
+        return PaginatedResult(items=items[start:end], total_items=len(items))
 
     async def get(self, document_id: UUID) -> FakeDocumentRecord | None:
         return self._records.get(document_id)
@@ -111,6 +115,50 @@ def build_docx_bytes() -> bytes:
         archive.writestr("[Content_Types].xml", "<Types/>")
         archive.writestr("word/document.xml", "<w:document/>")
     return buffer.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_list_documents_returns_paginated_response() -> None:
+    service, repository, _ = build_service()
+
+    await repository.create(
+        DocumentCreateRecord(
+            id=UUID("00000000-0000-0000-0000-000000000001"),
+            original_filename="older.pdf",
+            content_type="application/pdf",
+            file_extension=".pdf",
+            file_kind=DocumentKind.PDF,
+            size_bytes=10,
+            sha256="1" * 64,
+            storage_provider="cloudflare_r2",
+            storage_bucket="little-john-local",
+            storage_key="documents/1/older.pdf",
+            public_url=None,
+        )
+    )
+    await repository.create(
+        DocumentCreateRecord(
+            id=UUID("00000000-0000-0000-0000-000000000002"),
+            original_filename="newer.pdf",
+            content_type="application/pdf",
+            file_extension=".pdf",
+            file_kind=DocumentKind.PDF,
+            size_bytes=10,
+            sha256="2" * 64,
+            storage_provider="cloudflare_r2",
+            storage_bucket="little-john-local",
+            storage_key="documents/2/newer.pdf",
+            public_url=None,
+        )
+    )
+
+    result = await service.list_documents(PaginationParams(page=1, page_size=1))
+
+    assert result.page == 1
+    assert result.page_size == 1
+    assert result.total_items == 2
+    assert result.total_pages == 2
+    assert [document.original_filename for document in result.items] == ["newer.pdf"]
 
 
 @pytest.mark.asyncio

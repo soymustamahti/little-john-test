@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi import HTTPException
+from src.core.pagination import PaginatedResult, PaginationParams
 from src.extraction_templates.schemas import (
     ExtractionTemplateCreate,
     ExtractionTemplateUpdate,
@@ -29,8 +30,14 @@ class FakeExtractionTemplateRepository:
     def __init__(self) -> None:
         self._records: dict[UUID, FakeExtractionTemplateRecord] = {}
 
-    async def list(self) -> list[FakeExtractionTemplateRecord]:
-        return sorted(self._records.values(), key=lambda record: record.created_at, reverse=True)
+    async def list(
+        self,
+        pagination: PaginationParams,
+    ) -> PaginatedResult[FakeExtractionTemplateRecord]:
+        items = sorted(self._records.values(), key=lambda record: record.created_at, reverse=True)
+        start = pagination.offset
+        end = start + pagination.page_size
+        return PaginatedResult(items=items[start:end], total_items=len(items))
 
     async def get(self, template_id: UUID) -> FakeExtractionTemplateRecord | None:
         return self._records.get(template_id)
@@ -74,6 +81,23 @@ def build_template_payload(name: str = "Invoice extraction") -> ExtractionTempla
             )
         ],
     )
+
+
+@pytest.mark.asyncio
+async def test_list_extraction_templates_returns_paginated_response() -> None:
+    repository = FakeExtractionTemplateRepository()
+    service = ExtractionTemplateService(repository)
+
+    await repository.create(build_template_payload(name="First template"))
+    await repository.create(build_template_payload(name="Second template"))
+
+    result = await service.list_extraction_templates(PaginationParams(page=1, page_size=1))
+
+    assert result.page == 1
+    assert result.page_size == 1
+    assert result.total_items == 2
+    assert result.total_pages == 2
+    assert [template.name for template in result.items] == ["Second template"]
 
 
 @pytest.mark.asyncio

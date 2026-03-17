@@ -10,35 +10,34 @@ import { SetupStatsGrid } from "@/components/features/templates/setup-stats-grid
 import { Badge } from "@/components/ui/badge";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import { useDocumentsQuery, useUploadDocumentsMutation } from "@/hooks/use-documents";
-import { useTemplatesQuery } from "@/hooks/use-templates";
+import { useTemplateMetricsQuery } from "@/hooks/use-templates";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
 import type { Document, DocumentUploadBatchResult } from "@/types/documents";
-import { getTemplateStats } from "@/types/templates";
+import { DEFAULT_PAGE_SIZE } from "@/types/pagination";
+
+const DOCUMENTS_PAGE_SIZE = DEFAULT_PAGE_SIZE;
 
 export function DocumentsSection() {
   const router = useRouter();
   const { messages, formatText } = useLocale();
-  const documentsQuery = useDocumentsQuery();
-  const templatesQuery = useTemplatesQuery();
-  const categoriesQuery = useDocumentCategoriesQuery();
+  const [page, setPage] = useState(1);
+  const documentsQuery = useDocumentsQuery({ page, pageSize: DOCUMENTS_PAGE_SIZE });
+  const templateMetricsQuery = useTemplateMetricsQuery();
+  const categoriesQuery = useDocumentCategoriesQuery({ page: 1, pageSize: 1 });
   const uploadDocumentsMutation = useUploadDocumentsMutation(messages.common.apiError);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadResults, setUploadResults] = useState<DocumentUploadBatchResult[]>([]);
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
 
-  const documents = documentsQuery.data ?? [];
-  const templates = templatesQuery.data ?? [];
-  const categories = categoriesQuery.data ?? [];
-  const totalModules = templates.reduce(
-    (count, template) => count + getTemplateStats(template.modules).moduleCount,
-    0,
-  );
-  const totalFields = templates.reduce(
-    (count, template) => count + getTemplateStats(template.modules).fieldCount,
-    0,
-  );
+  const documents = documentsQuery.data?.items ?? [];
+  const documentCount = documentsQuery.data?.total_items ?? 0;
+  const totalPages = documentsQuery.data?.total_pages ?? 0;
+  const extractionTemplateCount = templateMetricsQuery.data?.totalItems ?? 0;
+  const documentCategoryCount = categoriesQuery.data?.total_items ?? 0;
+  const totalModules = templateMetricsQuery.data?.totalModules ?? 0;
+  const totalFields = templateMetricsQuery.data?.totalFields ?? 0;
 
   async function handleUpload() {
     if (!selectedFiles.length) {
@@ -71,7 +70,7 @@ export function DocumentsSection() {
           <Badge variant="accent">{messages.documentsSection.badges.layer}</Badge>
           <Badge>
             {formatText(messages.documentsSection.badges.uploaded, {
-              count: documents.length,
+              count: documentCount,
             })}
           </Badge>
         </div>
@@ -86,9 +85,9 @@ export function DocumentsSection() {
       </div>
 
       <SetupStatsGrid
-        extractionTemplateCount={templates.length}
-        documentCategoryCount={categories.length}
-        documentCount={documents.length}
+        extractionTemplateCount={extractionTemplateCount}
+        documentCategoryCount={documentCategoryCount}
+        documentCount={documentCount}
         totalModules={totalModules}
         totalFields={totalFields}
       />
@@ -117,6 +116,11 @@ export function DocumentsSection() {
             ? getApiErrorMessage(documentsQuery.error, messages.common.apiError)
             : null
         }
+        page={page}
+        pageSize={DOCUMENTS_PAGE_SIZE}
+        totalItems={documentCount}
+        totalPages={totalPages}
+        onPageChange={setPage}
         onPreview={(document) => setPreviewDocument(document)}
         onSelect={(document) => router.push(`/documents/${document.id}`)}
       />

@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.pagination import PaginatedResult, PaginationParams
 from src.document_categories.model import DocumentCategoryModel
 from src.document_categories.schemas import DocumentCategoryCreate, DocumentCategoryUpdate
 
@@ -12,11 +13,23 @@ class DocumentCategoryRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def list(self) -> list[DocumentCategoryModel]:
-        result = await self._session.execute(
-            select(DocumentCategoryModel).order_by(DocumentCategoryModel.name.asc())
+    async def list(
+        self,
+        pagination: PaginationParams,
+    ) -> PaginatedResult[DocumentCategoryModel]:
+        total_items = await self._session.scalar(
+            select(func.count()).select_from(DocumentCategoryModel)
         )
-        return list(result.scalars().all())
+        result = await self._session.execute(
+            select(DocumentCategoryModel)
+            .order_by(DocumentCategoryModel.name.asc())
+            .offset(pagination.offset)
+            .limit(pagination.page_size)
+        )
+        return PaginatedResult(
+            items=list(result.scalars().all()),
+            total_items=total_items or 0,
+        )
 
     async def get(self, category_id: UUID) -> DocumentCategoryModel | None:
         result = await self._session.execute(

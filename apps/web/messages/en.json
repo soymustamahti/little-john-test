@@ -21,6 +21,12 @@
       "view": "View",
       "backToList": "Back to list"
     },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageStatus": "Page {page} of {total}",
+      "resultsSummary": "Showing {start}-{end} of {total}"
+    },
     "labels": {
       "workspace": "Workspace",
       "new": "New",

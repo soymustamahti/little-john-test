@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_async_db_session
+from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
 from src.document_categories.repository import DocumentCategoryRepository
 from src.document_categories.schemas import (
     DocumentCategoryCreate,
@@ -22,11 +23,12 @@ def get_document_category_service(
     return DocumentCategoryService(repository)
 
 
-@router.get("", response_model=list[DocumentCategoryRead])
+@router.get("", response_model=PaginatedResponse[DocumentCategoryRead])
 async def list_document_categories(
+    pagination: PaginationParams = Depends(get_pagination_params),
     service: DocumentCategoryService = Depends(get_document_category_service),
-) -> list[DocumentCategoryRead]:
-    return await service.list_document_categories()
+) -> PaginatedResponse[DocumentCategoryRead]:
+    return await service.list_document_categories(pagination)
 
 
 @router.post("", response_model=DocumentCategoryRead, status_code=status.HTTP_201_CREATED)
