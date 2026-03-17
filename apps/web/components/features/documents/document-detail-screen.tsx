@@ -1,9 +1,17 @@
 "use client";
 
-import { ArrowLeft, ExternalLink, FileCheck2, Eye, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  FileCheck2,
+  Eye,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { DocumentProcessingPanel } from "@/components/features/documents/document-processing-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +19,9 @@ import { DocumentPreviewModal } from "@/components/features/documents/document-p
 import { useDeleteDocumentMutation, useDocumentQuery } from "@/hooks/use-documents";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
+import { getDocumentCategoryDisplayName } from "@/types/document-categories";
 import {
+  getDocumentClassificationStatusLabel,
   formatDocumentSize,
   getDocumentKindLabel,
   getDocumentShaPreview,
@@ -46,6 +56,7 @@ export function DocumentDetailScreen({
   const documentQuery = useDocumentQuery(documentId);
   const deleteDocumentMutation = useDeleteDocumentMutation();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isProcessingPanelOpen, setIsProcessingPanelOpen] = useState(false);
 
   async function deleteDocument() {
     const document = documentQuery.data;
@@ -109,6 +120,22 @@ export function DocumentDetailScreen({
   const deleteError = deleteDocumentMutation.error
     ? getApiErrorMessage(deleteDocumentMutation.error, messages.common.apiError)
     : null;
+  const classification = document.classification;
+  const classificationVariant =
+    classification.status === "classified"
+      ? "success"
+      : classification.status === "pending_review" || classification.status === "failed"
+        ? "warm"
+        : classification.status === "processing"
+          ? "accent"
+          : "default";
+  const classificationLabel = getDocumentClassificationStatusLabel(
+    classification.status,
+    messages,
+  );
+  const classifiedCategoryName = classification.category
+    ? getDocumentCategoryDisplayName(classification.category, messages)
+    : null;
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6">
@@ -167,6 +194,13 @@ export function DocumentDetailScreen({
               ) : null}
               <Button
                 type="button"
+                onClick={() => setIsProcessingPanelOpen(true)}
+              >
+                <Sparkles className="h-4 w-4" />
+                {messages.documentProcessing.openAction}
+              </Button>
+              <Button
+                type="button"
                 variant="danger"
                 onClick={deleteDocument}
                 disabled={deleteDocumentMutation.isPending}
@@ -181,14 +215,43 @@ export function DocumentDetailScreen({
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
               <FileCheck2 className="h-4 w-4 text-[color:var(--color-accent)]" />
               {messages.documentDetailScreen.summaryTitle}
+              <Badge variant={classificationVariant}>{classificationLabel}</Badge>
+              {classifiedCategoryName ? (
+                <Badge variant="accent">{classifiedCategoryName}</Badge>
+              ) : null}
             </div>
             <p className="mt-2 text-sm text-[color:var(--color-muted)]">
               {messages.documentDetailScreen.summaryDescription}
             </p>
+            {classification.rationale ? (
+              <p className="mt-3 text-sm text-[color:var(--color-ink)]">
+                {classification.status === "pending_review"
+                  ? messages.documentDetailScreen.pendingClassification.replace(
+                      "{reason}",
+                      classification.rationale,
+                    )
+                  : classification.rationale}
+              </p>
+            ) : null}
+            {classification.error ? (
+              <p className="mt-3 text-sm text-[color:var(--color-accent-warm)]">
+                {classification.error}
+              </p>
+            ) : null}
           </div>
+
+          {isProcessingPanelOpen ? (
+            <DocumentProcessingPanel
+              document={document}
+              documentId={documentId}
+              open={isProcessingPanelOpen}
+              onOpenChange={setIsProcessingPanelOpen}
+              onDocumentRefresh={() => documentQuery.refetch()}
+            />
+          ) : null}
 
           <div className="grid gap-4 lg:grid-cols-2">
             <InfoRow
@@ -215,6 +278,20 @@ export function DocumentDetailScreen({
               label={messages.documentDetailScreen.fields.sha}
               value={getDocumentShaPreview(document.sha256)}
             />
+            <InfoRow
+              label={messages.documentDetailScreen.fields.classificationStatus}
+              value={classificationLabel}
+            />
+            <InfoRow
+              label={messages.documentDetailScreen.fields.classificationCategory}
+              value={
+                classifiedCategoryName ??
+                pendingSuggestionLabel(
+                  classification.suggested_category?.name,
+                  messages.documentDetailScreen.unclassifiedValue,
+                )
+              }
+            />
           </div>
 
           {deleteError ? (
@@ -238,4 +315,15 @@ export function DocumentDetailScreen({
       />
     </div>
   );
+}
+
+function pendingSuggestionLabel(
+  suggestedCategoryName: string | undefined,
+  fallbackValue: string,
+) {
+  if (suggestedCategoryName) {
+    return suggestedCategoryName;
+  }
+
+  return fallbackValue;
 }

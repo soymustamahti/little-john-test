@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import type {
   Document,
+  DocumentClassificationSession,
   DocumentUploadBatchResult,
   DocumentUploadFailureResult,
   DocumentUploadSuccessResult,
@@ -19,6 +20,26 @@ export async function listDocuments(pagination: PaginationParams) {
 
 export async function getDocument(documentId: string) {
   const response = await apiClient.get<Document>(`/api/documents/${documentId}`);
+  return response.data;
+}
+
+export async function classifyDocumentManually(
+  documentId: string,
+  categoryId: string,
+) {
+  const response = await apiClient.post<Document>(
+    `/api/documents/${documentId}/classification/manual`,
+    {
+      category_id: categoryId,
+    },
+  );
+  return response.data;
+}
+
+export async function createDocumentAiClassificationSession(documentId: string) {
+  const response = await apiClient.post<DocumentClassificationSession>(
+    `/api/documents/${documentId}/classification/ai-session`,
+  );
   return response.data;
 }
 

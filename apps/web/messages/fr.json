@@ -273,16 +273,67 @@
     "cardTitle": "Métadonnées du document",
     "summaryTitle": "Résumé du téléversement",
     "summaryDescription": "Cet enregistrement représente le fichier original actuellement stocké dans Cloudflare R2 ainsi que les métadonnées persistées dans PostgreSQL.",
+    "pendingClassification": "Raisonnement de l'IA : {reason}",
     "openPublicUrl": "Ouvrir l'URL publique",
     "privateStorageNotice": "Ce document est bien stocké, mais aucune URL publique n'est exposée car le bucket est privé ou `R2_PUBLIC_URL` n'est pas configuré comme domaine public d'assets.",
     "confirmDelete": "Supprimer \"{name}\" ?",
+    "unclassifiedValue": "Non classé",
     "fields": {
       "kind": "Type",
       "contentType": "Type MIME",
       "size": "Taille",
       "created": "Téléversé",
       "updated": "Mis à jour",
-      "sha": "SHA-256"
+      "sha": "SHA-256",
+      "classificationStatus": "Statut de classification",
+      "classificationCategory": "Catégorie attribuée"
+    }
+  },
+  "documentProcessing": {
+    "badge": "Flux de traitement",
+    "pendingBadge": "Revue humaine requise",
+    "title": "Traiter le document",
+    "openAction": "Traiter le document",
+    "closeAction": "Fermer",
+    "backAction": "Retour",
+    "missingThread": "Le thread de revue IA est introuvable. Relancez le flux IA.",
+    "statuses": {
+      "unclassified": "Non classé",
+      "processing": "Traitement en cours",
+      "pending_review": "En attente de revue",
+      "classified": "Classé",
+      "failed": "Échec"
+    },
+    "options": {
+      "manualTitle": "Classer manuellement",
+      "manualDescription": "Choisissez vous-même une catégorie existante et enregistrez immédiatement le document.",
+      "aiTitle": "Utiliser la classification IA",
+      "aiDescription": "Échantillonne des chunks déjà stockés, les compare au catalogue de catégories et s'arrête pour revue seulement si une nouvelle catégorie semble nécessaire."
+    },
+    "manual": {
+      "title": "Classification manuelle",
+      "selectLabel": "Catégorie documentaire existante",
+      "placeholder": "Choisissez une catégorie",
+      "saveAction": "Enregistrer la classification manuelle",
+      "savingAction": "Enregistrement..."
+    },
+    "ai": {
+      "title": "Classification IA",
+      "startAction": "Lancer la classification IA",
+      "startingAction": "Démarrage...",
+      "streamingTitle": "Progression de l'agent en direct",
+      "streamingEmpty": "L'agent démarre. Les étapes en direct s'afficheront ici.",
+      "reviewBadge": "Nouvelle catégorie suggérée",
+      "confidenceLabel": "Confiance {value}",
+      "suggestedName": "Nom suggéré",
+      "suggestedLabelKey": "Clé suggérée",
+      "rationaleTitle": "Pourquoi l'agent la suggère",
+      "customizeTitle": "Créer votre propre catégorie à la place",
+      "customName": "Nom de la catégorie",
+      "customLabelKey": "Clé de la catégorie",
+      "acceptAction": "Accepter la suggestion",
+      "createCustomAction": "Créer une catégorie personnalisée",
+      "dismissAction": "Ignorer la suggestion"
     }
   },
   "documentCategoriesTable": {

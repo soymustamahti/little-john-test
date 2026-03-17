@@ -48,9 +48,14 @@ export function DocumentsSection() {
       const results = await uploadDocumentsMutation.mutateAsync(selectedFiles);
       setUploadResults(results);
       const hasSuccessfulUpload = results.some((result) => result.status === "success");
+      const firstSuccessfulUpload = results.find((result) => result.status === "success");
 
       if (hasSuccessfulUpload) {
         setSelectedFiles([]);
+        if (firstSuccessfulUpload?.status === "success") {
+          router.push(`/documents/${firstSuccessfulUpload.document.id}`);
+          return;
+        }
       }
     } catch (error) {
       setUploadResults([

@@ -273,16 +273,67 @@
     "cardTitle": "Document metadata",
     "summaryTitle": "Upload summary",
     "summaryDescription": "This record represents the original file currently stored in Cloudflare R2 plus the metadata persisted in PostgreSQL.",
+    "pendingClassification": "AI rationale: {reason}",
     "openPublicUrl": "Open public URL",
     "privateStorageNotice": "This document is stored successfully, but no public URL is exposed because the bucket is private or `R2_PUBLIC_URL` is not configured as a public asset domain.",
     "confirmDelete": "Delete \"{name}\"?",
+    "unclassifiedValue": "Unclassified",
     "fields": {
       "kind": "Kind",
       "contentType": "Content type",
       "size": "Size",
       "created": "Uploaded",
       "updated": "Updated",
-      "sha": "SHA-256"
+      "sha": "SHA-256",
+      "classificationStatus": "Classification status",
+      "classificationCategory": "Assigned category"
+    }
+  },
+  "documentProcessing": {
+    "badge": "Processing flow",
+    "pendingBadge": "Human review needed",
+    "title": "Process document",
+    "openAction": "Process document",
+    "closeAction": "Close",
+    "backAction": "Back",
+    "missingThread": "The AI review thread is missing. Start the AI flow again.",
+    "statuses": {
+      "unclassified": "Unclassified",
+      "processing": "Processing",
+      "pending_review": "Pending review",
+      "classified": "Classified",
+      "failed": "Failed"
+    },
+    "options": {
+      "manualTitle": "Classify manually",
+      "manualDescription": "Choose an existing category yourself and save the document immediately.",
+      "aiTitle": "Use AI classification",
+      "aiDescription": "Sample stored chunks, compare them with the category catalog, and pause for review only if a new category is needed."
+    },
+    "manual": {
+      "title": "Manual classification",
+      "selectLabel": "Existing document category",
+      "placeholder": "Choose a category",
+      "saveAction": "Save manual classification",
+      "savingAction": "Saving..."
+    },
+    "ai": {
+      "title": "AI classification",
+      "startAction": "Start AI classification",
+      "startingAction": "Starting...",
+      "streamingTitle": "Live agent progress",
+      "streamingEmpty": "The agent is starting. Live progress updates will appear here.",
+      "reviewBadge": "Suggested new category",
+      "confidenceLabel": "Confidence {value}",
+      "suggestedName": "Suggested category name",
+      "suggestedLabelKey": "Suggested label key",
+      "rationaleTitle": "Why the agent suggested it",
+      "customizeTitle": "Create your own category instead",
+      "customName": "Category name",
+      "customLabelKey": "Category label key",
+      "acceptAction": "Accept suggestion",
+      "createCustomAction": "Create custom category",
+      "dismissAction": "Dismiss suggestion"
     }
   },
   "documentCategoriesTable": {

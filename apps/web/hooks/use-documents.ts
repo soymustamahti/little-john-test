@@ -3,6 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  classifyDocumentManually,
+  createDocumentAiClassificationSession,
   deleteDocument,
   getDocument,
   listDocuments,
@@ -50,6 +52,43 @@ export function useDeleteDocumentMutation() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY }),
         queryClient.removeQueries({ queryKey: [...DOCUMENTS_QUERY_KEY, documentId] }),
+      ]);
+    },
+  });
+}
+
+export function useManualDocumentClassificationMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      documentId,
+      categoryId,
+    }: {
+      documentId: string;
+      categoryId: string;
+    }) => classifyDocumentManually(documentId, categoryId),
+    onSuccess: async (document) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY }),
+        queryClient.setQueryData([...DOCUMENTS_QUERY_KEY, document.id], document),
+      ]);
+    },
+  });
+}
+
+export function useCreateDocumentAiClassificationSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (documentId: string) =>
+      createDocumentAiClassificationSession(documentId),
+    onSuccess: async (_, documentId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: [...DOCUMENTS_QUERY_KEY, documentId],
+        }),
       ]);
     },
   });
