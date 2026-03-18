@@ -286,10 +286,12 @@ export function DocumentDetailScreen({
               label={messages.documentDetailScreen.fields.classificationCategory}
               value={
                 classifiedCategoryName ??
-                pendingSuggestionLabel(
-                  classification.suggested_category?.name,
-                  messages.documentDetailScreen.unclassifiedValue,
-                )
+                (classification.suggested_category
+                  ? getDocumentCategoryDisplayName(
+                      classification.suggested_category,
+                      messages,
+                    )
+                  : messages.documentDetailScreen.unclassifiedValue)
               }
             />
           </div>
@@ -315,15 +317,4 @@ export function DocumentDetailScreen({
       />
     </div>
   );
-}
-
-function pendingSuggestionLabel(
-  suggestedCategoryName: string | undefined,
-  fallbackValue: string,
-) {
-  if (suggestedCategoryName) {
-    return suggestedCategoryName;
-  }
-
-  return fallbackValue;
 }

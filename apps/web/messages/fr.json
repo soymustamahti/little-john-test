@@ -323,6 +323,12 @@
       "startingAction": "Démarrage...",
       "streamingTitle": "Progression de l'agent en direct",
       "streamingEmpty": "L'agent démarre. Les étapes en direct s'afficheront ici.",
+      "timelineEmpty": "Lancez la classification IA pour voir tout le flux d'événements.",
+      "idleBadge": "Au repos",
+      "liveBadge": "En direct",
+      "completeBadge": "Terminé",
+      "eventCountLabel": "{count} événements",
+      "rawPayloadAction": "Payload brut",
       "reviewBadge": "Nouvelle catégorie suggérée",
       "confidenceLabel": "Confiance {value}",
       "suggestedName": "Nom suggéré",
@@ -333,7 +339,27 @@
       "customLabelKey": "Clé de la catégorie",
       "acceptAction": "Accepter la suggestion",
       "createCustomAction": "Créer une catégorie personnalisée",
-      "dismissAction": "Ignorer la suggestion"
+      "dismissAction": "Ignorer la suggestion",
+      "eventLabels": {
+        "metadata": "Exécution démarrée",
+        "custom": "Mise à jour de progression",
+        "values": "Instantané d'état",
+        "updates": "Mise à jour d'état",
+        "interrupt": "Revue humaine demandée",
+        "error": "Erreur d'exécution",
+        "end": "Exécution terminée"
+      },
+      "eventDescriptions": {
+        "metadata": "Connexion établie avec l'exécution de classification, en attente des événements.",
+        "custom": "L'agent a émis une mise à jour de progression.",
+        "values": "L'exécution a publié un instantané d'état.",
+        "updates": "L'état a été mis à jour après : {nodes}.",
+        "updatesFallback": "L'exécution a publié une mise à jour d'état.",
+        "interrupt": "L'agent s'est mis en pause et attend une décision humaine sur la catégorie suggérée.",
+        "error": "L'exécution a signalé une erreur.",
+        "end": "Le flux d'exécution est terminé.",
+        "fallback": "Un événement du flux a été reçu."
+      }
     }
   },
   "documentCategoriesTable": {

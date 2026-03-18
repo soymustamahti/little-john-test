@@ -88,6 +88,27 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Reworked the document-classification prompt using patterns sampled from the local
+  `apps/system-prompts-and-models-of-ai-tools` corpus plus mini-agent analysis: the prompt now
+  uses explicit Mission/Evidence Boundary/Decision Policy/Language Policy/Output Contract sections
+  and requires the rationale and suggested category name to follow the document's dominant language
+- Hardened document-category label-key normalization for multilingual suggestions by transliterating
+  accented characters before snake_case normalization in both backend and frontend helpers, and
+  added focused backend tests covering accented French category suggestions
+- Improved the frontend AI document-classification operator flow so the processing panel no longer
+  resets out of AI mode when document refetches change the classification status, and added a live
+  event timeline with raw payload inspection by streaming LangGraph `custom`, `updates`, and
+  `values` events into the UI
+- Refined the AI classification event view into a compact operator activity feed that shows only
+  meaningful steps without internal scrolling, and reduced the visible stream noise by surfacing
+  `custom` progress events plus interrupt/completion/error states instead of every state update
+- Fixed duplicate human-review entries in the frontend activity feed by no longer explicitly
+  requesting LangGraph `values` mode for the classification run and deduplicating adjacent
+  interrupt events, since Aegra already remaps interrupt-only updates to `values` events for
+  compatibility
+- Normalized AI-suggested category names away from snake_case-style display by adding backend
+  category-name normalization, stronger classifier prompt guidance, frontend humanized fallback
+  rendering, and focused service tests for suggestion/acceptance flows
 - Migrated the frontend document-classification streaming client from a hand-rolled `fetch`/SSE
   parser to the official `@langchain/langgraph-sdk` browser client, including a shared
   `apps/web/lib/langgraph/client.ts` singleton and SDK-backed thread creation/run streaming in the

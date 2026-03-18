@@ -28,6 +28,7 @@ export const DOCUMENT_CATEGORY_LABEL_KEY_PATTERN =
   "^[a-z0-9]+(?:_[a-z0-9]+)*$";
 
 const documentCategoryLabelKeyRegex = new RegExp(DOCUMENT_CATEGORY_LABEL_KEY_PATTERN);
+const slugLikeDocumentCategoryNameRegex = /^[a-z0-9]+(?:[ _-][a-z0-9]+)+$/;
 
 export function createEmptyDocumentCategoryDraft(): DocumentCategoryDraft {
   return {
@@ -86,10 +87,29 @@ export function getDocumentCategoryValidationError(
 export function slugifyDocumentCategoryLabelKey(value: string): string {
   return value
     .trim()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .replace(/_+/g, "_");
+}
+
+export function formatDocumentCategoryName(value: string): string {
+  const normalized = value.trim().replace(/\s+/g, " ");
+  if (!normalized) {
+    return "";
+  }
+
+  if (!slugLikeDocumentCategoryNameRegex.test(normalized)) {
+    return normalized;
+  }
+
+  return normalized
+    .split(/[ _-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
 }
 
 export function getDocumentCategoryDisplayName(
@@ -97,5 +117,8 @@ export function getDocumentCategoryDisplayName(
   messages: Messages,
 ): string {
   const translatedLabels = messages.documentCategoryLabels as Record<string, string>;
-  return translatedLabels[category.label_key] ?? category.name;
+  return (
+    translatedLabels[category.label_key] ??
+    formatDocumentCategoryName(category.name || category.label_key)
+  );
 }

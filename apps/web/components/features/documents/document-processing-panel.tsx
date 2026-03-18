@@ -18,10 +18,15 @@ import {
 } from "@/hooks/use-documents";
 import { createAgentThread, streamAgentRun } from "@/lib/api/aegra";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import type { Messages } from "@/lib/i18n";
 import { useLocale } from "@/providers/locale-provider";
 import type { AgentStreamEvent } from "@/types/aegra";
 import type { Document } from "@/types/documents";
-import { getDocumentCategoryDisplayName, slugifyDocumentCategoryLabelKey } from "@/types/document-categories";
+import {
+  formatDocumentCategoryName,
+  getDocumentCategoryDisplayName,
+  slugifyDocumentCategoryLabelKey,
+} from "@/types/document-categories";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,14 +35,24 @@ import { Label } from "@/components/ui/label";
 
 const CATEGORY_PAGE_SIZE = 100;
 const DOCUMENT_CLASSIFICATION_ASSISTANT_ID = "document_classification_agent";
+const STREAM_EVENT_LIMIT = 48;
 
 interface ProgressItem {
   phase: string;
   message: string;
 }
 
+interface StreamTimelineItem {
+  id: string;
+  kind: "progress" | "interrupt" | "error" | "end";
+  label: string;
+  summary: string;
+  occurredAt: number;
+  variant: "default" | "accent" | "warm" | "success";
+}
+
 function extractProgressItem(event: AgentStreamEvent): ProgressItem | null {
-  if (event.event !== "custom") {
+  if (String(event.event) !== "custom") {
     return null;
   }
 
@@ -67,6 +82,89 @@ function unwrapAgentPayload(value: unknown): unknown {
   return value;
 }
 
+function formatMachineLabel(value: string): string {
+  return value
+    .split(/[/_|]+/)
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
+function buildStreamTimelineItem(
+  event: AgentStreamEvent,
+  messages: Messages,
+): StreamTimelineItem | null {
+  const eventName = String(event.event);
+  const payload = unwrapAgentPayload(event.data);
+
+  if (eventName === "custom") {
+    const phase = isRecord(payload) && typeof payload.phase === "string"
+      ? formatMachineLabel(payload.phase)
+      : messages.documentProcessing.ai.eventLabels.custom;
+    const summary = isRecord(payload) && typeof payload.message === "string"
+      ? payload.message
+      : messages.documentProcessing.ai.eventDescriptions.custom;
+
+    return {
+      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      kind: "progress",
+      label: phase,
+      summary,
+      occurredAt: Date.now(),
+      variant: "accent",
+    };
+  }
+
+  if (eventName === "values") {
+    const interrupts =
+      isRecord(payload) && Array.isArray(payload.__interrupt__)
+        ? payload.__interrupt__
+        : null;
+
+    if (!interrupts || interrupts.length === 0) {
+      return null;
+    }
+
+    return {
+      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      kind: "interrupt",
+      label: messages.documentProcessing.ai.eventLabels.interrupt,
+      summary: messages.documentProcessing.ai.eventDescriptions.interrupt,
+      occurredAt: Date.now(),
+      variant: "warm",
+    };
+  }
+
+  if (eventName === "error") {
+    const summary =
+      isRecord(payload) && typeof payload.message === "string"
+        ? payload.message
+        : messages.documentProcessing.ai.eventDescriptions.error;
+
+    return {
+      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      kind: "error",
+      label: messages.documentProcessing.ai.eventLabels.error,
+      summary,
+      occurredAt: Date.now(),
+      variant: "warm",
+    };
+  }
+
+  if (eventName === "end") {
+    return {
+      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      kind: "end",
+      label: messages.documentProcessing.ai.eventLabels.end,
+      summary: messages.documentProcessing.ai.eventDescriptions.end,
+      occurredAt: Date.now(),
+      variant: "success",
+    };
+  }
+
+  return null;
+}
+
 export function DocumentProcessingPanel({
   document,
   documentId,
@@ -80,7 +178,7 @@ export function DocumentProcessingPanel({
   onOpenChange: (open: boolean) => void;
   onDocumentRefresh: () => Promise<unknown>;
 }) {
-  const { messages } = useLocale();
+  const { locale, messages } = useLocale();
   const categoriesQuery = useDocumentCategoriesQuery({
     page: 1,
     pageSize: CATEGORY_PAGE_SIZE,
@@ -93,17 +191,26 @@ export function DocumentProcessingPanel({
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [customCategoryLabelKey, setCustomCategoryLabelKey] = useState("");
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
+  const [streamTimeline, setStreamTimeline] = useState<StreamTimelineItem[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const initializedDocumentIdRef = useRef<string | null>(null);
   const streamAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!open) {
+      initializedDocumentIdRef.current = null;
       return;
     }
 
+    if (initializedDocumentIdRef.current === document.id) {
+      return;
+    }
+
+    initializedDocumentIdRef.current = document.id;
     setAiError(null);
     setProgressItems([]);
+    setStreamTimeline([]);
     setSelectedCategoryId(document.classification.category?.id ?? "");
 
     if (
@@ -111,8 +218,21 @@ export function DocumentProcessingPanel({
       document.classification.suggested_category
     ) {
       setSelectedMode("ai");
-      setCustomCategoryName(document.classification.suggested_category.name);
+      setCustomCategoryName(
+        formatDocumentCategoryName(document.classification.suggested_category.name),
+      );
       setCustomCategoryLabelKey(document.classification.suggested_category.label_key);
+      return;
+    }
+
+    if (
+      document.classification.method === "ai" &&
+      (document.classification.status === "processing" ||
+        document.classification.status === "failed")
+    ) {
+      setSelectedMode("ai");
+      setCustomCategoryName("");
+      setCustomCategoryLabelKey("");
       return;
     }
 
@@ -121,8 +241,50 @@ export function DocumentProcessingPanel({
     setCustomCategoryLabelKey("");
   }, [
     document.classification.category?.id,
+    document.classification.method,
     document.classification.status,
     document.classification.suggested_category,
+    document.id,
+    open,
+  ]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setSelectedCategoryId(document.classification.category?.id ?? "");
+  }, [document.classification.category?.id, open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (
+      document.classification.method === "ai" &&
+      (isStreaming ||
+        document.classification.status === "processing" ||
+        document.classification.status === "pending_review" ||
+        document.classification.status === "failed")
+    ) {
+      setSelectedMode("ai");
+    }
+
+    if (
+      document.classification.status === "pending_review" &&
+      document.classification.suggested_category
+    ) {
+      setCustomCategoryName(
+        formatDocumentCategoryName(document.classification.suggested_category.name),
+      );
+      setCustomCategoryLabelKey(document.classification.suggested_category.label_key);
+    }
+  }, [
+    document.classification.method,
+    document.classification.status,
+    document.classification.suggested_category,
+    isStreaming,
     open,
   ]);
 
@@ -138,6 +300,22 @@ export function DocumentProcessingPanel({
 
   const categories = categoriesQuery.data?.items ?? [];
   const pendingSuggestion = document.classification.suggested_category;
+  const latestProgressItem = progressItems[progressItems.length - 1] ?? null;
+  const streamStatusVariant = isStreaming
+    ? "accent"
+    : streamTimeline.length > 0
+      ? "success"
+      : "default";
+  const streamStatusLabel = isStreaming
+    ? messages.documentProcessing.ai.liveBadge
+    : streamTimeline.length > 0
+      ? messages.documentProcessing.ai.completeBadge
+      : messages.documentProcessing.ai.idleBadge;
+  const timeFormatter = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
   const manualError = manualClassificationMutation.error
     ? getApiErrorMessage(
         manualClassificationMutation.error,
@@ -165,6 +343,7 @@ export function DocumentProcessingPanel({
   async function handleAiStart() {
     setAiError(null);
     setProgressItems([]);
+    setStreamTimeline([]);
     setSelectedMode("ai");
 
     try {
@@ -256,12 +435,36 @@ export function DocumentProcessingPanel({
         payload,
         signal: controller.signal,
         onEvent: async (event) => {
+          setStreamTimeline((currentItems) => {
+            const timelineItem = buildStreamTimelineItem(event, messages);
+            if (!timelineItem) {
+              return currentItems;
+            }
+
+            const previousItem = currentItems[currentItems.length - 1];
+            const isDuplicateInterrupt =
+              timelineItem.kind === "interrupt" &&
+              previousItem?.kind === "interrupt" &&
+              previousItem.label === timelineItem.label &&
+              previousItem.summary === timelineItem.summary;
+
+            if (isDuplicateInterrupt) {
+              return currentItems;
+            }
+
+            const nextItems = [
+              ...currentItems,
+              timelineItem,
+            ];
+            return nextItems.slice(-STREAM_EVENT_LIMIT);
+          });
+
           const progressItem = extractProgressItem(event);
           if (progressItem) {
             setProgressItems((currentItems) => [...currentItems, progressItem]);
           }
 
-          if (event.event === "error") {
+          if (String(event.event) === "error") {
             const payload = unwrapAgentPayload(event.data);
             if (isRecord(payload) && typeof payload.message === "string") {
               setAiError(payload.message);
@@ -414,35 +617,56 @@ export function DocumentProcessingPanel({
               </div>
             </div>
 
-            {isStreaming ? (
-              <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
-                  <LoaderCircle className="h-4 w-4 animate-spin text-[color:var(--color-accent)]" />
-                  {messages.documentProcessing.ai.streamingTitle}
-                </div>
-                <div className="mt-4 space-y-3">
-                  {progressItems.length ? (
-                    progressItems.map((item, index) => (
-                      <div
-                        key={`${item.phase}-${index}`}
-                        className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3"
-                      >
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                          {item.phase.replaceAll("_", " ")}
-                        </div>
-                        <div className="mt-2 text-sm text-[color:var(--color-ink)]">
-                          {item.message}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-[color:var(--color-muted)]">
-                      {messages.documentProcessing.ai.streamingEmpty}
-                    </div>
-                  )}
+            <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
+                    {isStreaming ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin text-[color:var(--color-accent)]" />
+                    ) : (
+                      <Bot className="h-4 w-4 text-[color:var(--color-accent)]" />
+                    )}
+                    {messages.documentProcessing.ai.streamingTitle}
+                    <Badge variant={streamStatusVariant}>{streamStatusLabel}</Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-[color:var(--color-muted)]">
+                    {latestProgressItem?.message ??
+                      (isStreaming
+                        ? messages.documentProcessing.ai.streamingEmpty
+                        : messages.documentProcessing.ai.timelineEmpty)}
+                  </p>
                 </div>
               </div>
-            ) : null}
+
+              <div className="mt-3 space-y-2">
+                {streamTimeline.length ? (
+                  streamTimeline.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start justify-between gap-3 rounded-xl border border-[color:var(--color-line)] bg-white px-3 py-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant={item.variant}>{item.label}</Badge>
+                          <span className="truncate text-sm text-[color:var(--color-ink)]">
+                            {item.summary}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="shrink-0 text-[11px] text-[color:var(--color-muted)]">
+                        {timeFormatter.format(item.occurredAt)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-xs text-[color:var(--color-muted)]">
+                    {isStreaming
+                      ? messages.documentProcessing.ai.streamingEmpty
+                      : messages.documentProcessing.ai.timelineEmpty}
+                  </div>
+                )}
+              </div>
+            </div>
 
             {pendingSuggestion ? (
               <div className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
@@ -466,7 +690,7 @@ export function DocumentProcessingPanel({
                       {messages.documentProcessing.ai.suggestedName}
                     </div>
                     <div className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
-                      {pendingSuggestion.name}
+                      {getDocumentCategoryDisplayName(pendingSuggestion, messages)}
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">

@@ -243,6 +243,61 @@ async def test_record_ai_suggestion_marks_document_pending_review(
 
 
 @pytest.mark.asyncio
+async def test_record_ai_suggestion_normalizes_slug_like_category_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, _ = build_service(monkeypatch)
+
+    await service.record_ai_suggestion(
+        document_id=document.id,
+        thread_id="thread-123",
+        suggested_category=SuggestedDocumentCategory(
+            name="construction_management_agreement",
+            label_key="construction_management_agreement",
+        ),
+        confidence=0.74,
+        rationale="The excerpt reads like a broad project management contract.",
+        sampled_chunk_indices=[0],
+        excerpt_character_count=42,
+    )
+
+    assert (
+        document.classification_metadata["suggested_category"]["name"]
+        == "Construction Management Agreement"
+    )
+    assert (
+        document.classification_metadata["suggested_category"]["label_key"]
+        == "construction_management_agreement"
+    )
+
+
+@pytest.mark.asyncio
+async def test_record_ai_suggestion_normalizes_accented_french_label_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, _ = build_service(monkeypatch)
+
+    await service.record_ai_suggestion(
+        document_id=document.id,
+        thread_id="thread-123",
+        suggested_category=SuggestedDocumentCategory(
+            name="Pièce d'identité",
+            label_key="pièce_d_identité",
+        ),
+        confidence=0.74,
+        rationale="L'extrait ressemble à un document d'identité officiel.",
+        sampled_chunk_indices=[0],
+        excerpt_character_count=42,
+    )
+
+    assert document.classification_metadata["suggested_category"]["name"] == "Pièce d'identité"
+    assert (
+        document.classification_metadata["suggested_category"]["label_key"]
+        == "piece_d_identite"
+    )
+
+
+@pytest.mark.asyncio
 async def test_accept_ai_suggested_category_creates_missing_category_and_assigns_document(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -266,3 +321,53 @@ async def test_accept_ai_suggested_category_creates_missing_category_and_assigns
     assert document.document_category is not None
     assert document.document_category.label_key == "utility_bill"
     assert len(categories) == 1
+
+
+@pytest.mark.asyncio
+async def test_accept_ai_suggested_category_normalizes_slug_like_category_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, categories = build_service(monkeypatch)
+    categories.clear()
+
+    await service.accept_ai_suggested_category(
+        document_id=document.id,
+        thread_id="thread-456",
+        suggested_category=SuggestedDocumentCategory(
+            name="construction_management_agreement",
+            label_key="construction_management_agreement",
+        ),
+        confidence=0.81,
+        rationale="The excerpt is closest to a construction management agreement.",
+        sampled_chunk_indices=[0],
+        excerpt_character_count=42,
+    )
+
+    assert document.document_category is not None
+    assert document.document_category.name == "Construction Management Agreement"
+    assert document.document_category.label_key == "construction_management_agreement"
+
+
+@pytest.mark.asyncio
+async def test_accept_ai_suggested_category_normalizes_accented_french_label_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, categories = build_service(monkeypatch)
+    categories.clear()
+
+    await service.accept_ai_suggested_category(
+        document_id=document.id,
+        thread_id="thread-456",
+        suggested_category=SuggestedDocumentCategory(
+            name="Pièce d'identité",
+            label_key="pièce_d_identité",
+        ),
+        confidence=0.81,
+        rationale="L'extrait est celui d'une pièce d'identité.",
+        sampled_chunk_indices=[0],
+        excerpt_character_count=42,
+    )
+
+    assert document.document_category is not None
+    assert document.document_category.name == "Pièce d'identité"
+    assert document.document_category.label_key == "piece_d_identite"

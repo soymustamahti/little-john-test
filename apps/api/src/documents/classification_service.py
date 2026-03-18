@@ -15,6 +15,7 @@ from src.documents.classification import (
     DocumentClassificationStatus,
     SuggestedDocumentCategory,
     build_classification_metadata,
+    normalize_document_category_name,
     slugify_document_category_label_key,
 )
 from src.documents.model import DocumentModel
@@ -26,6 +27,21 @@ from src.documents.schemas import (
 )
 
 DOCUMENT_CLASSIFICATION_ASSISTANT_ID = "document_classification_agent"
+
+
+def _normalize_suggested_category(
+    suggested_category: SuggestedDocumentCategory,
+) -> SuggestedDocumentCategory:
+    normalized_name = (
+        normalize_document_category_name(suggested_category.name) or suggested_category.name.strip()
+    )
+    normalized_label_key = slugify_document_category_label_key(
+        suggested_category.label_key or normalized_name
+    )
+    return SuggestedDocumentCategory(
+        name=normalized_name,
+        label_key=normalized_label_key,
+    )
 
 
 def get_document_classification_service(
@@ -200,6 +216,8 @@ class DocumentClassificationService:
         sampled_chunk_indices: Sequence[int],
         excerpt_character_count: int,
     ) -> None:
+        normalized_suggested_category = _normalize_suggested_category(suggested_category)
+
         async with self._session_factory() as session:
             document_repository = DocumentRepository(session)
             document = await self._get_document_or_404(document_repository, document_id)
@@ -213,7 +231,7 @@ class DocumentClassificationService:
                     thread_id=thread_id,
                     confidence=confidence,
                     rationale=rationale,
-                    suggested_category=suggested_category,
+                    suggested_category=normalized_suggested_category,
                     sampled_chunk_indices=sampled_chunk_indices,
                     excerpt_character_count=excerpt_character_count,
                 ),
@@ -231,15 +249,15 @@ class DocumentClassificationService:
         sampled_chunk_indices: Sequence[int],
         excerpt_character_count: int,
     ) -> None:
+        normalized_suggested_category = _normalize_suggested_category(suggested_category)
+
         async with self._session_factory() as session:
             document_repository = DocumentRepository(session)
             category_repository = DocumentCategoryRepository(session)
             document = await self._get_document_or_404(document_repository, document_id)
 
-            normalized_name = suggested_category.name.strip()
-            normalized_label_key = slugify_document_category_label_key(
-                suggested_category.label_key or suggested_category.name
-            )
+            normalized_name = normalized_suggested_category.name
+            normalized_label_key = normalized_suggested_category.label_key
 
             category = await category_repository.get_by_label_key(normalized_label_key)
             if category is None:
@@ -261,10 +279,7 @@ class DocumentClassificationService:
                     thread_id=thread_id,
                     confidence=confidence,
                     rationale=rationale,
-                    suggested_category=SuggestedDocumentCategory(
-                        name=normalized_name,
-                        label_key=normalized_label_key,
-                    ),
+                    suggested_category=normalized_suggested_category,
                     sampled_chunk_indices=sampled_chunk_indices,
                     excerpt_character_count=excerpt_character_count,
                 ),

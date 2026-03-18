@@ -323,6 +323,12 @@
       "startingAction": "Starting...",
       "streamingTitle": "Live agent progress",
       "streamingEmpty": "The agent is starting. Live progress updates will appear here.",
+      "timelineEmpty": "Start the AI run to see the full event stream.",
+      "idleBadge": "Idle",
+      "liveBadge": "Live",
+      "completeBadge": "Complete",
+      "eventCountLabel": "{count} events",
+      "rawPayloadAction": "Raw payload",
       "reviewBadge": "Suggested new category",
       "confidenceLabel": "Confidence {value}",
       "suggestedName": "Suggested category name",
@@ -333,7 +339,27 @@
       "customLabelKey": "Category label key",
       "acceptAction": "Accept suggestion",
       "createCustomAction": "Create custom category",
-      "dismissAction": "Dismiss suggestion"
+      "dismissAction": "Dismiss suggestion",
+      "eventLabels": {
+        "metadata": "Run started",
+        "custom": "Progress update",
+        "values": "State snapshot",
+        "updates": "State update",
+        "interrupt": "Human review requested",
+        "error": "Run error",
+        "end": "Run finished"
+      },
+      "eventDescriptions": {
+        "metadata": "Connected to the classification run and waiting for streamed updates.",
+        "custom": "The agent emitted a progress update.",
+        "values": "The run published a state snapshot.",
+        "updates": "State updated after: {nodes}.",
+        "updatesFallback": "The run published a state update.",
+        "interrupt": "The agent paused and is waiting for a human decision on the suggested category.",
+        "error": "The run reported an error.",
+        "end": "The streamed run finished.",
+        "fallback": "A stream event was received."
+      }
     }
   },
   "documentCategoriesTable": {

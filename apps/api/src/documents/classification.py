@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+
+SLUG_LIKE_DOCUMENT_CATEGORY_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:[ _-][a-z0-9]+)+$")
 
 
 class DocumentClassificationStatus(str, Enum):
@@ -38,10 +41,27 @@ class ParsedClassificationMetadata:
 
 
 def slugify_document_category_label_key(value: str) -> str:
-    normalized = re.sub(r"[^a-z0-9]+", "_", value.strip().lower())
+    normalized = unicodedata.normalize("NFKD", value.strip().lower())
+    normalized = "".join(
+        character
+        for character in normalized
+        if not unicodedata.combining(character)
+    )
+    normalized = re.sub(r"[^a-z0-9]+", "_", normalized)
     normalized = normalized.strip("_")
     normalized = re.sub(r"_+", "_", normalized)
     return normalized
+
+
+def normalize_document_category_name(value: str) -> str:
+    normalized = re.sub(r"\s+", " ", value.strip())
+    if not normalized:
+        return ""
+
+    if not SLUG_LIKE_DOCUMENT_CATEGORY_NAME_PATTERN.fullmatch(normalized):
+        return normalized
+
+    return " ".join(part.capitalize() for part in re.split(r"[ _-]+", normalized) if part)
 
 
 def build_classification_metadata(

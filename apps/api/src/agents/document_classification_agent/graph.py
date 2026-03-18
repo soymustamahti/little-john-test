@@ -19,6 +19,7 @@ from src.core.config import Settings, get_settings
 from src.core.database import get_async_session_factory
 from src.documents.classification import (
     SuggestedDocumentCategory,
+    normalize_document_category_name,
     slugify_document_category_label_key,
 )
 from src.documents.classification_service import (
@@ -302,7 +303,9 @@ def _format_categories(categories: list[dict[str, str]]) -> str:
 
 
 def _build_suggested_category(state: State) -> SuggestedDocumentCategory:
-    name = _require_string(state.suggested_category_name, "suggested_category_name")
+    name = normalize_document_category_name(
+        _require_string(state.suggested_category_name, "suggested_category_name")
+    )
     label_key = slugify_document_category_label_key(
         _require_string(state.suggested_category_label_key, "suggested_category_label_key")
     )
