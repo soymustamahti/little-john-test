@@ -9,23 +9,29 @@ from src.core.config import get_settings
 from src.core.database import get_async_db_session, get_async_session_factory
 from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
 from src.documents.classification_service import DocumentClassificationService
+from src.documents.extraction_schemas import (
+    DocumentExtractionRead,
+    DocumentExtractionReviewUpdate,
+    DocumentExtractionSessionCreate,
+    DocumentExtractionSessionRead,
+)
+from src.documents.extraction_service import DocumentExtractionService
 from src.documents.repository import DocumentRepository
-from src.documents.runtime import get_document_processing_service
+from src.documents.runtime import (
+    get_document_extraction_service as get_runtime_document_extraction_service,
+)
+from src.documents.runtime import (
+    get_document_processing_service,
+    get_r2_object_storage,
+)
 from src.documents.schemas import (
     DocumentClassificationSessionRead,
     DocumentRead,
     ManualDocumentClassificationRequest,
 )
 from src.documents.service import DocumentService, UploadedDocumentInput
-from src.storage.r2 import R2ObjectStorage
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
-
-
-@lru_cache
-def get_r2_object_storage() -> R2ObjectStorage:
-    settings = get_settings()
-    return R2ObjectStorage(settings.r2)
 
 
 def get_document_service(
@@ -44,6 +50,11 @@ def get_document_service(
 @lru_cache
 def get_document_classification_service() -> DocumentClassificationService:
     return DocumentClassificationService(get_async_session_factory())
+
+
+@lru_cache
+def get_document_extraction_service() -> DocumentExtractionService:
+    return get_runtime_document_extraction_service()
 
 
 async def read_upload_bytes(upload: UploadFile, max_size_bytes: int) -> bytes:
@@ -125,6 +136,44 @@ async def create_document_ai_classification_session(
     service: DocumentClassificationService = Depends(get_document_classification_service),
 ) -> DocumentClassificationSessionRead:
     return await service.start_ai_classification_session(document_id)
+
+
+@router.post(
+    "/{document_id}/extraction/ai-session",
+    response_model=DocumentExtractionSessionRead,
+)
+async def create_document_ai_extraction_session(
+    document_id: UUID,
+    payload: DocumentExtractionSessionCreate,
+    service: DocumentExtractionService = Depends(get_document_extraction_service),
+) -> DocumentExtractionSessionRead:
+    return await service.start_ai_extraction_session(
+        document_id=document_id,
+        template_id=payload.template_id,
+    )
+
+
+@router.get(
+    "/{document_id}/extraction",
+    response_model=DocumentExtractionRead,
+)
+async def get_document_extraction(
+    document_id: UUID,
+    service: DocumentExtractionService = Depends(get_document_extraction_service),
+) -> DocumentExtractionRead:
+    return await service.get_extraction(document_id)
+
+
+@router.put(
+    "/{document_id}/extraction/review",
+    response_model=DocumentExtractionRead,
+)
+async def confirm_document_extraction_review(
+    document_id: UUID,
+    payload: DocumentExtractionReviewUpdate,
+    service: DocumentExtractionService = Depends(get_document_extraction_service),
+) -> DocumentExtractionRead:
+    return await service.confirm_review(document_id=document_id, payload=payload)
 
 
 @router.get("/{document_id}/content")

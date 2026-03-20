@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.db.base import Base
 from src.document_categories.model import DocumentCategoryModel
 from src.documents.classification import DocumentClassificationStatus
+from src.extraction_templates.model import ExtractionTemplateModel
 
 
 class DocumentModel(Base):
@@ -70,3 +71,28 @@ class DocumentChunkModel(Base):
     embedding_dimensions: Mapped[int] = mapped_column(Integer(), nullable=False)
     embedding: Mapped[list[float]] = mapped_column(ARRAY(Float()), nullable=False)
     document: Mapped[DocumentModel] = relationship(back_populates="chunks")
+
+
+class DocumentExtractionModel(Base):
+    __tablename__ = "document_extractions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    extraction_template_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("extraction_templates.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    method: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    extraction_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    extraction_metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    extracted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    document: Mapped[DocumentModel] = relationship()
+    extraction_template: Mapped[ExtractionTemplateModel | None] = relationship()

@@ -297,6 +297,11 @@
     "closeAction": "Close",
     "backAction": "Back",
     "missingThread": "The AI review thread is missing. Start the AI flow again.",
+    "templateLabel": "Extraction template",
+    "templatePlaceholder": "Choose an extraction template",
+    "templateLoading": "Loading extraction templates...",
+    "templateDescription": "The selected template defines which fields the extraction agent must collect and review.",
+    "templateRequired": "Choose an extraction template before starting the workflow.",
     "statuses": {
       "unclassified": "Unclassified",
       "processing": "Processing",
@@ -360,6 +365,38 @@
         "end": "The streamed run finished.",
         "fallback": "A stream event was received."
       }
+    },
+    "extraction": {
+      "reviewTitle": "Extraction review",
+      "startAction": "Start extraction",
+      "startingAction": "Starting extraction...",
+      "streamingTitle": "Live extraction progress",
+      "streamingEmpty": "The extraction agent is starting. Live progress updates will appear here.",
+      "timelineEmpty": "Start extraction to see the retrieval and extraction steps.",
+      "statuses": {
+        "not_started": "Not started",
+        "processing": "Processing",
+        "pending_review": "Pending review",
+        "confirmed": "Confirmed",
+        "failed": "Failed"
+      },
+      "overallConfidence": "Overall confidence {value}",
+      "reasoningTitle": "Extraction summary",
+      "moduleLabel": "Module",
+      "fieldConfidence": "Confidence (%)",
+      "requiredBadge": "Required",
+      "sourceChunks": "Source chunks: {value}",
+      "noSource": "No source chunks were linked to this value.",
+      "tableEmpty": "No evidence-backed rows were extracted for this table.",
+      "rowLabel": "Row {value}",
+      "rowConfidence": "Row confidence {value}",
+      "saveAction": "Confirm reviewed extraction",
+      "savingAction": "Saving review...",
+      "reviewHint": "You can edit extracted values and confidence before confirming the result.",
+      "emptyState": "No extraction draft is available yet.",
+      "emptyValue": "Empty value",
+      "booleanTrue": "True",
+      "booleanFalse": "False"
     }
   },
   "documentCategoriesTable": {

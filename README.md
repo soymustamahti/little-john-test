@@ -15,10 +15,14 @@ This repository is now in early implementation.
 - `apps/api` now also exposes the first document-classification slice: manual category assignment,
   AI classification session bootstrap, and an Aegra/LangGraph document-classification agent with
   streamed progress plus human review for suggested new categories
+- `apps/api` now also exposes the first structured-extraction slice: AI extraction session
+  bootstrap, a LangGraph extraction agent with hybrid retrieval tools, persisted reviewable
+  extraction drafts, and confirmation endpoints for human-reviewed extraction results
 - `apps/web` now includes a documents workspace for upload, list, detail, and delete flows in
   addition to the existing template and document-category screens
 - `apps/web` now includes a document-processing flow on the document detail page for manual or AI
-  classification, including review of AI-suggested categories
+  classification, including review of AI-suggested categories plus template-driven extraction
+  review with editable values and confidence inputs
 - `apps/web` now includes the first real operator UI for template management
 - Agent guidance files remain part of the repository so future slices follow the same constraints
 
@@ -48,10 +52,17 @@ an event-driven, FastAPI-friendly architecture for the actual feature work.
 The current backend direction is now more concrete:
 
 - LangGraph for ingestion, retrieval, and correction workflows
-- Mistral OCR for OCR-capable ingestion
+- OpenAI OCR for OCR-capable ingestion
 - R2 for original document storage
 - PostgreSQL plus pgvector for durable metadata, chunks, and embeddings
 - hybrid retrieval with keyword search, semantic search, and reranking
+
+Current prototype note:
+
+- the new extraction slice intentionally keeps retrieval simple and explainable for the interview:
+  the extraction agent uses stored chunk embeddings, keyword overlap scoring, hybrid candidate
+  merging, chunk inspection, and pandas-backed spreadsheet preview tools before producing a
+  reviewable extraction draft
 
 ## Important Repository Override
 

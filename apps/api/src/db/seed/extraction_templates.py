@@ -729,6 +729,277 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
             },
         ],
     },
+    {
+        "id": "55555555-5555-4555-8555-555555555555",
+        "name": "Convention de mandat de maîtrise d'ouvrage",
+        "description": (
+            "Modele francophone pour une convention de mandat de maitrise "
+            "d'ouvrage avec identification, parties, montants clefs et annexes."
+        ),
+        "locale": "fr",
+        "modules": [
+            {
+                "key": "identification_convention",
+                "label": "Identification de la convention",
+                "fields": [
+                    {
+                        "key": "titre_convention",
+                        "label": "Titre de la convention",
+                        "required": True,
+                        "description": (
+                            "Intitule principal du document en page de garde."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "operation",
+                        "label": "Operation",
+                        "required": True,
+                        "description": (
+                            "Nom du projet ou de l'operation confiee au mandataire."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "phase_operation",
+                        "label": "Phase de l'operation",
+                        "required": False,
+                        "description": (
+                            "Phase mentionnee en couverture ou dans le corps."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "objet_convention",
+                        "label": "Objet de la convention",
+                        "required": True,
+                        "description": (
+                            "Objet formule de la mission confiee au mandataire."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "juridiction_competente",
+                        "label": "Juridiction competente",
+                        "required": False,
+                        "description": (
+                            "Juridiction citee pour le traitement des litiges."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                ],
+            },
+            {
+                "key": "parties",
+                "label": "Parties",
+                "fields": [
+                    {
+                        "key": "maitre_ouvrage_nom",
+                        "label": "Nom du maitre d'ouvrage",
+                        "required": True,
+                        "description": (
+                            "Nom de l'entite designee comme maitre d'ouvrage."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "maitre_ouvrage_siret",
+                        "label": "SIRET du maitre d'ouvrage",
+                        "required": False,
+                        "description": (
+                            "Numero SIRET du maitre d'ouvrage lorsqu'il est present."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "maitre_ouvrage_adresse",
+                        "label": "Adresse du maitre d'ouvrage",
+                        "required": False,
+                        "description": (
+                            "Adresse postale ou siege du maitre d'ouvrage."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "maitre_ouvrage_representant",
+                        "label": "Representant du maitre d'ouvrage",
+                        "required": False,
+                        "description": (
+                            "Personne signataire ou representant le maitre d'ouvrage."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "mandataire_nom",
+                        "label": "Nom du mandataire",
+                        "required": True,
+                        "description": (
+                            "Nom complet de l'entite designee comme mandataire."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "mandataire_identifiant_legal",
+                        "label": "Identifiant legal du mandataire",
+                        "required": False,
+                        "description": (
+                            "Numero RCS, SIREN ou identifiant unique du mandataire."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "mandataire_adresse",
+                        "label": "Adresse du mandataire",
+                        "required": False,
+                        "description": "Siege social ou adresse du mandataire.",
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "mandataire_representant",
+                        "label": "Representant du mandataire",
+                        "required": False,
+                        "description": (
+                            "Personne habilitee a engager le mandataire."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                ],
+            },
+            {
+                "key": "modalites_financieres",
+                "label": "Modalites financieres",
+                "fields": [
+                    {
+                        "key": "budget_etudes_ht",
+                        "label": "Budget etudes HT",
+                        "required": True,
+                        "description": (
+                            "Montant hors taxes de la partie etudes de l'operation."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "budget_travaux_ht",
+                        "label": "Budget travaux HT",
+                        "required": False,
+                        "description": (
+                            "Montant hors taxes de la partie travaux lorsqu'il est present."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "budget_total_operation_ht",
+                        "label": "Budget total operation HT",
+                        "required": False,
+                        "description": (
+                            "Montant total hors taxes de l'operation."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "remuneration_mandataire_ht",
+                        "label": "Remuneration du mandataire HT",
+                        "required": True,
+                        "description": (
+                            "Remuneration forfaitaire hors taxes du mandataire."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "devise",
+                        "label": "Devise",
+                        "required": False,
+                        "description": (
+                            "Devise ou symbole monetaire utilise dans la convention."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "mission_limitee_aux_etudes",
+                        "label": "Mission limitee aux etudes",
+                        "required": False,
+                        "description": (
+                            "Indique si la mission du mandataire est limitee aux etudes."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "boolean",
+                    },
+                ],
+            },
+            {
+                "key": "cloture_et_annexes",
+                "label": "Cloture et annexes",
+                "fields": [
+                    {
+                        "key": "delai_remise_bilan_mois",
+                        "label": "Delai de remise du bilan (mois)",
+                        "required": False,
+                        "description": (
+                            "Delai en mois pour remettre le bilan general apres expiration."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "delai_notification_quitus_mois",
+                        "label": "Delai de notification du quitus (mois)",
+                        "required": False,
+                        "description": (
+                            "Delai en mois laisse au maitre d'ouvrage pour notifier le quitus."
+                        ),
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "liste_annexes",
+                        "label": "Liste des annexes",
+                        "required": False,
+                        "description": (
+                            "Annexes officiellement mentionnees dans la convention."
+                        ),
+                        "kind": "table",
+                        "min_rows": 1,
+                        "columns": [
+                            {
+                                "key": "reference_annexe",
+                                "label": "Reference annexe",
+                                "value_type": "string",
+                                "required": True,
+                                "description": (
+                                    "Numero ou identifiant de l'annexe."
+                                ),
+                            },
+                            {
+                                "key": "intitule_annexe",
+                                "label": "Intitule annexe",
+                                "value_type": "string",
+                                "required": True,
+                                "description": "Titre ou nom de l'annexe.",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    },
 ]
 
 

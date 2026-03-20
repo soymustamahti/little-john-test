@@ -144,6 +144,10 @@ class OpenAIProviderSettings(BaseSettings):
         default="gpt-4o-mini",
         description="Model used for document classification",
     )
+    extraction_model: str = Field(
+        default="gpt-4.1-mini",
+        description="Model used for document extraction and retrieval planning",
+    )
     embedding_model: str = Field(
         default="text-embedding-3-small",
         description="Model used for chunk embeddings",

@@ -9,19 +9,25 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
+import { DocumentExtractionReview } from "@/components/features/documents/document-extraction-review";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import {
+  useConfirmDocumentExtractionReviewMutation,
+  useCreateDocumentAiExtractionSessionMutation,
   useCreateDocumentAiClassificationSessionMutation,
+  useDocumentExtractionQuery,
   useManualDocumentClassificationMutation,
 } from "@/hooks/use-documents";
+import { useTemplatesQuery } from "@/hooks/use-templates";
 import { createAgentThread, streamAgentRun } from "@/lib/api/aegra";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import type { Messages } from "@/lib/i18n";
 import { useLocale } from "@/providers/locale-provider";
 import type { AgentStreamEvent } from "@/types/aegra";
-import type { Document } from "@/types/documents";
+import type { Document, DocumentExtractionResult } from "@/types/documents";
+import { getDocumentExtractionStatusLabel } from "@/types/documents";
 import {
   formatDocumentCategoryName,
   getDocumentCategoryDisplayName,
@@ -34,7 +40,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const CATEGORY_PAGE_SIZE = 100;
+const TEMPLATE_PAGE_SIZE = 100;
 const DOCUMENT_CLASSIFICATION_ASSISTANT_ID = "document_classification_agent";
+const DOCUMENT_EXTRACTION_ASSISTANT_ID = "document_extraction_agent";
 const STREAM_EVENT_LIMIT = 48;
 
 interface ProgressItem {
@@ -165,6 +173,53 @@ function buildStreamTimelineItem(
   return null;
 }
 
+function upsertTimelineItem(
+  currentItems: StreamTimelineItem[],
+  timelineItem: StreamTimelineItem,
+): StreamTimelineItem[] {
+  const previousItem = currentItems[currentItems.length - 1];
+  const isDuplicateInterrupt =
+    timelineItem.kind === "interrupt" &&
+    previousItem?.kind === "interrupt" &&
+    previousItem.label === timelineItem.label &&
+    previousItem.summary === timelineItem.summary;
+
+  if (isDuplicateInterrupt) {
+    return currentItems;
+  }
+
+  const shouldReplaceActiveProgress =
+    timelineItem.kind === "progress" &&
+    previousItem?.kind === "progress" &&
+    previousItem.label === timelineItem.label;
+
+  if (shouldReplaceActiveProgress && previousItem) {
+    return [
+      ...currentItems.slice(0, -1),
+      {
+        ...previousItem,
+        summary: timelineItem.summary,
+        occurredAt: timelineItem.occurredAt,
+        variant: timelineItem.variant,
+      },
+    ];
+  }
+
+  return [...currentItems, timelineItem].slice(-STREAM_EVENT_LIMIT);
+}
+
+function upsertProgressItem(
+  currentItems: ProgressItem[],
+  progressItem: ProgressItem,
+): ProgressItem[] {
+  const previousItem = currentItems[currentItems.length - 1];
+  if (previousItem?.phase === progressItem.phase) {
+    return [...currentItems.slice(0, -1), progressItem];
+  }
+
+  return [...currentItems, progressItem].slice(-STREAM_EVENT_LIMIT);
+}
+
 export function DocumentProcessingPanel({
   document,
   documentId,
@@ -183,17 +238,31 @@ export function DocumentProcessingPanel({
     page: 1,
     pageSize: CATEGORY_PAGE_SIZE,
   });
+  const templatesQuery = useTemplatesQuery({
+    page: 1,
+    pageSize: TEMPLATE_PAGE_SIZE,
+  });
+  const extractionQuery = useDocumentExtractionQuery(documentId, open);
   const manualClassificationMutation = useManualDocumentClassificationMutation();
   const aiSessionMutation = useCreateDocumentAiClassificationSessionMutation();
+  const extractionSessionMutation = useCreateDocumentAiExtractionSessionMutation();
+  const extractionReviewMutation = useConfirmDocumentExtractionReviewMutation();
 
   const [selectedMode, setSelectedMode] = useState<"choose" | "manual" | "ai">("choose");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [pendingExtractionTemplateId, setPendingExtractionTemplateId] = useState<string | null>(
+    null,
+  );
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [customCategoryLabelKey, setCustomCategoryLabelKey] = useState("");
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
   const [streamTimeline, setStreamTimeline] = useState<StreamTimelineItem[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [activeStreamKind, setActiveStreamKind] = useState<
+    "classification" | "extraction" | null
+  >(null);
   const initializedDocumentIdRef = useRef<string | null>(null);
   const streamAbortControllerRef = useRef<AbortController | null>(null);
 
@@ -212,6 +281,8 @@ export function DocumentProcessingPanel({
     setProgressItems([]);
     setStreamTimeline([]);
     setSelectedCategoryId(document.classification.category?.id ?? "");
+    setSelectedTemplateId(extractionQuery.data?.template.id ?? "");
+    setPendingExtractionTemplateId(null);
 
     if (
       document.classification.status === "pending_review" &&
@@ -245,6 +316,7 @@ export function DocumentProcessingPanel({
     document.classification.status,
     document.classification.suggested_category,
     document.id,
+    extractionQuery.data?.template.id,
     open,
   ]);
 
@@ -255,6 +327,16 @@ export function DocumentProcessingPanel({
 
     setSelectedCategoryId(document.classification.category?.id ?? "");
   }, [document.classification.category?.id, open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (!selectedTemplateId && extractionQuery.data?.template.id) {
+      setSelectedTemplateId(extractionQuery.data.template.id);
+    }
+  }, [extractionQuery.data?.template.id, open, selectedTemplateId]);
 
   useEffect(() => {
     if (!open) {
@@ -288,6 +370,32 @@ export function DocumentProcessingPanel({
     open,
   ]);
 
+  const startPendingExtraction = useEffectEvent((templateId: string) => {
+    void handleExtractionStart(templateId);
+  });
+
+  useEffect(() => {
+    if (!open || !pendingExtractionTemplateId || isStreaming) {
+      return;
+    }
+
+    if (document.classification.status === "classified") {
+      const templateId = pendingExtractionTemplateId;
+      setPendingExtractionTemplateId(null);
+      startPendingExtraction(templateId);
+      return;
+    }
+
+    if (document.classification.status === "failed") {
+      setPendingExtractionTemplateId(null);
+    }
+  }, [
+    document.classification.status,
+    isStreaming,
+    open,
+    pendingExtractionTemplateId,
+  ]);
+
   useEffect(() => {
     return () => {
       streamAbortControllerRef.current?.abort();
@@ -299,6 +407,8 @@ export function DocumentProcessingPanel({
   }
 
   const categories = categoriesQuery.data?.items ?? [];
+  const templates = templatesQuery.data?.items ?? [];
+  const extraction = extractionQuery.data;
   const pendingSuggestion = document.classification.suggested_category;
   const latestProgressItem = progressItems[progressItems.length - 1] ?? null;
   const streamStatusVariant = isStreaming
@@ -322,9 +432,32 @@ export function DocumentProcessingPanel({
         messages.common.apiError,
       )
     : null;
+  const extractionError = extractionReviewMutation.error
+    ? getApiErrorMessage(
+        extractionReviewMutation.error,
+        messages.common.apiError,
+      )
+    : null;
+  const streamingTitle =
+    activeStreamKind === "extraction"
+      ? messages.documentProcessing.extraction.streamingTitle
+      : messages.documentProcessing.ai.streamingTitle;
+  const streamingEmptyMessage =
+    activeStreamKind === "extraction"
+      ? messages.documentProcessing.extraction.streamingEmpty
+      : messages.documentProcessing.ai.streamingEmpty;
+  const timelineEmptyMessage =
+    activeStreamKind === "extraction"
+      ? messages.documentProcessing.extraction.timelineEmpty
+      : messages.documentProcessing.ai.timelineEmpty;
 
   async function handleManualClassification() {
     if (!selectedCategoryId) {
+      return;
+    }
+
+    if (!selectedTemplateId) {
+      setAiError(messages.documentProcessing.templateRequired);
       return;
     }
 
@@ -333,18 +466,24 @@ export function DocumentProcessingPanel({
         documentId,
         categoryId: selectedCategoryId,
       });
+      setPendingExtractionTemplateId(selectedTemplateId);
       await onDocumentRefresh();
-      onOpenChange(false);
     } catch {
       return;
     }
   }
 
   async function handleAiStart() {
+    if (!selectedTemplateId) {
+      setAiError(messages.documentProcessing.templateRequired);
+      return;
+    }
+
     setAiError(null);
     setProgressItems([]);
     setStreamTimeline([]);
     setSelectedMode("ai");
+    setPendingExtractionTemplateId(selectedTemplateId);
 
     try {
       const session = await aiSessionMutation.mutateAsync(documentId);
@@ -357,12 +496,50 @@ export function DocumentProcessingPanel({
       });
 
       await runAgentStream({
+        kind: "classification",
         threadId: session.thread_id,
         payload: {
           assistant_id: session.assistant_id,
           input: {
             document_id: documentId,
             thread_id: session.thread_id,
+          },
+          stream_mode: ["custom"],
+          on_disconnect: "continue",
+        },
+      });
+    } catch (error) {
+      setAiError(getApiErrorMessage(error, messages.common.apiError));
+    }
+  }
+
+  async function handleExtractionStart(templateId: string) {
+    setAiError(null);
+    setSelectedMode("ai");
+
+    try {
+      const session = await extractionSessionMutation.mutateAsync({
+        documentId,
+        templateId,
+      });
+      await createAgentThread({
+        threadId: session.thread_id,
+        metadata: {
+          document_id: documentId,
+          extraction_template_id: templateId,
+          purpose: "document_extraction",
+        },
+      });
+
+      await runAgentStream({
+        kind: "extraction",
+        threadId: session.thread_id,
+        payload: {
+          assistant_id: DOCUMENT_EXTRACTION_ASSISTANT_ID,
+          input: {
+            document_id: documentId,
+            thread_id: session.thread_id,
+            extraction_template_id: templateId,
           },
           stream_mode: ["custom"],
           on_disconnect: "continue",
@@ -394,6 +571,7 @@ export function DocumentProcessingPanel({
 
     try {
       await runAgentStream({
+        kind: "classification",
         threadId,
         payload: {
           assistant_id: DOCUMENT_CLASSIFICATION_ASSISTANT_ID,
@@ -409,24 +587,24 @@ export function DocumentProcessingPanel({
           on_disconnect: "continue",
         },
       });
-
-      await onDocumentRefresh();
-      onOpenChange(false);
     } catch (error) {
       setAiError(getApiErrorMessage(error, messages.common.apiError));
     }
   }
 
   async function runAgentStream({
+    kind,
     threadId,
     payload,
   }: {
+    kind: "classification" | "extraction";
     threadId: string;
     payload: Parameters<typeof streamAgentRun>[0]["payload"];
   }) {
     const controller = new AbortController();
     streamAbortControllerRef.current = controller;
     setIsStreaming(true);
+    setActiveStreamKind(kind);
     setAiError(null);
 
     try {
@@ -440,28 +618,14 @@ export function DocumentProcessingPanel({
             if (!timelineItem) {
               return currentItems;
             }
-
-            const previousItem = currentItems[currentItems.length - 1];
-            const isDuplicateInterrupt =
-              timelineItem.kind === "interrupt" &&
-              previousItem?.kind === "interrupt" &&
-              previousItem.label === timelineItem.label &&
-              previousItem.summary === timelineItem.summary;
-
-            if (isDuplicateInterrupt) {
-              return currentItems;
-            }
-
-            const nextItems = [
-              ...currentItems,
-              timelineItem,
-            ];
-            return nextItems.slice(-STREAM_EVENT_LIMIT);
+            return upsertTimelineItem(currentItems, timelineItem);
           });
 
           const progressItem = extractProgressItem(event);
           if (progressItem) {
-            setProgressItems((currentItems) => [...currentItems, progressItem]);
+            setProgressItems((currentItems) =>
+              upsertProgressItem(currentItems, progressItem)
+            );
           }
 
           if (String(event.event) === "error") {
@@ -474,8 +638,30 @@ export function DocumentProcessingPanel({
       });
     } finally {
       setIsStreaming(false);
+      setActiveStreamKind(null);
       streamAbortControllerRef.current = null;
-      await onDocumentRefresh();
+      await Promise.all([
+        onDocumentRefresh(),
+        extractionQuery.refetch(),
+      ]);
+    }
+  }
+
+  async function handleExtractionReviewSave(result: DocumentExtractionResult) {
+    if (!result) {
+      return;
+    }
+
+    try {
+      await extractionReviewMutation.mutateAsync({
+        documentId,
+        payload: {
+          result,
+        },
+      });
+      await extractionQuery.refetch();
+    } catch {
+      return;
     }
   }
 
@@ -513,6 +699,33 @@ export function DocumentProcessingPanel({
       </CardHeader>
 
       <CardContent className="space-y-6 pt-6">
+        <div className="space-y-2 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+          <Label htmlFor="document-processing-template">
+            {messages.documentProcessing.templateLabel}
+          </Label>
+          <select
+            id="document-processing-template"
+            className="flex h-11 w-full rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none focus:border-[color:var(--color-accent)]"
+            value={selectedTemplateId}
+            onChange={(event) => setSelectedTemplateId(event.target.value)}
+            disabled={templatesQuery.isLoading}
+          >
+            <option value="">
+              {templatesQuery.isLoading
+                ? messages.documentProcessing.templateLoading
+                : messages.documentProcessing.templatePlaceholder}
+            </option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-[color:var(--color-muted)]">
+            {messages.documentProcessing.templateDescription}
+          </p>
+        </div>
+
         {selectedMode === "choose" ? (
           <div className="grid gap-4 lg:grid-cols-2">
             <button
@@ -590,7 +803,9 @@ export function DocumentProcessingPanel({
               <Button
                 onClick={handleManualClassification}
                 disabled={
-                  !selectedCategoryId || manualClassificationMutation.isPending
+                  !selectedCategoryId ||
+                  !selectedTemplateId ||
+                  manualClassificationMutation.isPending
                 }
               >
                 {manualClassificationMutation.isPending
@@ -610,11 +825,16 @@ export function DocumentProcessingPanel({
 
         {selectedMode === "ai" ? (
           <div className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-white p-5">
-            <div className="flex items-center gap-3 text-[color:var(--color-ink)]">
+            <div className="flex flex-wrap items-center gap-3 text-[color:var(--color-ink)]">
               <Bot className="h-5 w-5 text-[color:var(--color-accent)]" />
               <div className="text-lg font-semibold">
                 {messages.documentProcessing.ai.title}
               </div>
+              {extraction ? (
+                <Badge variant={extraction.status === "confirmed" ? "success" : "accent"}>
+                  {getDocumentExtractionStatusLabel(extraction.status, messages)}
+                </Badge>
+              ) : null}
             </div>
 
             <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
@@ -626,14 +846,14 @@ export function DocumentProcessingPanel({
                     ) : (
                       <Bot className="h-4 w-4 text-[color:var(--color-accent)]" />
                     )}
-                    {messages.documentProcessing.ai.streamingTitle}
+                    {streamingTitle}
                     <Badge variant={streamStatusVariant}>{streamStatusLabel}</Badge>
                   </div>
                   <p className="mt-1 text-xs text-[color:var(--color-muted)]">
                     {latestProgressItem?.message ??
                       (isStreaming
-                        ? messages.documentProcessing.ai.streamingEmpty
-                        : messages.documentProcessing.ai.timelineEmpty)}
+                        ? streamingEmptyMessage
+                        : timelineEmptyMessage)}
                   </p>
                 </div>
               </div>
@@ -661,8 +881,8 @@ export function DocumentProcessingPanel({
                 ) : (
                   <div className="text-xs text-[color:var(--color-muted)]">
                     {isStreaming
-                      ? messages.documentProcessing.ai.streamingEmpty
-                      : messages.documentProcessing.ai.timelineEmpty}
+                      ? streamingEmptyMessage
+                      : timelineEmptyMessage}
                   </div>
                 )}
               </div>
@@ -780,9 +1000,37 @@ export function DocumentProcessingPanel({
               </div>
             ) : null}
 
+            {extraction?.result ? (
+              <div className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="accent">
+                    {messages.documentProcessing.extraction.reviewTitle}
+                  </Badge>
+                  <Badge
+                    variant={extraction.status === "confirmed" ? "success" : "warm"}
+                  >
+                    {getDocumentExtractionStatusLabel(extraction.status, messages)}
+                  </Badge>
+                </div>
+                <DocumentExtractionReview
+                  key={extraction.updated_at}
+                  extraction={extraction}
+                  messages={messages}
+                  isSaving={extractionReviewMutation.isPending}
+                  onSave={handleExtractionReviewSave}
+                />
+              </div>
+            ) : null}
+
             {aiError ? (
               <div className="rounded-xl border border-[color:var(--color-warm-soft)] bg-[color:var(--color-background)] px-4 py-3 text-sm text-[color:var(--color-accent-warm)]">
                 {aiError}
+              </div>
+            ) : null}
+
+            {extractionError ? (
+              <div className="rounded-xl border border-[color:var(--color-warm-soft)] bg-[color:var(--color-background)] px-4 py-3 text-sm text-[color:var(--color-accent-warm)]">
+                {extractionError}
               </div>
             ) : null}
 
@@ -792,6 +1040,17 @@ export function DocumentProcessingPanel({
                   {aiSessionMutation.isPending
                     ? messages.documentProcessing.ai.startingAction
                     : messages.documentProcessing.ai.startAction}
+                </Button>
+              ) : null}
+              {!isStreaming && document.classification.status === "classified" ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => handleExtractionStart(selectedTemplateId)}
+                  disabled={!selectedTemplateId || extractionSessionMutation.isPending}
+                >
+                  {extractionSessionMutation.isPending
+                    ? messages.documentProcessing.extraction.startingAction
+                    : messages.documentProcessing.extraction.startAction}
                 </Button>
               ) : null}
               <Button

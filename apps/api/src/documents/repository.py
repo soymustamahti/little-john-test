@@ -52,6 +52,17 @@ class DocumentRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_for_extraction(self, document_id: UUID) -> DocumentModel | None:
+        result = await self._session.execute(
+            select(DocumentModel)
+            .options(
+                selectinload(DocumentModel.chunks),
+                selectinload(DocumentModel.document_category),
+            )
+            .where(DocumentModel.id == document_id)
+        )
+        return result.scalar_one_or_none()
+
     async def create(
         self,
         payload: DocumentCreateRecord,

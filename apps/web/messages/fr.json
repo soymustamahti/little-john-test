@@ -297,6 +297,11 @@
     "closeAction": "Fermer",
     "backAction": "Retour",
     "missingThread": "Le thread de revue IA est introuvable. Relancez le flux IA.",
+    "templateLabel": "Modèle d'extraction",
+    "templatePlaceholder": "Choisissez un modèle d'extraction",
+    "templateLoading": "Chargement des modèles d'extraction...",
+    "templateDescription": "Le modèle sélectionné définit les champs que l'agent d'extraction doit collecter puis faire réviser.",
+    "templateRequired": "Choisissez un modèle d'extraction avant de lancer le flux.",
     "statuses": {
       "unclassified": "Non classé",
       "processing": "Traitement en cours",
@@ -360,6 +365,38 @@
         "end": "Le flux d'exécution est terminé.",
         "fallback": "Un événement du flux a été reçu."
       }
+    },
+    "extraction": {
+      "reviewTitle": "Revue de l'extraction",
+      "startAction": "Lancer l'extraction",
+      "startingAction": "Démarrage de l'extraction...",
+      "streamingTitle": "Progression de l'extraction en direct",
+      "streamingEmpty": "L'agent d'extraction démarre. Les étapes en direct s'afficheront ici.",
+      "timelineEmpty": "Lancez l'extraction pour voir les étapes de recherche et d'extraction.",
+      "statuses": {
+        "not_started": "Non démarrée",
+        "processing": "Traitement en cours",
+        "pending_review": "En attente de revue",
+        "confirmed": "Confirmée",
+        "failed": "Échec"
+      },
+      "overallConfidence": "Confiance globale {value}",
+      "reasoningTitle": "Résumé de l'extraction",
+      "moduleLabel": "Module",
+      "fieldConfidence": "Confiance (%)",
+      "requiredBadge": "Obligatoire",
+      "sourceChunks": "Chunks source : {value}",
+      "noSource": "Aucun chunk source n'a été lié à cette valeur.",
+      "tableEmpty": "Aucune ligne appuyée par des preuves n'a été extraite pour ce tableau.",
+      "rowLabel": "Ligne {value}",
+      "rowConfidence": "Confiance de la ligne {value}",
+      "saveAction": "Confirmer l'extraction revue",
+      "savingAction": "Enregistrement de la revue...",
+      "reviewHint": "Vous pouvez modifier les valeurs extraites et la confiance avant de confirmer le résultat.",
+      "emptyState": "Aucun brouillon d'extraction n'est encore disponible.",
+      "emptyValue": "Valeur vide",
+      "booleanTrue": "Vrai",
+      "booleanFalse": "Faux"
     }
   },
   "documentCategoriesTable": {

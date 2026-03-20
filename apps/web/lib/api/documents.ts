@@ -1,7 +1,12 @@
+import axios from "axios";
+
 import { apiClient } from "@/lib/api/client";
 import type {
   Document,
   DocumentClassificationSession,
+  DocumentExtraction,
+  DocumentExtractionReviewPayload,
+  DocumentExtractionSession,
   DocumentUploadBatchResult,
   DocumentUploadFailureResult,
   DocumentUploadSuccessResult,
@@ -39,6 +44,44 @@ export async function classifyDocumentManually(
 export async function createDocumentAiClassificationSession(documentId: string) {
   const response = await apiClient.post<DocumentClassificationSession>(
     `/api/documents/${documentId}/classification/ai-session`,
+  );
+  return response.data;
+}
+
+export async function createDocumentAiExtractionSession(
+  documentId: string,
+  templateId: string,
+) {
+  const response = await apiClient.post<DocumentExtractionSession>(
+    `/api/documents/${documentId}/extraction/ai-session`,
+    {
+      template_id: templateId,
+    },
+  );
+  return response.data;
+}
+
+export async function getDocumentExtraction(documentId: string) {
+  try {
+    const response = await apiClient.get<DocumentExtraction>(
+      `/api/documents/${documentId}/extraction`,
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function confirmDocumentExtractionReview(
+  documentId: string,
+  payload: DocumentExtractionReviewPayload,
+) {
+  const response = await apiClient.put<DocumentExtraction>(
+    `/api/documents/${documentId}/extraction/review`,
+    payload,
   );
   return response.data;
 }

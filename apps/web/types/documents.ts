@@ -8,6 +8,15 @@ export type DocumentClassificationStatus =
   | "classified"
   | "failed";
 export type DocumentClassificationMethod = "manual" | "ai";
+export type DocumentExtractionStatus =
+  | "not_started"
+  | "processing"
+  | "pending_review"
+  | "confirmed"
+  | "failed";
+export type DocumentExtractionMethod = "ai";
+export type ExtractionValueMode = "direct" | "inferred" | "not_found";
+export type ScalarExtractionValue = string | number | boolean | null;
 
 export interface DocumentClassificationCategory {
   id: string;
@@ -53,6 +62,99 @@ export interface DocumentClassificationSession {
   thread_id: string;
   document_id: string;
   status: DocumentClassificationStatus;
+}
+
+export interface DocumentExtractionEvidence {
+  source_chunk_indices: number[];
+  source_excerpt: string | null;
+}
+
+export interface ScalarExtractionField {
+  kind: "scalar";
+  key: string;
+  label: string;
+  value_type: "string" | "number" | "date" | "boolean";
+  required: boolean;
+  value: ScalarExtractionValue;
+  raw_value: string | null;
+  confidence: number;
+  extraction_mode: ExtractionValueMode;
+  evidence: DocumentExtractionEvidence | null;
+}
+
+export interface TableExtractionCell {
+  key: string;
+  label: string;
+  value_type: "string" | "number" | "date" | "boolean";
+  required: boolean;
+  value: ScalarExtractionValue;
+  raw_value: string | null;
+  confidence: number;
+  extraction_mode: ExtractionValueMode;
+  evidence: DocumentExtractionEvidence | null;
+}
+
+export interface TableExtractionRow {
+  row_index: number;
+  confidence: number;
+  cells: TableExtractionCell[];
+}
+
+export interface TableExtractionField {
+  kind: "table";
+  key: string;
+  label: string;
+  required: boolean;
+  min_rows: number;
+  rows: TableExtractionRow[];
+}
+
+export type DocumentExtractionField =
+  | ScalarExtractionField
+  | TableExtractionField;
+
+export interface DocumentExtractionModule {
+  key: string;
+  label: string;
+  fields: DocumentExtractionField[];
+}
+
+export interface DocumentExtractionResult {
+  modules: DocumentExtractionModule[];
+}
+
+export interface DocumentExtractionTemplateSummary {
+  id: string;
+  name: string;
+  locale: string;
+}
+
+export interface DocumentExtraction {
+  document_id: string;
+  status: DocumentExtractionStatus;
+  method: DocumentExtractionMethod | null;
+  template: DocumentExtractionTemplateSummary;
+  thread_id: string | null;
+  overall_confidence: number | null;
+  reasoning_summary: string | null;
+  error: string | null;
+  result: DocumentExtractionResult | null;
+  extracted_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DocumentExtractionSession {
+  assistant_id: string;
+  thread_id: string;
+  document_id: string;
+  template_id: string;
+  status: DocumentExtractionStatus;
+}
+
+export interface DocumentExtractionReviewPayload {
+  result: DocumentExtractionResult;
 }
 
 export interface DocumentUploadSuccessResult {
@@ -109,4 +211,11 @@ export function getDocumentClassificationStatusLabel(
   messages: Messages,
 ) {
   return messages.documentProcessing.statuses[status];
+}
+
+export function getDocumentExtractionStatusLabel(
+  status: DocumentExtractionStatus,
+  messages: Messages,
+) {
+  return messages.documentProcessing.extraction.statuses[status];
 }

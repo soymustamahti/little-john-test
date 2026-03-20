@@ -83,11 +83,39 @@ and streams progress back to the client.
 2. Use Aegra source as the reference when import/loading behavior is unclear
 3. Avoid root-level Alembic overrides in `apps/api` unless custom migrations are deliberately
    taking over that responsibility
-4. Build classification results and routing on top of the new document ingestion slice plus the
-   existing `extraction_templates` and `document_categories` modules
+4. Build deterministic validation and correction flows on top of the new classification and
+   extraction slices
 
 ## Latest Milestone
 
+- Added a comprehensive end-to-end walkthrough under
+  `docs/end-to-end-document-workflow-walkthrough.md` that explains the live repository workflow
+  from upload and digestion through classification, extraction, streaming, review, persistence,
+  typed contracts, and code-reading order, while clearly separating current implementation from
+  still-planned interview targets
+- Fixed the extraction review visibility bug by tightening the extraction finalizer contract:
+  the LangGraph finalizer now produces a typed compact result payload instead of an unconstrained
+  generic dict, avoids prompting the model with an all-null output skeleton, and runs a repair
+  pass when the first structured result comes back empty even though the reasoning summary found
+  evidence
+- Verified the fix live against the `convention mandat MSH.pdf` document: the extraction row in
+  PostgreSQL now stores populated field values and the `/api/documents/{id}/extraction` API
+  returns them for the frontend review UI instead of an all-null template-shaped skeleton
+- Updated the extraction review UI so confidence percentages remain visible but are no longer
+  editable inputs; only extracted values remain operator-editable during review
+- Added the first structured-extraction slice across backend and frontend: documents can now start
+  a dedicated AI extraction session for a chosen extraction template, stream progress from a new
+  `document_extraction_agent`, persist a reviewable extraction draft, and confirm edited
+  extraction values plus confidence scores from the UI
+- Implemented a minimal but explicit LangGraph extraction agent under
+  `src/agents/document_extraction_agent/` that uses hybrid retrieval tools
+  (`keyword_search`, `semantic_search`, `hybrid_search`, `inspect_chunk`, and pandas-backed
+  `inspect_spreadsheet`) before handing off to a structured finalizer step
+- Added `document_extractions` persistence plus backend service and router coverage for extraction
+  session bootstrap, draft retrieval, and human-reviewed extraction confirmation
+- Extended the document-processing panel so operators now pick an extraction template up front,
+  let AI/manual classification continue as before, and then review/edit extracted fields in
+  template-shaped inputs while confidence remains visible as read-only review information
 - Reworked the document-classification prompt using patterns sampled from the local
   `apps/system-prompts-and-models-of-ai-tools` corpus plus mini-agent analysis: the prompt now
   uses explicit Mission/Evidence Boundary/Decision Policy/Language Policy/Output Contract sections
@@ -196,3 +224,22 @@ and streams progress back to the client.
   without background orchestration or retrieval indexing yet
 - Added focused backend tests covering OCR fallback routing, DOCX/spreadsheet extraction, chunking,
   embedding persistence wiring, and upload failure behavior when processing fails
+- Added the first LangGraph-based extraction workflow with reviewable draft persistence, hybrid
+  retrieval tools, and editable confidence-backed extraction review in the frontend processing
+  panel
+- Hotfixed the extraction finalizer to use OpenAI function-calling structured output instead of
+  the stricter `response_format` path, which rejected the discriminated extraction schema
+- Updated extraction progress streaming so retrieval/tool activity emits specific messages and the
+  frontend updates the active progress row in place instead of stacking duplicate
+  "planning_and_retrieving" timeline blocks
+- Relaxed the extraction finalizer response schema to accept a draft payload, then normalize the
+  result deterministically against the chosen template before strict validation so missing `kind`
+  discriminators or list-shaped evidence no longer crash the run
+- Added a hard extraction evidence-collection budget in the LangGraph loop to prevent runaway
+  model/tool turns from causing excessive OpenAI retries and rate-limit pressure during finalization
+- Added a dedicated seeded French extraction template for "Convention de mandat de maîtrise
+  d'ouvrage", based on the `convention mandat MSH.pdf` test document, with modules for
+  identification, parties, financial terms, and annexes
+- Relaxed the finalizer draft summary schema and added deterministic summary trimming so verbose
+  `reasoning_summary` text from the LLM can no longer crash extraction runs during structured
+  output parsing
