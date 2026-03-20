@@ -88,6 +88,13 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Reworked the document detail page into the post-processing home for a document: it now shows an
+  inline source preview, a compact extraction overview, and the correction chat directly on the
+  detail screen, while the confirm-review action closes the processing panel and returns the
+  operator to that detail view instead of leaving them inside the workflow card
+- Locked the detail-page process action once an extraction is confirmed, while still allowing a
+  dedicated "continue review" path for pending-review extractions so already processed documents
+  are not reprocessed accidentally
 - Hardened the correction-chat finalizer boundary so correction runs no longer fail when the
   model emits an empty patch like `updates: []`; the correction schema now normalizes empty or
   module-list-shaped patches before validation, trims finalizer text fields defensively, and keeps
@@ -255,3 +262,7 @@ and streams progress back to the client.
 - Relaxed the finalizer draft summary schema and added deterministic summary trimming so verbose
   `reasoning_summary` text from the LLM can no longer crash extraction runs during structured
   output parsing
+- Reworked the extraction correction chat into a single conversation layout with inline,
+  collapsible per-turn activity explorers, compact event summaries, and full-width assistant
+  replies so streaming agent activity feels closer to ChatGPT/Codex instead of a split chat plus
+  side activity rail

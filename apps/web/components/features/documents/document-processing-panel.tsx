@@ -492,7 +492,11 @@ export function DocumentProcessingPanel({
           result,
         },
       });
-      await extractionQuery.refetch();
+      await Promise.all([
+        extractionQuery.refetch(),
+        onDocumentRefresh(),
+      ]);
+      onOpenChange(false);
     } catch {
       return;
     }

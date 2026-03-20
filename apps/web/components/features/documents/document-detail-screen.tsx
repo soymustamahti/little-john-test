@@ -3,26 +3,33 @@
 import {
   ArrowLeft,
   ExternalLink,
-  FileCheck2,
   Eye,
+  FileCheck2,
   Sparkles,
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { DocumentExtractionCorrectionChat } from "@/components/features/documents/document-extraction-correction-chat";
+import { DocumentExtractionOverview } from "@/components/features/documents/document-extraction-overview";
+import { DocumentPreviewContent } from "@/components/features/documents/document-preview-content";
+import { DocumentPreviewModal } from "@/components/features/documents/document-preview-modal";
 import { DocumentProcessingPanel } from "@/components/features/documents/document-processing-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DocumentPreviewModal } from "@/components/features/documents/document-preview-modal";
-import { useDeleteDocumentMutation, useDocumentQuery } from "@/hooks/use-documents";
+import {
+  useDeleteDocumentMutation,
+  useDocumentExtractionQuery,
+  useDocumentQuery,
+} from "@/hooks/use-documents";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { useLocale } from "@/providers/locale-provider";
 import { getDocumentCategoryDisplayName } from "@/types/document-categories";
 import {
-  getDocumentClassificationStatusLabel,
   formatDocumentSize,
+  getDocumentClassificationStatusLabel,
   getDocumentKindLabel,
   getDocumentShaPreview,
 } from "@/types/documents";
@@ -54,7 +61,9 @@ export function DocumentDetailScreen({
   const router = useRouter();
   const { locale, messages, formatDate } = useLocale();
   const documentQuery = useDocumentQuery(documentId);
+  const extractionQuery = useDocumentExtractionQuery(documentId);
   const deleteDocumentMutation = useDeleteDocumentMutation();
+
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isProcessingPanelOpen, setIsProcessingPanelOpen] = useState(false);
 
@@ -79,7 +88,7 @@ export function DocumentDetailScreen({
       await deleteDocumentMutation.mutateAsync(documentId);
       router.push("/documents");
     } catch {
-      // Error is rendered below from the mutation state.
+      return;
     }
   }
 
@@ -117,6 +126,7 @@ export function DocumentDetailScreen({
   }
 
   const document = documentQuery.data;
+  const extraction = extractionQuery.data;
   const deleteError = deleteDocumentMutation.error
     ? getApiErrorMessage(deleteDocumentMutation.error, messages.common.apiError)
     : null;
@@ -136,6 +146,13 @@ export function DocumentDetailScreen({
   const classifiedCategoryName = classification.category
     ? getDocumentCategoryDisplayName(classification.category, messages)
     : null;
+  const processActionDisabled = extraction?.status === "confirmed";
+  const processActionLabel =
+    extraction?.status === "pending_review"
+      ? messages.documentDetailScreen.continueReviewAction
+      : extraction?.status === "processing"
+        ? messages.documentDetailScreen.viewProcessingAction
+        : messages.documentProcessing.openAction;
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6">
@@ -170,11 +187,19 @@ export function DocumentDetailScreen({
                   {getDocumentKindLabel(document.file_kind, messages)}
                 </Badge>
                 <Badge>{document.file_extension.toUpperCase().replace(".", "")}</Badge>
+                {extraction ? (
+                  <Badge
+                    variant={extraction.status === "confirmed" ? "success" : "warm"}
+                  >
+                    {messages.documentDetailScreen.extractionAvailableBadge}
+                  </Badge>
+                ) : null}
               </div>
               <CardTitle className="mt-3 text-2xl">
                 {messages.documentDetailScreen.cardTitle}
               </CardTitle>
             </div>
+
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -195,9 +220,12 @@ export function DocumentDetailScreen({
               <Button
                 type="button"
                 onClick={() => setIsProcessingPanelOpen(true)}
+                disabled={processActionDisabled}
               >
                 <Sparkles className="h-4 w-4" />
-                {messages.documentProcessing.openAction}
+                {processActionDisabled
+                  ? messages.documentDetailScreen.processedAction
+                  : processActionLabel}
               </Button>
               <Button
                 type="button"
@@ -213,6 +241,7 @@ export function DocumentDetailScreen({
             </div>
           </div>
         </CardHeader>
+
         <CardContent className="space-y-6 pt-6">
           <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-4">
             <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
@@ -241,6 +270,11 @@ export function DocumentDetailScreen({
                 {classification.error}
               </p>
             ) : null}
+            {processActionDisabled ? (
+              <p className="mt-3 text-sm text-[color:var(--color-muted)]">
+                {messages.documentDetailScreen.processedHint}
+              </p>
+            ) : null}
           </div>
 
           {isProcessingPanelOpen ? (
@@ -249,64 +283,144 @@ export function DocumentDetailScreen({
               documentId={documentId}
               open={isProcessingPanelOpen}
               onOpenChange={setIsProcessingPanelOpen}
-              onDocumentRefresh={() => documentQuery.refetch()}
+              onDocumentRefresh={async () => {
+                await Promise.all([
+                  documentQuery.refetch(),
+                  extractionQuery.refetch(),
+                ]);
+              }}
             />
           ) : null}
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <InfoRow
-              label={messages.documentDetailScreen.fields.kind}
-              value={getDocumentKindLabel(document.file_kind, messages)}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.contentType}
-              value={document.content_type}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.size}
-              value={formatDocumentSize(document.size_bytes, locale)}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.created}
-              value={formatDate(document.created_at)}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.updated}
-              value={formatDate(document.updated_at)}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.sha}
-              value={getDocumentShaPreview(document.sha256)}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.classificationStatus}
-              value={classificationLabel}
-            />
-            <InfoRow
-              label={messages.documentDetailScreen.fields.classificationCategory}
-              value={
-                classifiedCategoryName ??
-                (classification.suggested_category
-                  ? getDocumentCategoryDisplayName(
-                      classification.suggested_category,
-                      messages,
-                    )
-                  : messages.documentDetailScreen.unclassifiedValue)
-              }
-            />
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)]">
+            <section className="space-y-4 rounded-[28px] border border-[color:var(--color-line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,245,239,0.92))] p-5">
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-[color:var(--color-ink)]">
+                  {messages.documentDetailScreen.previewTitle}
+                </div>
+                <div className="text-sm text-[color:var(--color-muted)]">
+                  {messages.documentDetailScreen.previewDescription}
+                </div>
+              </div>
+              <DocumentPreviewContent document={document} />
+            </section>
+
+            <div className="space-y-4">
+              <div className="rounded-[28px] border border-[color:var(--color-line)] bg-white p-5">
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-[color:var(--color-ink)]">
+                    {messages.documentDetailScreen.metadataTitle}
+                  </div>
+                  <div className="text-sm text-[color:var(--color-muted)]">
+                    {messages.documentDetailScreen.metadataDescription}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.kind}
+                    value={getDocumentKindLabel(document.file_kind, messages)}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.contentType}
+                    value={document.content_type}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.size}
+                    value={formatDocumentSize(document.size_bytes, locale)}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.created}
+                    value={formatDate(document.created_at)}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.updated}
+                    value={formatDate(document.updated_at)}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.sha}
+                    value={getDocumentShaPreview(document.sha256)}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.classificationStatus}
+                    value={classificationLabel}
+                  />
+                  <InfoRow
+                    label={messages.documentDetailScreen.fields.classificationCategory}
+                    value={
+                      classifiedCategoryName ??
+                      (classification.suggested_category
+                        ? getDocumentCategoryDisplayName(
+                            classification.suggested_category,
+                            messages,
+                          )
+                        : messages.documentDetailScreen.unclassifiedValue)
+                    }
+                  />
+                </div>
+              </div>
+
+              {deleteError ? (
+                <div className="rounded-xl border border-[color:var(--color-warm-soft)] bg-[color:var(--color-background)] px-4 py-3 text-sm text-[color:var(--color-accent-warm)]">
+                  {deleteError}
+                </div>
+              ) : null}
+
+              {!document.public_url ? (
+                <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3 text-sm text-[color:var(--color-muted)]">
+                  {messages.documentDetailScreen.privateStorageNotice}
+                </div>
+              ) : null}
+            </div>
           </div>
 
-          {deleteError ? (
-            <div className="rounded-xl border border-[color:var(--color-warm-soft)] bg-[color:var(--color-background)] px-4 py-3 text-sm text-[color:var(--color-accent-warm)]">
-              {deleteError}
-            </div>
-          ) : null}
+          <section className="space-y-4 rounded-[28px] border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="text-sm font-semibold text-[color:var(--color-ink)]">
+                  {messages.documentDetailScreen.extractionTitle}
+                </div>
+                <div className="text-sm text-[color:var(--color-muted)]">
+                  {messages.documentDetailScreen.extractionDescription}
+                </div>
+              </div>
 
-          {!document.public_url ? (
-            <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3 text-sm text-[color:var(--color-muted)]">
-              {messages.documentDetailScreen.privateStorageNotice}
+              {extraction?.status === "pending_review" ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsProcessingPanelOpen(true)}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {messages.documentDetailScreen.continueReviewAction}
+                </Button>
+              ) : null}
             </div>
-          ) : null}
+
+            {extractionQuery.isLoading ? (
+              <div className="rounded-2xl border border-[color:var(--color-line)] bg-white px-4 py-4 text-sm text-[color:var(--color-muted)]">
+                {messages.documentDetailScreen.extractionLoading}
+              </div>
+            ) : extraction?.result ? (
+              <div className="space-y-5">
+                <DocumentExtractionOverview extraction={extraction} messages={messages} />
+                <DocumentExtractionCorrectionChat
+                  documentId={documentId}
+                  extraction={extraction}
+                  onExtractionRefresh={async () => {
+                    await Promise.all([
+                      extractionQuery.refetch(),
+                      documentQuery.refetch(),
+                    ]);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-[color:var(--color-line)] bg-white px-4 py-4 text-sm text-[color:var(--color-muted)]">
+                {messages.documentDetailScreen.extractionEmpty}
+              </div>
+            )}
+          </section>
         </CardContent>
       </Card>
 

@@ -1,8 +1,12 @@
 "use client";
 
 import {
+  AlertCircle,
   ArrowUp,
   Bot,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   LoaderCircle,
   MessageSquareText,
   Search,
@@ -13,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   type KeyboardEvent,
+  type ReactNode,
   useEffect,
   useMemo,
   useRef,
@@ -32,19 +37,46 @@ import {
   type StreamTimelineItem,
   unwrapAgentPayload,
   upsertProgressItem,
-  upsertTimelineItem,
 } from "@/lib/agent-stream";
 import { createAgentThread, streamAgentRun } from "@/lib/api/aegra";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
-import type { DocumentExtraction } from "@/types/documents";
+import type {
+  DocumentExtraction,
+  DocumentExtractionField,
+  DocumentExtractionResult,
+} from "@/types/documents";
 
 interface SuggestionPrompt {
   icon: LucideIcon;
   label: string;
   prompt: string;
 }
+
+interface TurnEventItem {
+  id: string;
+  kind: "progress" | "error" | "end" | "change";
+  summary: string;
+  occurredAt: number;
+}
+
+interface TurnEventGroup {
+  id: string;
+  userTurnIndex: number;
+  summary: string;
+  items: TurnEventItem[];
+  status: "running" | "complete" | "error";
+  expanded: boolean;
+}
+
+interface PendingTurnState {
+  groupId: string;
+  baselineResult: DocumentExtractionResult | null;
+  correctionMessageCount: number;
+}
+
+type LocaleMessages = ReturnType<typeof useLocale>["messages"];
 
 export function DocumentExtractionCorrectionChat({
   documentId,
@@ -61,13 +93,13 @@ export function DocumentExtractionCorrectionChat({
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState(extraction.correction_messages);
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
-  const [streamTimeline, setStreamTimeline] = useState<StreamTimelineItem[]>([]);
   const [chatError, setChatError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [eventGroups, setEventGroups] = useState<TurnEventGroup[]>([]);
 
   const streamAbortControllerRef = useRef<AbortController | null>(null);
   const conversationViewportRef = useRef<HTMLDivElement | null>(null);
-  const activityViewportRef = useRef<HTMLDivElement | null>(null);
+  const pendingTurnRef = useRef<PendingTurnState | null>(null);
 
   useEffect(() => {
     if (!isStreaming) {
@@ -91,19 +123,42 @@ export function DocumentExtractionCorrectionChat({
       top: viewport.scrollHeight,
       behavior: isStreaming ? "smooth" : "auto",
     });
-  }, [chatMessages, isStreaming, progressItems.length]);
+  }, [chatMessages, eventGroups, isStreaming]);
 
   useEffect(() => {
-    const viewport = activityViewportRef.current;
-    if (!viewport) {
+    const pendingTurn = pendingTurnRef.current;
+    if (!pendingTurn || isStreaming) {
       return;
     }
 
-    viewport.scrollTo({
-      top: viewport.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [streamTimeline]);
+    if (extraction.correction_messages.length <= pendingTurn.correctionMessageCount) {
+      return;
+    }
+
+    const changeItems = buildChangeItems(
+      pendingTurn.baselineResult,
+      extraction.result,
+      messages,
+    );
+
+    setEventGroups((currentGroups) =>
+      finalizeEventGroup(
+        currentGroups,
+        pendingTurn.groupId,
+        changeItems,
+        messages,
+        extraction.status === "failed",
+      ),
+    );
+
+    pendingTurnRef.current = null;
+  }, [
+    extraction.correction_messages.length,
+    extraction.result,
+    extraction.status,
+    isStreaming,
+    messages,
+  ]);
 
   const latestProgressItem = progressItems[progressItems.length - 1] ?? null;
   const timeFormatter = new Intl.DateTimeFormat(locale, {
@@ -126,7 +181,9 @@ export function DocumentExtractionCorrectionChat({
       {
         icon: WandSparkles,
         label: messages.documentProcessing.extraction.correction.suggestionSpreadsheetLabel,
-        prompt: messages.documentProcessing.extraction.correction.suggestionSpreadsheetPrompt,
+        prompt:
+          messages.documentProcessing.extraction.correction
+            .suggestionSpreadsheetPrompt,
       },
     ],
     [messages],
@@ -138,10 +195,12 @@ export function DocumentExtractionCorrectionChat({
       return;
     }
 
+    const turnId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const userTurnIndex = chatMessages.filter((item) => item.role === "user").length;
+
     setChatError(null);
     setChatInput("");
     setProgressItems([]);
-    setStreamTimeline([]);
     setChatMessages((current) => [
       ...current,
       {
@@ -150,6 +209,23 @@ export function DocumentExtractionCorrectionChat({
         created_at: new Date().toISOString(),
       },
     ]);
+    setEventGroups((currentGroups) => [
+      ...currentGroups,
+      {
+        id: turnId,
+        userTurnIndex,
+        summary: messages.documentProcessing.extraction.correction.eventSummaryRunning,
+        items: [],
+        status: "running",
+        expanded: true,
+      },
+    ]);
+
+    pendingTurnRef.current = {
+      groupId: turnId,
+      baselineResult: extraction.result ? structuredClone(extraction.result) : null,
+      correctionMessageCount: extraction.correction_messages.length,
+    };
 
     try {
       const session = await correctionSessionMutation.mutateAsync(documentId);
@@ -179,13 +255,22 @@ export function DocumentExtractionCorrectionChat({
         },
         signal: controller.signal,
         onEvent: async (event) => {
-          setStreamTimeline((currentItems) => {
-            const timelineItem = buildStreamTimelineItem(event, messages);
-            if (!timelineItem) {
-              return currentItems;
-            }
-            return upsertTimelineItem(currentItems, timelineItem);
-          });
+          const timelineItem = buildStreamTimelineItem(event, messages);
+          if (timelineItem) {
+            setEventGroups((currentGroups) =>
+              appendEventItem(
+                currentGroups,
+                turnId,
+                {
+                  id: timelineItem.id,
+                  kind: mapTimelineItemKind(timelineItem.kind),
+                  summary: compactEventSummary(timelineItem.summary),
+                  occurredAt: timelineItem.occurredAt,
+                },
+                messages,
+              ),
+            );
+          }
 
           const progressItem = extractProgressItem(event);
           if (progressItem) {
@@ -203,7 +288,12 @@ export function DocumentExtractionCorrectionChat({
         },
       });
     } catch (error) {
-      setChatError(getApiErrorMessage(error, messages.common.apiError));
+      const messageText = getApiErrorMessage(error, messages.common.apiError);
+      setChatError(messageText);
+      setEventGroups((currentGroups) =>
+        markEventGroupErrored(currentGroups, turnId, messageText, messages),
+      );
+      pendingTurnRef.current = null;
     } finally {
       setIsStreaming(false);
       streamAbortControllerRef.current = null;
@@ -222,6 +312,14 @@ export function DocumentExtractionCorrectionChat({
     setChatInput(prompt);
   }
 
+  function toggleEventGroup(groupId: string) {
+    setEventGroups((currentGroups) =>
+      currentGroups.map((group) =>
+        group.id === groupId ? { ...group, expanded: !group.expanded } : group,
+      ),
+    );
+  }
+
   return (
     <section className="overflow-hidden rounded-[28px] border border-[color:var(--color-line)] bg-[radial-gradient(circle_at_top_left,rgba(207,226,255,0.42),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,245,239,0.94))] shadow-[0_24px_60px_rgba(20,27,45,0.08)]">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[color:var(--color-line)] px-5 py-5">
@@ -235,7 +333,7 @@ export function DocumentExtractionCorrectionChat({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="default">{extraction.template.name}</Badge>
+          <Badge>{extraction.template.name}</Badge>
           <Badge variant={isBusy ? "accent" : "default"}>
             {isBusy
               ? messages.documentProcessing.extraction.correction.liveBadge
@@ -244,8 +342,8 @@ export function DocumentExtractionCorrectionChat({
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.75fr)_minmax(300px,1fr)]">
-        <div className="flex min-h-[38rem] flex-col rounded-[26px] border border-[color:var(--color-line)] bg-white/90">
+      <div className="space-y-4 p-4">
+        <div className="flex min-h-[38rem] flex-col rounded-[26px] border border-[color:var(--color-line)] bg-white/92">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--color-line)] px-5 py-4">
             <div className="space-y-1">
               <div className="text-sm font-semibold text-[color:var(--color-ink)]">
@@ -265,67 +363,23 @@ export function DocumentExtractionCorrectionChat({
 
           <div
             ref={conversationViewportRef}
-            className="flex-1 space-y-4 overflow-y-auto px-5 py-5"
+            className="flex-1 space-y-5 overflow-y-auto px-5 py-5"
           >
             {chatMessages.length ? (
-              chatMessages.map((message, index) => {
-                const isAssistant = message.role === "assistant";
-
-                return (
-                  <div
-                    key={`${message.role}-${message.created_at}-${index}`}
-                    className={cn("flex", isAssistant ? "justify-start" : "justify-end")}
-                  >
-                    <div
-                      className={cn(
-                        "max-w-[85%] rounded-[24px] border px-4 py-3 shadow-[0_10px_24px_rgba(20,27,45,0.06)]",
-                        isAssistant
-                          ? "border-[color:var(--color-line)] bg-[color:var(--color-panel)] text-[color:var(--color-ink)]"
-                          : "border-transparent bg-[color:var(--color-ink)] text-[color:var(--color-paper)]",
-                      )}
-                    >
-                      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] opacity-80">
-                        {isAssistant ? (
-                          <Bot className="h-3.5 w-3.5" />
-                        ) : (
-                          <User className="h-3.5 w-3.5" />
-                        )}
-                        <span>
-                          {isAssistant
-                            ? messages.documentProcessing.extraction.correction.assistantBadge
-                            : messages.documentProcessing.extraction.correction.userBadge}
-                        </span>
-                        <span className="text-[10px] opacity-70">
-                          {timeFormatter.format(new Date(message.created_at))}
-                        </span>
-                      </div>
-                      <div className="mt-2 whitespace-pre-wrap text-sm leading-6">
-                        {message.content}
-                      </div>
-                    </div>
-                  </div>
-                );
+              renderConversation({
+                chatMessages,
+                eventGroups,
+                isBusy,
+                latestProgressItem,
+                messages,
+                timeFormatter,
+                onToggleEventGroup: toggleEventGroup,
               })
             ) : (
               <div className="rounded-[24px] border border-dashed border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 px-4 py-5 text-sm leading-6 text-[color:var(--color-muted)]">
                 {messages.documentProcessing.extraction.correction.emptyChat}
               </div>
             )}
-
-            {isBusy ? (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-[24px] border border-[color:var(--color-line)] bg-[color:var(--color-panel)] px-4 py-3 shadow-[0_10px_24px_rgba(20,27,45,0.06)]">
-                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                    <LoaderCircle className="h-3.5 w-3.5 animate-spin text-[color:var(--color-accent)]" />
-                    {messages.documentProcessing.extraction.correction.liveBadge}
-                  </div>
-                  <div className="mt-2 text-sm leading-6 text-[color:var(--color-ink)]">
-                    {latestProgressItem?.message
-                      ?? messages.documentProcessing.extraction.correction.activityEmpty}
-                  </div>
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <div className="border-t border-[color:var(--color-line)] px-5 py-4">
@@ -387,96 +441,376 @@ export function DocumentExtractionCorrectionChat({
           </div>
         </div>
 
-        <aside className="space-y-4">
-          <div className="rounded-[26px] border border-[color:var(--color-line)] bg-white/90 p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--color-ink)]">
-              <WandSparkles className="h-4 w-4 text-[color:var(--color-accent)]" />
-              {messages.documentProcessing.extraction.correction.currentActivityTitle}
-            </div>
-            <div className="mt-3 rounded-[20px] border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 px-4 py-4">
-              <div className="text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                {latestProgressItem?.phase
-                  ? latestProgressItem.phase.split("_").join(" ")
-                  : messages.documentProcessing.extraction.correction.idleBadge}
-              </div>
-              <div className="mt-2 text-sm leading-6 text-[color:var(--color-ink)]">
-                {latestProgressItem?.message
-                  ?? messages.documentProcessing.extraction.correction.activityEmpty}
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[26px] border border-[color:var(--color-line)] bg-white/90 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-[color:var(--color-ink)]">
-                {messages.documentProcessing.extraction.correction.activityTitle}
-              </div>
-              <Badge>
-                {messages.documentProcessing.extraction.correction.eventCountLabel.replace(
-                  "{count}",
-                  String(streamTimeline.length),
-                )}
-              </Badge>
-            </div>
-
-            {streamTimeline.length ? (
-              <div
-                ref={activityViewportRef}
-                className="mt-4 max-h-[30rem] space-y-3 overflow-y-auto pr-1"
-              >
-                {streamTimeline.map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "rounded-[20px] border px-4 py-3",
-                      getTimelineItemClasses(item.variant),
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-medium text-[color:var(--color-ink)]">
-                        {item.label}
-                      </div>
-                      <div className="text-xs text-[color:var(--color-muted)]">
-                        {timeFormatter.format(new Date(item.occurredAt))}
-                      </div>
-                    </div>
-                    <div className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
-                      {item.summary}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-4 rounded-[20px] border border-dashed border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 px-4 py-4 text-sm leading-6 text-[color:var(--color-muted)]">
-                {messages.documentProcessing.extraction.correction.activityEmpty}
-              </div>
-            )}
-          </div>
-        </aside>
-      </div>
-
-      {chatError ? (
-        <div className="border-t border-[color:var(--color-line)] bg-[color:var(--color-background)]/90 px-5 py-4">
+        {chatError ? (
           <div className="rounded-[20px] border border-[color:var(--color-warm-soft)] bg-white px-4 py-3 text-sm text-[color:var(--color-accent-warm)]">
             {chatError}
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </section>
   );
 }
 
-function getTimelineItemClasses(
-  variant: StreamTimelineItem["variant"],
-): string {
-  switch (variant) {
-    case "accent":
-      return "border-[color:rgba(66,99,235,0.18)] bg-[color:rgba(66,99,235,0.06)]";
-    case "warm":
-      return "border-[color:rgba(213,92,50,0.2)] bg-[color:rgba(213,92,50,0.07)]";
-    case "success":
-      return "border-[color:rgba(43,138,62,0.18)] bg-[color:rgba(43,138,62,0.08)]";
-    default:
-      return "border-[color:var(--color-line)] bg-[color:var(--color-background)]/70";
+function renderConversation({
+  chatMessages,
+  eventGroups,
+  isBusy,
+  latestProgressItem,
+  messages,
+  timeFormatter,
+  onToggleEventGroup,
+}: {
+  chatMessages: DocumentExtraction["correction_messages"];
+  eventGroups: TurnEventGroup[];
+  isBusy: boolean;
+  latestProgressItem: ProgressItem | null;
+  messages: LocaleMessages;
+  timeFormatter: Intl.DateTimeFormat;
+  onToggleEventGroup: (groupId: string) => void;
+}) {
+  const conversationNodes: ReactNode[] = [];
+  let userTurnIndex = 0;
+
+  for (const [index, message] of chatMessages.entries()) {
+    const isAssistant = message.role === "assistant";
+    const matchingGroup = !isAssistant
+      ? eventGroups.find((group) => group.userTurnIndex === userTurnIndex)
+      : null;
+
+    conversationNodes.push(
+      <div
+        key={`${message.role}-${message.created_at}-${index}`}
+        className={cn(
+          "flex",
+          isAssistant ? "justify-start pr-8" : "justify-end pl-12",
+        )}
+      >
+        {isAssistant ? (
+          <div className="w-full max-w-4xl">
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+              <Bot className="h-3.5 w-3.5 text-[color:var(--color-accent)]" />
+              <span>
+                {messages.documentProcessing.extraction.correction.assistantBadge}
+              </span>
+              <span className="text-[10px]">
+                {timeFormatter.format(new Date(message.created_at))}
+              </span>
+            </div>
+            <div className="mt-2 whitespace-pre-wrap text-[15px] leading-7 text-[color:var(--color-ink)]">
+              {message.content}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-[78%] rounded-[28px] bg-[color:var(--color-ink)] px-5 py-4 text-[color:var(--color-paper)] shadow-[0_16px_36px_rgba(20,27,45,0.16)]">
+            <div className="whitespace-pre-wrap text-[15px] leading-7">
+              {message.content}
+            </div>
+            <div className="mt-3 flex items-center justify-end gap-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/62">
+              <User className="h-3 w-3" />
+              <span>{messages.documentProcessing.extraction.correction.userBadge}</span>
+              <span>{timeFormatter.format(new Date(message.created_at))}</span>
+            </div>
+          </div>
+        )}
+      </div>,
+    );
+
+    if (matchingGroup) {
+      const eventCountLabel =
+        matchingGroup.items.length > 0
+          ? messages.documentProcessing.extraction.correction.eventCountLabel.replace(
+              "{count}",
+              String(matchingGroup.items.length),
+            )
+          : null;
+
+      conversationNodes.push(
+        <div key={`events-${matchingGroup.id}`} className="max-w-4xl pr-8">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 rounded-[20px] bg-[rgba(20,27,45,0.96)] px-4 py-3 text-left text-white shadow-[0_12px_28px_rgba(15,23,42,0.22)] transition hover:bg-[rgba(20,27,45,0.92)]"
+            onClick={() => onToggleEventGroup(matchingGroup.id)}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              {renderEventStatusIcon(matchingGroup.status)}
+              <span className="truncate text-sm font-medium">
+                {matchingGroup.summary}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {eventCountLabel ? (
+                <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/76">
+                  {eventCountLabel}
+                </span>
+              ) : null}
+              {matchingGroup.expanded ? (
+                <ChevronDown className="h-4 w-4 shrink-0 text-[rgba(255,255,255,0.78)]" />
+              ) : (
+                <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(255,255,255,0.78)]" />
+              )}
+            </div>
+          </button>
+
+          {matchingGroup.expanded ? (
+            <div className="mt-2 rounded-[20px] border border-[color:var(--color-line)] bg-[color:var(--color-panel)]/94 px-4 py-3 shadow-[0_12px_32px_rgba(20,27,45,0.08)]">
+              {matchingGroup.items.length ? (
+                <div className="space-y-2">
+                  {matchingGroup.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start gap-2 text-xs leading-5 text-[color:var(--color-muted)]"
+                    >
+                      {renderEventItemIcon(item.kind)}
+                      <span>{item.summary}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-xs leading-5 text-[color:var(--color-muted)]">
+                  <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-accent)]" />
+                  <span>
+                    {isBusy && latestProgressItem
+                      ? compactEventSummary(latestProgressItem.message)
+                      : messages.documentProcessing.extraction.correction.activityEmpty}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>,
+      );
+    }
+
+    if (!isAssistant) {
+      userTurnIndex += 1;
+    }
   }
+
+  return conversationNodes;
+}
+
+function renderEventStatusIcon(status: TurnEventGroup["status"]) {
+  if (status === "running") {
+    return (
+      <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-[rgba(255,255,255,0.82)]" />
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <AlertCircle className="h-4 w-4 shrink-0 text-[rgba(255,180,180,0.9)]" />
+    );
+  }
+
+  return (
+    <CheckCircle2 className="h-4 w-4 shrink-0 text-[rgba(167,243,208,0.9)]" />
+  );
+}
+
+function renderEventItemIcon(kind: TurnEventItem["kind"]) {
+  if (kind === "error") {
+    return (
+      <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-accent-warm)]" />
+    );
+  }
+
+  if (kind === "change" || kind === "end") {
+    return (
+      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+    );
+  }
+
+  return (
+    <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--color-accent)]" />
+  );
+}
+
+function mapTimelineItemKind(kind: StreamTimelineItem["kind"]): TurnEventItem["kind"] {
+  if (kind === "error") {
+    return "error";
+  }
+
+  if (kind === "end") {
+    return "end";
+  }
+
+  return "progress";
+}
+
+function appendEventItem(
+  eventGroups: TurnEventGroup[],
+  groupId: string,
+  item: TurnEventItem,
+  messages: LocaleMessages,
+): TurnEventGroup[] {
+  return eventGroups.map((group) => {
+    if (group.id !== groupId) {
+      return group;
+    }
+
+    const nextItems = dedupeTurnEventItems([...group.items, item]);
+    return {
+      ...group,
+      items: nextItems,
+      summary:
+        item.kind === "error"
+          ? messages.documentProcessing.extraction.correction.eventSummaryError
+          : item.summary,
+      status: item.kind === "error" ? "error" : group.status,
+    };
+  });
+}
+
+function finalizeEventGroup(
+  eventGroups: TurnEventGroup[],
+  groupId: string,
+  changeItems: TurnEventItem[],
+  messages: LocaleMessages,
+  forceError: boolean,
+): TurnEventGroup[] {
+  return eventGroups.map((group) => {
+    if (group.id !== groupId) {
+      return group;
+    }
+
+    if (forceError || group.status === "error") {
+      return {
+        ...group,
+        expanded: false,
+        status: "error",
+        summary: messages.documentProcessing.extraction.correction.eventSummaryError,
+      };
+    }
+
+    const nextItems = dedupeTurnEventItems([...group.items, ...changeItems]);
+    const changeCount = changeItems.length;
+    const summary =
+      changeCount > 0
+        ? messages.documentProcessing.extraction.correction.eventSummaryUpdated.replace(
+            "{count}",
+            String(changeCount),
+          )
+        : nextItems.length > 0
+          ? messages.documentProcessing.extraction.correction.eventSummaryCompleted.replace(
+              "{count}",
+              String(nextItems.length),
+            )
+          : messages.documentProcessing.extraction.correction.eventSummaryNoChange;
+
+    return {
+      ...group,
+      items: nextItems,
+      summary,
+      status: "complete",
+      expanded: false,
+    };
+  });
+}
+
+function markEventGroupErrored(
+  eventGroups: TurnEventGroup[],
+  groupId: string,
+  message: string,
+  messages: LocaleMessages,
+): TurnEventGroup[] {
+  return eventGroups.map((group) => {
+    if (group.id !== groupId) {
+      return group;
+    }
+
+    return {
+      ...group,
+      items: dedupeTurnEventItems([
+        ...group.items,
+        {
+          id: `${group.id}-error`,
+          kind: "error",
+          summary: compactEventSummary(message),
+          occurredAt: Date.now(),
+        },
+      ]),
+      summary: messages.documentProcessing.extraction.correction.eventSummaryError,
+      status: "error",
+      expanded: true,
+    };
+  });
+}
+
+function dedupeTurnEventItems(items: TurnEventItem[]): TurnEventItem[] {
+  const deduped: TurnEventItem[] = [];
+  for (const item of items) {
+    const previous = deduped[deduped.length - 1];
+    if (previous?.summary === item.summary && previous.kind === item.kind) {
+      deduped[deduped.length - 1] = item;
+      continue;
+    }
+    deduped.push(item);
+  }
+  return deduped.slice(-12);
+}
+
+function buildChangeItems(
+  previousResult: DocumentExtractionResult | null,
+  nextResult: DocumentExtractionResult | null,
+  messages: LocaleMessages,
+): TurnEventItem[] {
+  if (!previousResult || !nextResult) {
+    return [];
+  }
+
+  const items: TurnEventItem[] = [];
+  const previousModules = new Map(
+    previousResult.modules.map((moduleItem) => [moduleItem.key, moduleItem]),
+  );
+
+  for (const moduleItem of nextResult.modules) {
+    const previousModule = previousModules.get(moduleItem.key);
+    if (!previousModule) {
+      continue;
+    }
+
+    const previousFields = new Map(
+      previousModule.fields.map((field) => [field.key, field]),
+    );
+
+    for (const field of moduleItem.fields) {
+      const previousField = previousFields.get(field.key);
+      if (!previousField || !didFieldChange(previousField, field)) {
+        continue;
+      }
+
+      items.push({
+        id: `${moduleItem.key}-${field.key}`,
+        kind: "change",
+        summary:
+          field.kind === "table"
+            ? messages.documentProcessing.extraction.correction.eventTableChanged.replace(
+                "{field}",
+                field.label,
+              )
+            : messages.documentProcessing.extraction.correction.eventFieldChanged.replace(
+                "{field}",
+                field.label,
+              ),
+        occurredAt: Date.now(),
+      });
+    }
+  }
+
+  return items;
+}
+
+function didFieldChange(
+  previousField: DocumentExtractionField,
+  nextField: DocumentExtractionField,
+): boolean {
+  return JSON.stringify(previousField) !== JSON.stringify(nextField);
+}
+
+function compactEventSummary(value: string): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 72) {
+    return normalized;
+  }
+  return `${normalized.slice(0, 69).trimEnd()}...`;
 }
