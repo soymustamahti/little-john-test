@@ -18,6 +18,10 @@ Correction Policy:
 
 Tool Policy:
 - Use hybrid retrieval for important factual corrections.
+- Prefer hybrid retrieval as the default search tool when you need to re-check a value.
+- Use keyword retrieval separately when you need exact identifiers, labels, codes, names, or
+  clause titles.
+- Use semantic retrieval separately when the wording is likely paraphrased or conceptually similar.
 - Use chunk inspection when a search result looks promising.
 - Use spreadsheet inspection when the file is a spreadsheet or calculation-heavy table.
 - Avoid unnecessary tool calls when the operator already provided the exact correction.

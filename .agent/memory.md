@@ -266,3 +266,7 @@ and streams progress back to the client.
   collapsible per-turn activity explorers, compact event summaries, and full-width assistant
   replies so streaming agent activity feels closer to ChatGPT/Codex instead of a split chat plus
   side activity rail
+- Confirmed the document retrieval stack is hybrid by design and now enabled the intended
+  cross-encoder reranking path by adding `sentence-transformers`, while also making the shared
+  extraction/correction tool list hybrid-first with separate keyword and semantic tools still
+  exposed for targeted use

@@ -118,6 +118,16 @@ class DocumentUploadSettings(BaseSettings):
         le=4_000,
         description="Target minimum chunk size before flushing the current chunk",
     )
+    hybrid_candidate_pool_size: int = Field(
+        default=12,
+        ge=2,
+        le=32,
+        description="Candidate pool size before hybrid retrieval reranking.",
+    )
+    hybrid_reranker_model: str = Field(
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        description="Cross-encoder model used to rerank merged hybrid retrieval candidates.",
+    )
     pdf_direct_text_min_characters: int = Field(
         default=120,
         ge=1,

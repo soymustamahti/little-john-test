@@ -105,7 +105,8 @@ async def hybrid_search(document_id: str, query: str, top_k: int = 5) -> dict[st
     """Run keyword and semantic retrieval, then return the merged evidence set."""
     summarized_query = _summarize_query(query)
     _emit_progress(
-        f"Running hybrid retrieval for '{summarized_query}' with keyword and embedding search."
+        "Running hybrid retrieval for "
+        f"'{summarized_query}' with keyword, semantic, and reranking stages."
     )
     results = await _get_retrieval_service().hybrid_search(
         document_id=UUID(document_id),
@@ -113,7 +114,7 @@ async def hybrid_search(document_id: str, query: str, top_k: int = 5) -> dict[st
         top_k=max(1, min(top_k, 8)),
     )
     _emit_progress(
-        f"Hybrid retrieval merged {len(results)} {_pluralize(len(results), 'candidate chunk')} "
+        f"Hybrid retrieval returned {len(results)} {_pluralize(len(results), 'ranked chunk')} "
         f"for '{summarized_query}'."
     )
     return {
@@ -174,9 +175,9 @@ async def inspect_spreadsheet(
 
 
 TOOLS: list[Callable[..., Any]] = [
+    hybrid_search,
     keyword_search,
     semantic_search,
-    hybrid_search,
     inspect_chunk,
     inspect_spreadsheet,
 ]

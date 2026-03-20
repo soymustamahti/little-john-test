@@ -8,6 +8,7 @@ from src.documents.embeddings import OpenAIEmbeddingClient
 from src.documents.extraction_service import DocumentExtractionService
 from src.documents.ocr import OpenAIDocumentOcrClient
 from src.documents.processing import DocumentProcessingService
+from src.documents.reranking import CrossEncoderDocumentReranker
 from src.documents.retrieval import DocumentRetrievalService
 from src.storage.r2 import R2ObjectStorage
 
@@ -47,6 +48,8 @@ def get_document_retrieval_service() -> DocumentRetrievalService:
         get_async_session_factory(),
         get_r2_object_storage(),
         OpenAIEmbeddingClient(settings.openai_provider),
+        CrossEncoderDocumentReranker(settings.documents.hybrid_reranker_model),
+        settings.documents.hybrid_candidate_pool_size,
     )
 
 

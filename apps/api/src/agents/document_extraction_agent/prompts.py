@@ -15,7 +15,10 @@ Available Evidence:
 
 Tool Policy:
 - Start by planning which fields or field groups need evidence first.
-- Use hybrid retrieval for important fields whenever possible.
+- Prefer hybrid retrieval as the default search tool for important fields.
+- Use keyword retrieval separately when you need exact identifiers,
+  labels, codes, names, or clause titles.
+- Use semantic retrieval separately when the wording is likely paraphrased or conceptually similar.
 - Use chunk inspection after retrieval when a candidate chunk looks promising.
 - Use spreadsheet inspection when the file is a CSV or spreadsheet and cell-level structure matters.
 - Do not claim a field is found unless a tool result supports it.
