@@ -203,71 +203,63 @@ export function DocumentExtractionReview({
                   key={field.key}
                   className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4"
                 >
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_150px]">
-                    <div className="space-y-2">
-                      <Label htmlFor={`${field.key}-value`}>
-                        {field.label}
-                      </Label>
-                      {field.value_type === "boolean" ? (
-                        <select
-                          id={`${field.key}-value`}
-                          className="flex h-11 w-full rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none focus:border-[color:var(--color-accent)]"
-                          value={
-                            field.value === null || field.value === undefined
-                              ? ""
-                              : String(field.value)
-                          }
-                          onChange={(event) => {
-                            const nextValue = event.target.value;
-                            updateScalarValue(
-                              moduleIndex,
-                              fieldIndex,
-                              nextValue === "" ? null : nextValue === "true",
-                            );
-                          }}
-                        >
-                          <option value="">
-                            {messages.documentProcessing.extraction.emptyValue}
-                          </option>
-                          <option value="true">
-                            {messages.documentProcessing.extraction.booleanTrue}
-                          </option>
-                          <option value="false">
-                            {messages.documentProcessing.extraction.booleanFalse}
-                          </option>
-                        </select>
-                      ) : (
-                        <Input
-                          id={`${field.key}-value`}
-                          type={field.value_type === "number" ? "number" : "text"}
-                          step={field.value_type === "number" ? "any" : undefined}
-                          value={renderScalarValue(field.value)}
-                          onChange={(event) => {
-                            const nextValue = event.target.value;
-                            updateScalarValue(
-                              moduleIndex,
-                              fieldIndex,
-                              field.value_type === "number"
-                                ? nextValue === ""
-                                  ? null
-                                  : Number(nextValue)
-                                : nextValue || null,
-                            );
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>{messages.documentProcessing.extraction.fieldConfidence}</Label>
-                      <div className="flex h-11 items-center rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)]">
-                        {toConfidencePercent(field.confidence)}%
-                      </div>
-                    </div>
+                  <div className="space-y-3">
+                    <Label htmlFor={`${field.key}-value`}>{field.label}</Label>
+                    {field.value_type === "boolean" ? (
+                      <select
+                        id={`${field.key}-value`}
+                        className="flex h-11 w-full rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none focus:border-[color:var(--color-accent)]"
+                        value={
+                          field.value === null || field.value === undefined
+                            ? ""
+                            : String(field.value)
+                        }
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          updateScalarValue(
+                            moduleIndex,
+                            fieldIndex,
+                            nextValue === "" ? null : nextValue === "true",
+                          );
+                        }}
+                      >
+                        <option value="">
+                          {messages.documentProcessing.extraction.emptyValue}
+                        </option>
+                        <option value="true">
+                          {messages.documentProcessing.extraction.booleanTrue}
+                        </option>
+                        <option value="false">
+                          {messages.documentProcessing.extraction.booleanFalse}
+                        </option>
+                      </select>
+                    ) : (
+                      <Input
+                        id={`${field.key}-value`}
+                        type={field.value_type === "number" ? "number" : "text"}
+                        step={field.value_type === "number" ? "any" : undefined}
+                        value={renderScalarValue(field.value)}
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          updateScalarValue(
+                            moduleIndex,
+                            fieldIndex,
+                            field.value_type === "number"
+                              ? nextValue === ""
+                                ? null
+                                : Number(nextValue)
+                              : nextValue || null,
+                          );
+                        }}
+                      />
+                    )}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge>{field.extraction_mode}</Badge>
+                    <Badge variant="accent">
+                      {toConfidencePercent(field.confidence)}%
+                    </Badge>
                     {field.required ? (
                       <Badge variant="warm">
                         {messages.documentProcessing.extraction.requiredBadge}
@@ -335,8 +327,13 @@ export function DocumentExtractionReview({
                               fieldIndex,
                               rowIndex,
                             )}
-                            <div className="flex h-11 items-center rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)]">
-                              {toConfidencePercent(cell.confidence)}%
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--color-muted)]">
+                              <span>
+                                {messages.documentProcessing.extraction.fieldConfidence}
+                              </span>
+                              <Badge variant="accent">
+                                {toConfidencePercent(cell.confidence)}%
+                              </Badge>
                             </div>
                             <div className="text-xs text-[color:var(--color-muted)]">
                               {cell.evidence?.source_chunk_indices.length

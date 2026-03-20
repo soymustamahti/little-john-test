@@ -1,4 +1,6 @@
 import {
+  ChevronDown,
+  ChevronRight,
   Columns3,
   FilePlus2,
   FolderPlus,
@@ -9,6 +11,7 @@ import {
   Save,
   Trash2,
 } from "lucide-react";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -164,158 +167,191 @@ function FieldEditor({
 }) {
   const { messages } = useLocale();
   const draftLabels: TemplateDraftLabels = messages.templateShared;
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="rounded-2xl border border-[color:var(--color-line)] bg-white p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Grip className="h-4 w-4 text-[color:var(--color-muted)]" />
-          <span className="text-sm font-medium text-[color:var(--color-ink)]">
-            {field.kind === "table"
+      <button
+        type="button"
+        className="flex w-full items-start justify-between gap-3 text-left"
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Grip className="h-4 w-4 text-[color:var(--color-muted)]" />
+            <Badge>{field.kind === "table"
               ? messages.templateDetailPanel.field.table
-              : messages.templateDetailPanel.field.scalar}
-          </span>
-        </div>
-        <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
-          {messages.templateDetailPanel.field.remove}
-        </Button>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>{messages.templateDetailPanel.field.key}</Label>
-          <Input
-            value={field.key}
-            onChange={(event) => onChange({ ...field, key: event.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>{messages.templateDetailPanel.field.label}</Label>
-          <Input
-            value={field.label}
-            onChange={(event) => onChange({ ...field, label: event.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>{messages.templateDetailPanel.field.kind}</Label>
-          <SelectField
-            value={field.kind}
-            onChange={(value) => {
-              if (value === field.kind) {
-                return;
-              }
-
-              if (value === "table") {
-                onChange({
-                  kind: "table",
-                  key: field.key,
-                  label: field.label,
-                  required: field.required,
-                  description: field.description,
-                  min_rows: 0,
-                  columns: [createEmptyTableColumn(1, draftLabels)],
-                });
-                return;
-              }
-
-              onChange({
-                kind: "scalar",
-                key: field.key,
-                label: field.label,
-                required: field.required,
-                description: field.description,
-                value_type: "string",
-              });
-            }}
-            options={[
-              { label: messages.templateShared.fieldKinds.scalar, value: "scalar" },
-              { label: messages.templateShared.fieldKinds.table, value: "table" },
-            ]}
-          />
-        </div>
-
-        {field.kind === "table" ? (
-          <div className="space-y-2">
-            <Label>{messages.templateDetailPanel.field.minimumRows}</Label>
-            <Input
-              type="number"
-              min={0}
-              value={field.min_rows}
-              onChange={(event) =>
-                onChange({
-                  ...field,
-                  min_rows: Number(event.target.value) || 0,
-                })
-              }
-            />
+              : messages.templateDetailPanel.field.scalar}</Badge>
+            {field.required ? (
+              <Badge variant="warm">{messages.templateDetailPanel.field.required}</Badge>
+            ) : null}
           </div>
-        ) : (
-          <div className="space-y-2">
-            <Label>{messages.templateDetailPanel.field.valueType}</Label>
-            <SelectField
-              value={field.value_type}
-              onChange={(value) =>
-                onChange({
-                  ...field,
-                  value_type: value as ScalarValueType,
-                })
-              }
-              options={[
-                { label: messages.templateShared.valueTypes.string, value: "string" },
-                { label: messages.templateShared.valueTypes.number, value: "number" },
-                { label: messages.templateShared.valueTypes.date, value: "date" },
-                { label: messages.templateShared.valueTypes.boolean, value: "boolean" },
-              ]}
-            />
+          <div className="text-sm font-semibold text-[color:var(--color-ink)]">
+            {field.label || messages.templateDetailPanel.field.label}
           </div>
-        )}
-      </div>
-
-      <div className="mt-3 grid gap-3">
-        <div className="space-y-2">
-          <Label>{messages.templateDetailPanel.field.description}</Label>
-          <Textarea
-            className="min-h-20"
-            value={field.description ?? ""}
-            onChange={(event) => onChange({ ...field, description: event.target.value })}
-          />
+          <div className="text-xs text-[color:var(--color-muted)]">
+            {field.key || messages.templateDetailPanel.field.key}
+          </div>
         </div>
-        <CheckboxField
-          checked={field.required}
-          label={messages.templateDetailPanel.field.required}
-          onChange={(checked) => onChange({ ...field, required: checked })}
-        />
-      </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {field.kind === "table" ? (
+            <Badge>{field.columns.length}</Badge>
+          ) : (
+            <Badge>{messages.templateShared.valueTypes[field.value_type]}</Badge>
+          )}
+          {isOpen ? (
+            <ChevronDown className="h-4 w-4 text-[color:var(--color-muted)]" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-[color:var(--color-muted)]" />
+          )}
+        </div>
+      </button>
 
-      {field.kind === "table" ? (
-        <div className="mt-5 space-y-3 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/45 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Rows3 className="h-4 w-4 text-[color:var(--color-muted)]" />
-              <span className="text-sm font-medium text-[color:var(--color-ink)]">
-                {messages.templateDetailPanel.field.columns}
-              </span>
-            </div>
-            <Button type="button" size="sm" variant="secondary" onClick={onAddColumn}>
-              <Plus className="h-4 w-4" />
-              {messages.templateDetailPanel.field.addColumn}
+      {isOpen ? (
+        <div className="mt-5 space-y-5 border-t border-[color:var(--color-line)] pt-5">
+          <div className="flex justify-end">
+            <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
+              {messages.templateDetailPanel.field.remove}
             </Button>
           </div>
 
-          {!field.columns.length ? (
-            <div className="text-sm text-[color:var(--color-muted)]">
-              {messages.templateDetailPanel.field.emptyColumns}
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{messages.templateDetailPanel.field.key}</Label>
+              <Input
+                value={field.key}
+                onChange={(event) => onChange({ ...field, key: event.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{messages.templateDetailPanel.field.label}</Label>
+              <Input
+                value={field.label}
+                onChange={(event) => onChange({ ...field, label: event.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{messages.templateDetailPanel.field.kind}</Label>
+              <SelectField
+                value={field.kind}
+                onChange={(value) => {
+                  if (value === field.kind) {
+                    return;
+                  }
+
+                  if (value === "table") {
+                    onChange({
+                      kind: "table",
+                      key: field.key,
+                      label: field.label,
+                      required: field.required,
+                      description: field.description,
+                      min_rows: 0,
+                      columns: [createEmptyTableColumn(1, draftLabels)],
+                    });
+                    return;
+                  }
+
+                  onChange({
+                    kind: "scalar",
+                    key: field.key,
+                    label: field.label,
+                    required: field.required,
+                    description: field.description,
+                    value_type: "string",
+                  });
+                }}
+                options={[
+                  { label: messages.templateShared.fieldKinds.scalar, value: "scalar" },
+                  { label: messages.templateShared.fieldKinds.table, value: "table" },
+                ]}
+              />
+            </div>
+
+            {field.kind === "table" ? (
+              <div className="space-y-2">
+                <Label>{messages.templateDetailPanel.field.minimumRows}</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={field.min_rows}
+                  onChange={(event) =>
+                    onChange({
+                      ...field,
+                      min_rows: Number(event.target.value) || 0,
+                    })
+                  }
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>{messages.templateDetailPanel.field.valueType}</Label>
+                <SelectField
+                  value={field.value_type}
+                  onChange={(value) =>
+                    onChange({
+                      ...field,
+                      value_type: value as ScalarValueType,
+                    })
+                  }
+                  options={[
+                    { label: messages.templateShared.valueTypes.string, value: "string" },
+                    { label: messages.templateShared.valueTypes.number, value: "number" },
+                    { label: messages.templateShared.valueTypes.date, value: "date" },
+                    { label: messages.templateShared.valueTypes.boolean, value: "boolean" },
+                  ]}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-3">
+            <div className="space-y-2">
+              <Label>{messages.templateDetailPanel.field.description}</Label>
+              <Textarea
+                className="min-h-20"
+                value={field.description ?? ""}
+                onChange={(event) => onChange({ ...field, description: event.target.value })}
+              />
+            </div>
+            <CheckboxField
+              checked={field.required}
+              label={messages.templateDetailPanel.field.required}
+              onChange={(checked) => onChange({ ...field, required: checked })}
+            />
+          </div>
+
+          {field.kind === "table" ? (
+            <div className="space-y-3 rounded-xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/45 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Rows3 className="h-4 w-4 text-[color:var(--color-muted)]" />
+                  <span className="text-sm font-medium text-[color:var(--color-ink)]">
+                    {messages.templateDetailPanel.field.columns}
+                  </span>
+                </div>
+                <Button type="button" size="sm" variant="secondary" onClick={onAddColumn}>
+                  <Plus className="h-4 w-4" />
+                  {messages.templateDetailPanel.field.addColumn}
+                </Button>
+              </div>
+
+              {!field.columns.length ? (
+                <div className="text-sm text-[color:var(--color-muted)]">
+                  {messages.templateDetailPanel.field.emptyColumns}
+                </div>
+              ) : null}
+
+              {field.columns.map((column, columnIndex) => (
+                <ColumnEditor
+                  key={`${column.key}-${columnIndex}`}
+                  column={column}
+                  onChange={(nextColumn) => onChangeColumn(columnIndex, nextColumn)}
+                  onRemove={() => onRemoveColumn(columnIndex)}
+                />
+              ))}
             </div>
           ) : null}
-
-          {field.columns.map((column, columnIndex) => (
-            <ColumnEditor
-              key={`${column.key}-${columnIndex}`}
-              column={column}
-              onChange={(nextColumn) => onChangeColumn(columnIndex, nextColumn)}
-              onRemove={() => onRemoveColumn(columnIndex)}
-            />
-          ))}
         </div>
       ) : null}
     </div>
@@ -350,80 +386,104 @@ function ModuleEditor({
   onRemoveColumn: (fieldIndex: number, columnIndex: number) => void;
 }) {
   const { messages, formatText } = useLocale();
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/40 p-5">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
+      <button
+        type="button"
+        className="flex w-full items-start justify-between gap-3 text-left"
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-2 text-sm text-[color:var(--color-muted)]">
             <Rows3 className="h-4 w-4" />
             {messages.templateDetailPanel.module.title}
           </div>
+          <div className="text-base font-semibold text-[color:var(--color-ink)]">
+            {moduleItem.label || messages.templateDetailPanel.module.label}
+          </div>
+          <div className="text-xs text-[color:var(--color-muted)]">
+            {moduleItem.key || messages.templateDetailPanel.module.key}
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <Badge>
             {formatText(messages.templateDetailPanel.module.fieldCount, {
               count: moduleItem.fields.length,
             })}
           </Badge>
+          {isOpen ? (
+            <ChevronDown className="h-4 w-4 text-[color:var(--color-muted)]" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-[color:var(--color-muted)]" />
+          )}
         </div>
-        <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
-          {messages.templateDetailPanel.module.remove}
-        </Button>
-      </div>
+      </button>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>{messages.templateDetailPanel.module.key}</Label>
-          <Input
-            value={moduleItem.key}
-            onChange={(event) => onChange({ ...moduleItem, key: event.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>{messages.templateDetailPanel.module.label}</Label>
-          <Input
-            value={moduleItem.label}
-            onChange={(event) => onChange({ ...moduleItem, label: event.target.value })}
-          />
-        </div>
-      </div>
-
-      <div className="mt-5 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h4 className="text-sm font-medium text-[color:var(--color-ink)]">
-            {messages.templateDetailPanel.module.fields}
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="secondary" onClick={onAddScalarField}>
-              <FilePlus2 className="h-4 w-4" />
-              {messages.templateDetailPanel.module.addScalar}
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={onAddTableField}>
-              <Rows3 className="h-4 w-4" />
-              {messages.templateDetailPanel.module.addTable}
+      {isOpen ? (
+        <div className="mt-5 space-y-5 border-t border-[color:var(--color-line)] pt-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>{messages.templateDetailPanel.module.key}</Label>
+                <Input
+                  value={moduleItem.key}
+                  onChange={(event) => onChange({ ...moduleItem, key: event.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>{messages.templateDetailPanel.module.label}</Label>
+                <Input
+                  value={moduleItem.label}
+                  onChange={(event) => onChange({ ...moduleItem, label: event.target.value })}
+                />
+              </div>
+            </div>
+            <Button type="button" size="sm" variant="ghost" onClick={onRemove}>
+              {messages.templateDetailPanel.module.remove}
             </Button>
           </div>
-        </div>
 
-        {!moduleItem.fields.length ? (
-          <div className="rounded-xl border border-dashed border-[color:var(--color-line)] bg-white p-4 text-sm text-[color:var(--color-muted)]">
-            {messages.templateDetailPanel.module.empty}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h4 className="text-sm font-medium text-[color:var(--color-ink)]">
+                {messages.templateDetailPanel.module.fields}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="secondary" onClick={onAddScalarField}>
+                  <FilePlus2 className="h-4 w-4" />
+                  {messages.templateDetailPanel.module.addScalar}
+                </Button>
+                <Button type="button" size="sm" variant="secondary" onClick={onAddTableField}>
+                  <Rows3 className="h-4 w-4" />
+                  {messages.templateDetailPanel.module.addTable}
+                </Button>
+              </div>
+            </div>
+
+            {!moduleItem.fields.length ? (
+              <div className="rounded-xl border border-dashed border-[color:var(--color-line)] bg-white p-4 text-sm text-[color:var(--color-muted)]">
+                {messages.templateDetailPanel.module.empty}
+              </div>
+            ) : null}
+
+            {moduleItem.fields.map((field, fieldIndex) => (
+              <FieldEditor
+                key={`${field.key}-${fieldIndex}`}
+                field={field}
+                onChange={(nextField) => onChangeField(fieldIndex, nextField)}
+                onRemove={() => onRemoveField(fieldIndex)}
+                onAddColumn={() => onAddColumn(fieldIndex)}
+                onChangeColumn={(columnIndex, nextColumn) =>
+                  onChangeColumn(fieldIndex, columnIndex, nextColumn)
+                }
+                onRemoveColumn={(columnIndex) => onRemoveColumn(fieldIndex, columnIndex)}
+              />
+            ))}
           </div>
-        ) : null}
-
-        {moduleItem.fields.map((field, fieldIndex) => (
-          <FieldEditor
-            key={`${field.key}-${fieldIndex}`}
-            field={field}
-            onChange={(nextField) => onChangeField(fieldIndex, nextField)}
-            onRemove={() => onRemoveField(fieldIndex)}
-            onAddColumn={() => onAddColumn(fieldIndex)}
-            onChangeColumn={(columnIndex, nextColumn) =>
-              onChangeColumn(fieldIndex, columnIndex, nextColumn)
-            }
-            onRemoveColumn={(columnIndex) => onRemoveColumn(fieldIndex, columnIndex)}
-          />
-        ))}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

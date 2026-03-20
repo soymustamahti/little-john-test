@@ -89,6 +89,7 @@ export function DocumentProcessingPanel({
   );
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [customCategoryLabelKey, setCustomCategoryLabelKey] = useState("");
+  const [suggestionResolved, setSuggestionResolved] = useState(false);
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
   const [streamTimeline, setStreamTimeline] = useState<StreamTimelineItem[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -116,11 +117,13 @@ export function DocumentProcessingPanel({
     setSelectedCategoryId(document.classification.category?.id ?? "");
     setSelectedTemplateId(extractionQuery.data?.template.id ?? "");
     setPendingExtractionTemplateId(null);
+    setSuggestionResolved(false);
 
     if (
       document.classification.status === "pending_review" &&
       document.classification.suggested_category
     ) {
+      setSuggestionResolved(false);
       setSelectedMode("ai");
       setCustomCategoryName(
         formatDocumentCategoryName(document.classification.suggested_category.name),
@@ -190,6 +193,7 @@ export function DocumentProcessingPanel({
       document.classification.status === "pending_review" &&
       document.classification.suggested_category
     ) {
+      setSuggestionResolved(false);
       setCustomCategoryName(
         formatDocumentCategoryName(document.classification.suggested_category.name),
       );
@@ -242,6 +246,7 @@ export function DocumentProcessingPanel({
   const categories = categoriesQuery.data?.items ?? [];
   const templates = templatesQuery.data?.items ?? [];
   const extraction = extractionQuery.data;
+  const hasExtractionDraft = Boolean(extraction?.result);
   const pendingSuggestion = document.classification.suggested_category;
   const latestProgressItem = progressItems[progressItems.length - 1] ?? null;
   const streamStatusVariant = isStreaming
@@ -403,6 +408,7 @@ export function DocumentProcessingPanel({
             };
 
     try {
+      setSuggestionResolved(true);
       await runAgentStream({
         kind: "classification",
         threadId,
@@ -421,6 +427,7 @@ export function DocumentProcessingPanel({
         },
       });
     } catch (error) {
+      setSuggestionResolved(false);
       setAiError(getApiErrorMessage(error, messages.common.apiError));
     }
   }
@@ -567,7 +574,7 @@ export function DocumentProcessingPanel({
           <div className="grid gap-4 lg:grid-cols-2">
             <button
               type="button"
-              className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition hover:border-[color:var(--color-accent)]"
+              className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-[color:var(--color-accent)] hover:shadow-[0_16px_36px_rgba(29,91,219,0.12)]"
               onClick={() => setSelectedMode("manual")}
             >
               <div className="flex items-center gap-3 text-[color:var(--color-ink)]">
@@ -583,7 +590,7 @@ export function DocumentProcessingPanel({
 
             <button
               type="button"
-              className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition hover:border-[color:var(--color-accent)]"
+              className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-[color:var(--color-accent)] hover:shadow-[0_16px_36px_rgba(29,91,219,0.12)]"
               onClick={handleAiStart}
               disabled={aiSessionMutation.isPending}
             >
@@ -725,7 +732,9 @@ export function DocumentProcessingPanel({
               </div>
             </div>
 
-            {pendingSuggestion ? (
+            {document.classification.status === "pending_review" &&
+            pendingSuggestion &&
+            !suggestionResolved ? (
               <div className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="warm">
@@ -879,14 +888,18 @@ export function DocumentProcessingPanel({
             ) : null}
 
             <div className="flex flex-wrap gap-2">
-              {!isStreaming && document.classification.status !== "pending_review" ? (
+              {!isStreaming &&
+              document.classification.status !== "pending_review" &&
+              !hasExtractionDraft ? (
                 <Button onClick={handleAiStart} disabled={aiSessionMutation.isPending}>
                   {aiSessionMutation.isPending
                     ? messages.documentProcessing.ai.startingAction
                     : messages.documentProcessing.ai.startAction}
                 </Button>
               ) : null}
-              {!isStreaming && document.classification.status === "classified" ? (
+              {!isStreaming &&
+              document.classification.status === "classified" &&
+              !hasExtractionDraft ? (
                 <Button
                   variant="secondary"
                   onClick={() => handleExtractionStart(selectedTemplateId)}

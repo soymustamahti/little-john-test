@@ -270,3 +270,8 @@ and streams progress back to the client.
   cross-encoder reranking path by adding `sentence-transformers`, while also making the shared
   extraction/correction tool list hybrid-first with separate keyword and semantic tools still
   exposed for targeted use
+- Cleaned up the document-detail/process-review frontend flow: interactive controls now advertise
+  clickability better, pending category suggestions collapse immediately after a decision, the
+  detail page only shows extraction results and correction chat after confirmation, confidence
+  indicators are compact chips instead of input-looking boxes, and extraction-template editing now
+  uses collapsible module/field sections for a denser readable layout
