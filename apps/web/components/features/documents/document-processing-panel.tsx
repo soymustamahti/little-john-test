@@ -12,6 +12,7 @@ import {
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DocumentExtractionReview } from "@/components/features/documents/document-extraction-review";
+import { DocumentExtractionCorrectionChat } from "@/components/features/documents/document-extraction-correction-chat";
 import { useDocumentCategoriesQuery } from "@/hooks/use-document-categories";
 import {
   useConfirmDocumentExtractionReviewMutation,
@@ -22,10 +23,18 @@ import {
 } from "@/hooks/use-documents";
 import { useTemplatesQuery } from "@/hooks/use-templates";
 import { createAgentThread, streamAgentRun } from "@/lib/api/aegra";
+import {
+  buildStreamTimelineItem,
+  extractProgressItem,
+  isRecord,
+  type ProgressItem,
+  type StreamTimelineItem,
+  unwrapAgentPayload,
+  upsertProgressItem,
+  upsertTimelineItem,
+} from "@/lib/agent-stream";
 import { getApiErrorMessage } from "@/lib/api/errors";
-import type { Messages } from "@/lib/i18n";
 import { useLocale } from "@/providers/locale-provider";
-import type { AgentStreamEvent } from "@/types/aegra";
 import type { Document, DocumentExtractionResult } from "@/types/documents";
 import { getDocumentExtractionStatusLabel } from "@/types/documents";
 import {
@@ -43,182 +52,6 @@ const CATEGORY_PAGE_SIZE = 100;
 const TEMPLATE_PAGE_SIZE = 100;
 const DOCUMENT_CLASSIFICATION_ASSISTANT_ID = "document_classification_agent";
 const DOCUMENT_EXTRACTION_ASSISTANT_ID = "document_extraction_agent";
-const STREAM_EVENT_LIMIT = 48;
-
-interface ProgressItem {
-  phase: string;
-  message: string;
-}
-
-interface StreamTimelineItem {
-  id: string;
-  kind: "progress" | "interrupt" | "error" | "end";
-  label: string;
-  summary: string;
-  occurredAt: number;
-  variant: "default" | "accent" | "warm" | "success";
-}
-
-function extractProgressItem(event: AgentStreamEvent): ProgressItem | null {
-  if (String(event.event) !== "custom") {
-    return null;
-  }
-
-  const payload = unwrapAgentPayload(event.data);
-  if (!isRecord(payload)) {
-    return null;
-  }
-
-  const phase = typeof payload.phase === "string" ? payload.phase : "working";
-  const message = typeof payload.message === "string" ? payload.message : null;
-
-  if (!message) {
-    return null;
-  }
-
-  return { phase, message };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function unwrapAgentPayload(value: unknown): unknown {
-  if (isRecord(value) && "chunk" in value) {
-    return value.chunk;
-  }
-  return value;
-}
-
-function formatMachineLabel(value: string): string {
-  return value
-    .split(/[/_|]+/)
-    .filter(Boolean)
-    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
-    .join(" ");
-}
-
-function buildStreamTimelineItem(
-  event: AgentStreamEvent,
-  messages: Messages,
-): StreamTimelineItem | null {
-  const eventName = String(event.event);
-  const payload = unwrapAgentPayload(event.data);
-
-  if (eventName === "custom") {
-    const phase = isRecord(payload) && typeof payload.phase === "string"
-      ? formatMachineLabel(payload.phase)
-      : messages.documentProcessing.ai.eventLabels.custom;
-    const summary = isRecord(payload) && typeof payload.message === "string"
-      ? payload.message
-      : messages.documentProcessing.ai.eventDescriptions.custom;
-
-    return {
-      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      kind: "progress",
-      label: phase,
-      summary,
-      occurredAt: Date.now(),
-      variant: "accent",
-    };
-  }
-
-  if (eventName === "values") {
-    const interrupts =
-      isRecord(payload) && Array.isArray(payload.__interrupt__)
-        ? payload.__interrupt__
-        : null;
-
-    if (!interrupts || interrupts.length === 0) {
-      return null;
-    }
-
-    return {
-      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      kind: "interrupt",
-      label: messages.documentProcessing.ai.eventLabels.interrupt,
-      summary: messages.documentProcessing.ai.eventDescriptions.interrupt,
-      occurredAt: Date.now(),
-      variant: "warm",
-    };
-  }
-
-  if (eventName === "error") {
-    const summary =
-      isRecord(payload) && typeof payload.message === "string"
-        ? payload.message
-        : messages.documentProcessing.ai.eventDescriptions.error;
-
-    return {
-      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      kind: "error",
-      label: messages.documentProcessing.ai.eventLabels.error,
-      summary,
-      occurredAt: Date.now(),
-      variant: "warm",
-    };
-  }
-
-  if (eventName === "end") {
-    return {
-      id: event.id ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      kind: "end",
-      label: messages.documentProcessing.ai.eventLabels.end,
-      summary: messages.documentProcessing.ai.eventDescriptions.end,
-      occurredAt: Date.now(),
-      variant: "success",
-    };
-  }
-
-  return null;
-}
-
-function upsertTimelineItem(
-  currentItems: StreamTimelineItem[],
-  timelineItem: StreamTimelineItem,
-): StreamTimelineItem[] {
-  const previousItem = currentItems[currentItems.length - 1];
-  const isDuplicateInterrupt =
-    timelineItem.kind === "interrupt" &&
-    previousItem?.kind === "interrupt" &&
-    previousItem.label === timelineItem.label &&
-    previousItem.summary === timelineItem.summary;
-
-  if (isDuplicateInterrupt) {
-    return currentItems;
-  }
-
-  const shouldReplaceActiveProgress =
-    timelineItem.kind === "progress" &&
-    previousItem?.kind === "progress" &&
-    previousItem.label === timelineItem.label;
-
-  if (shouldReplaceActiveProgress && previousItem) {
-    return [
-      ...currentItems.slice(0, -1),
-      {
-        ...previousItem,
-        summary: timelineItem.summary,
-        occurredAt: timelineItem.occurredAt,
-        variant: timelineItem.variant,
-      },
-    ];
-  }
-
-  return [...currentItems, timelineItem].slice(-STREAM_EVENT_LIMIT);
-}
-
-function upsertProgressItem(
-  currentItems: ProgressItem[],
-  progressItem: ProgressItem,
-): ProgressItem[] {
-  const previousItem = currentItems[currentItems.length - 1];
-  if (previousItem?.phase === progressItem.phase) {
-    return [...currentItems.slice(0, -1), progressItem];
-  }
-
-  return [...currentItems, progressItem].slice(-STREAM_EVENT_LIMIT);
-}
 
 export function DocumentProcessingPanel({
   document,
@@ -1018,6 +851,13 @@ export function DocumentProcessingPanel({
                   messages={messages}
                   isSaving={extractionReviewMutation.isPending}
                   onSave={handleExtractionReviewSave}
+                />
+                <DocumentExtractionCorrectionChat
+                  documentId={documentId}
+                  extraction={extraction}
+                  onExtractionRefresh={async () => {
+                    await extractionQuery.refetch();
+                  }}
                 />
               </div>
             ) : null}

@@ -7,6 +7,7 @@ import {
   confirmDocumentExtractionReview,
   createDocumentAiExtractionSession,
   createDocumentAiClassificationSession,
+  createDocumentExtractionCorrectionSession,
   deleteDocument,
   getDocument,
   getDocumentExtraction,
@@ -123,6 +124,20 @@ export function useCreateDocumentAiExtractionSessionMutation() {
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({
         queryKey: [...DOCUMENTS_QUERY_KEY, variables.documentId, "extraction"],
+      });
+    },
+  });
+}
+
+export function useCreateDocumentExtractionCorrectionSessionMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (documentId: string) =>
+      createDocumentExtractionCorrectionSession(documentId),
+    onSuccess: async (_, documentId) => {
+      await queryClient.invalidateQueries({
+        queryKey: [...DOCUMENTS_QUERY_KEY, documentId, "extraction"],
       });
     },
   });

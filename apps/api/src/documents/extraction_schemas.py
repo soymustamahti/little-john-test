@@ -83,6 +83,12 @@ class ExtractionTemplateSummaryRead(BaseModel):
     locale: Annotated[str, Field(min_length=1, max_length=8)]
 
 
+class DocumentExtractionCorrectionMessageRead(BaseModel):
+    role: Literal["user", "assistant"]
+    content: Annotated[str, Field(min_length=1, max_length=4000)]
+    created_at: datetime
+
+
 class DocumentExtractionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -94,6 +100,7 @@ class DocumentExtractionRead(BaseModel):
     overall_confidence: Annotated[float | None, Field(default=None, ge=0, le=1)]
     reasoning_summary: str | None = None
     error: str | None = None
+    correction_messages: list[DocumentExtractionCorrectionMessageRead] = Field(default_factory=list)
     result: DocumentExtractionResultRead | None = None
     extracted_at: datetime | None = None
     reviewed_at: datetime | None = None
@@ -110,6 +117,13 @@ class DocumentExtractionSessionRead(BaseModel):
     thread_id: str
     document_id: UUID
     template_id: UUID
+    status: DocumentExtractionStatus
+
+
+class DocumentExtractionCorrectionSessionRead(BaseModel):
+    assistant_id: str
+    thread_id: str
+    document_id: UUID
     status: DocumentExtractionStatus
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
@@ -11,11 +12,14 @@ from src.documents.classification import DocumentClassificationStatus
 from src.documents.extraction import (
     DocumentExtractionMethod,
     DocumentExtractionStatus,
+    ParsedDocumentExtractionCorrectionMessage,
     build_extraction_metadata,
     parse_extraction_metadata,
 )
 from src.documents.extraction_repository import DocumentExtractionRepository
 from src.documents.extraction_schemas import (
+    DocumentExtractionCorrectionMessageRead,
+    DocumentExtractionCorrectionSessionRead,
     DocumentExtractionRead,
     DocumentExtractionResultRead,
     DocumentExtractionReviewUpdate,
@@ -27,6 +31,8 @@ from src.documents.repository import DocumentRepository
 from src.extraction_templates.repository import ExtractionTemplateRepository
 
 DOCUMENT_EXTRACTION_ASSISTANT_ID = "document_extraction_agent"
+DOCUMENT_EXTRACTION_CORRECTION_ASSISTANT_ID = "document_extraction_correction_agent"
+CORRECTION_MESSAGE_HISTORY_LIMIT = 24
 
 
 @dataclass(frozen=True)
@@ -47,6 +53,21 @@ class DocumentExtractionSource:
     template_locale: str
     template_modules: list[dict[str, object]]
     chunks: tuple[ExtractionSourceChunk, ...]
+
+
+@dataclass(frozen=True)
+class DocumentExtractionCorrectionSource:
+    document_id: UUID
+    original_filename: str
+    file_kind: str
+    file_extension: str
+    template_id: UUID
+    template_name: str
+    template_locale: str
+    template_modules: list[dict[str, object]]
+    current_result: DocumentExtractionResultRead
+    reasoning_summary: str | None
+    correction_messages: tuple[ParsedDocumentExtractionCorrectionMessage, ...]
 
 
 class DocumentExtractionService:
@@ -112,6 +133,51 @@ class DocumentExtractionService:
                 )
             return build_document_extraction_read(extraction)
 
+    async def start_correction_session(
+        self,
+        *,
+        document_id: UUID,
+    ) -> DocumentExtractionCorrectionSessionRead:
+        thread_id = str(uuid4())
+
+        async with self._session_factory() as session:
+            extraction_repository = DocumentExtractionRepository(session)
+            extraction = await extraction_repository.get(document_id)
+            if extraction is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Extraction for document {document_id} was not found.",
+                )
+            if not isinstance(extraction.extraction_result, dict):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="An extraction draft must exist before correction chat can start.",
+                )
+
+            metadata = parse_extraction_metadata(extraction.extraction_metadata)
+            await extraction_repository.save_result(
+                extraction=extraction,
+                status=DocumentExtractionStatus.PROCESSING,
+                metadata=build_extraction_metadata(
+                    thread_id=metadata.thread_id,
+                    overall_confidence=metadata.overall_confidence,
+                    reasoning_summary=metadata.reasoning_summary,
+                    correction_messages=_serialize_correction_messages(
+                        metadata.correction_messages
+                    ),
+                ),
+                result=extraction.extraction_result,
+                extracted_at=extraction.extracted_at,
+                reviewed_at=extraction.reviewed_at,
+            )
+
+        return DocumentExtractionCorrectionSessionRead(
+            assistant_id=DOCUMENT_EXTRACTION_CORRECTION_ASSISTANT_ID,
+            thread_id=thread_id,
+            document_id=document_id,
+            status=DocumentExtractionStatus.PROCESSING,
+        )
+
     async def get_extraction_source(
         self,
         *,
@@ -162,6 +228,60 @@ class DocumentExtractionService:
                 ),
             )
 
+    async def get_correction_source(
+        self,
+        *,
+        document_id: UUID,
+    ) -> DocumentExtractionCorrectionSource:
+        async with self._session_factory() as session:
+            document_repository = DocumentRepository(session)
+            extraction_repository = DocumentExtractionRepository(session)
+
+            document = await document_repository.get_for_extraction(document_id)
+            if document is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Document {document_id} was not found.",
+                )
+
+            extraction = await extraction_repository.get(document_id)
+            if extraction is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Extraction for document {document_id} was not found.",
+                )
+
+            template = extraction.extraction_template
+            if template is None:
+                raise RuntimeError(
+                    "Document extraction "
+                    f"{document_id} is missing its linked extraction template."
+                )
+
+            if not isinstance(extraction.extraction_result, dict):
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="An extraction draft must exist before correction chat can start.",
+                )
+
+            metadata = parse_extraction_metadata(extraction.extraction_metadata)
+
+            return DocumentExtractionCorrectionSource(
+                document_id=document.id,
+                original_filename=document.original_filename,
+                file_kind=document.file_kind,
+                file_extension=document.file_extension,
+                template_id=template.id,
+                template_name=template.name,
+                template_locale=template.locale,
+                template_modules=list(template.modules),
+                current_result=DocumentExtractionResultRead.model_validate(
+                    extraction.extraction_result
+                ),
+                reasoning_summary=metadata.reasoning_summary,
+                correction_messages=metadata.correction_messages,
+            )
+
     async def save_ai_draft(
         self,
         *,
@@ -188,6 +308,7 @@ class DocumentExtractionService:
                 )
 
             overall_confidence = compute_overall_confidence(result)
+            existing_metadata = parse_extraction_metadata(extraction.extraction_metadata)
             await extraction_repository.save_result(
                 extraction=extraction,
                 status=DocumentExtractionStatus.PENDING_REVIEW,
@@ -195,6 +316,9 @@ class DocumentExtractionService:
                     thread_id=thread_id,
                     overall_confidence=overall_confidence,
                     reasoning_summary=reasoning_summary,
+                    correction_messages=_serialize_correction_messages(
+                        existing_metadata.correction_messages
+                    ),
                 ),
                 result=result.model_dump(mode="json"),
                 extracted_at=datetime.now(UTC),
@@ -225,6 +349,9 @@ class DocumentExtractionService:
                     thread_id=existing_metadata.thread_id,
                     overall_confidence=overall_confidence,
                     reasoning_summary=existing_metadata.reasoning_summary,
+                    correction_messages=_serialize_correction_messages(
+                        existing_metadata.correction_messages
+                    ),
                 ),
                 result=payload.result.model_dump(mode="json"),
                 extracted_at=extraction.extracted_at,
@@ -249,16 +376,107 @@ class DocumentExtractionService:
                     detail=f"Extraction for document {document_id} was not found.",
                 )
 
+            existing_metadata = parse_extraction_metadata(extraction.extraction_metadata)
             await extraction_repository.save_result(
                 extraction=extraction,
                 status=DocumentExtractionStatus.FAILED,
                 metadata=build_extraction_metadata(
                     thread_id=thread_id,
                     error=error_message,
+                    correction_messages=_serialize_correction_messages(
+                        existing_metadata.correction_messages
+                    ),
                 ),
                 result=None,
                 extracted_at=None,
                 reviewed_at=None,
+            )
+
+    async def save_chat_correction(
+        self,
+        *,
+        document_id: UUID,
+        user_message: str,
+        assistant_response: str,
+        result: DocumentExtractionResultRead,
+        reasoning_summary: str | None,
+    ) -> None:
+        async with self._session_factory() as session:
+            extraction_repository = DocumentExtractionRepository(session)
+            extraction = await extraction_repository.get(document_id)
+            if extraction is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Extraction for document {document_id} was not found.",
+                )
+
+            existing_metadata = parse_extraction_metadata(extraction.extraction_metadata)
+            overall_confidence = compute_overall_confidence(result)
+            correction_messages = _append_correction_messages(
+                existing_metadata.correction_messages,
+                (
+                    _build_correction_message("user", user_message),
+                    _build_correction_message("assistant", assistant_response),
+                ),
+            )
+
+            await extraction_repository.save_result(
+                extraction=extraction,
+                status=DocumentExtractionStatus.PENDING_REVIEW,
+                metadata=build_extraction_metadata(
+                    thread_id=existing_metadata.thread_id,
+                    overall_confidence=overall_confidence,
+                    reasoning_summary=reasoning_summary
+                    or existing_metadata.reasoning_summary
+                    or "Extraction draft updated from correction chat.",
+                    correction_messages=correction_messages,
+                ),
+                result=result.model_dump(mode="json"),
+                extracted_at=datetime.now(UTC),
+                reviewed_at=None,
+            )
+
+    async def mark_correction_failure(
+        self,
+        *,
+        document_id: UUID,
+        user_message: str,
+        error_message: str,
+    ) -> None:
+        async with self._session_factory() as session:
+            extraction_repository = DocumentExtractionRepository(session)
+            extraction = await extraction_repository.get(document_id)
+            if extraction is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Extraction for document {document_id} was not found.",
+                )
+
+            existing_metadata = parse_extraction_metadata(extraction.extraction_metadata)
+            correction_messages = _append_correction_messages(
+                existing_metadata.correction_messages,
+                (
+                    _build_correction_message("user", user_message),
+                    _build_correction_message(
+                        "assistant",
+                        f"I could not apply the requested correction: {error_message}",
+                    ),
+                ),
+            )
+
+            await extraction_repository.save_result(
+                extraction=extraction,
+                status=DocumentExtractionStatus.FAILED,
+                metadata=build_extraction_metadata(
+                    thread_id=existing_metadata.thread_id,
+                    overall_confidence=existing_metadata.overall_confidence,
+                    reasoning_summary=existing_metadata.reasoning_summary,
+                    error=error_message,
+                    correction_messages=correction_messages,
+                ),
+                result=extraction.extraction_result,
+                extracted_at=extraction.extracted_at,
+                reviewed_at=extraction.reviewed_at,
             )
 
 
@@ -289,6 +507,14 @@ def build_document_extraction_read(extraction: DocumentExtractionModel) -> Docum
             "overall_confidence": metadata.overall_confidence,
             "reasoning_summary": metadata.reasoning_summary,
             "error": metadata.error,
+            "correction_messages": [
+                DocumentExtractionCorrectionMessageRead(
+                    role=item.role,
+                    content=item.content,
+                    created_at=item.created_at or extraction.updated_at,
+                )
+                for item in metadata.correction_messages
+            ],
             "result": result_payload,
             "extracted_at": extraction.extracted_at,
             "reviewed_at": extraction.reviewed_at,
@@ -314,3 +540,45 @@ def compute_overall_confidence(result: DocumentExtractionResultRead) -> float | 
         return None
 
     return sum(confidences) / len(confidences)
+
+
+def _build_correction_message(
+    role: str,
+    content: str,
+) -> dict[str, str]:
+    return {
+        "role": role,
+        "content": content.strip(),
+        "created_at": datetime.now(UTC).isoformat(),
+    }
+
+
+def _append_correction_messages(
+    existing_messages: Sequence[ParsedDocumentExtractionCorrectionMessage],
+    new_messages: Sequence[dict[str, str]],
+) -> list[dict[str, str]]:
+    combined = [
+        *_serialize_correction_messages(existing_messages),
+        *[message for message in new_messages if message.get("content")],
+    ]
+    return combined[-CORRECTION_MESSAGE_HISTORY_LIMIT:]
+
+
+def _serialize_correction_messages(
+    messages: Sequence[ParsedDocumentExtractionCorrectionMessage],
+) -> list[dict[str, str]]:
+    serialized: list[dict[str, str]] = []
+    for message in messages:
+        created_at = (
+            message.created_at.isoformat()
+            if message.created_at is not None
+            else datetime.now(UTC).isoformat()
+        )
+        serialized.append(
+            {
+                "role": message.role,
+                "content": message.content,
+                "created_at": created_at,
+            }
+        )
+    return serialized[-CORRECTION_MESSAGE_HISTORY_LIMIT:]

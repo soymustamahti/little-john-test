@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from src.documents.extraction import DocumentExtractionStatus
 from src.documents.extraction_schemas import (
+    DocumentExtractionCorrectionSessionRead,
     DocumentExtractionRead,
     DocumentExtractionReviewUpdate,
     DocumentExtractionSessionRead,
@@ -35,6 +36,18 @@ class FakeDocumentExtractionService:
     async def get_extraction(self, document_id) -> DocumentExtractionRead:
         self.get_calls.append(str(document_id))
         return build_extraction_payload(document_id)
+
+    async def start_correction_session(
+        self,
+        *,
+        document_id,
+    ) -> DocumentExtractionCorrectionSessionRead:
+        return DocumentExtractionCorrectionSessionRead(
+            assistant_id="document_extraction_correction_agent",
+            thread_id="thread-correction-123",
+            document_id=document_id,
+            status=DocumentExtractionStatus.PROCESSING,
+        )
 
     async def confirm_review(
         self,
@@ -138,6 +151,22 @@ def test_get_document_extraction_endpoint_returns_extraction_payload() -> None:
     assert response.status_code == 200
     assert service.get_calls == [str(document_id)]
     assert response.json()["status"] == "pending_review"
+
+
+def test_document_extraction_correction_session_endpoint_returns_bootstrap_payload() -> None:
+    service = FakeDocumentExtractionService()
+    client = build_client(service)
+    document_id = uuid4()
+
+    response = client.post(f"/api/documents/{document_id}/extraction/correction-session")
+
+    assert response.status_code == 200
+    assert response.json() == {
+      "assistant_id": "document_extraction_correction_agent",
+      "thread_id": "thread-correction-123",
+      "document_id": str(document_id),
+      "status": "processing",
+    }
 
 
 def test_confirm_document_extraction_review_endpoint_returns_confirmed_payload() -> None:

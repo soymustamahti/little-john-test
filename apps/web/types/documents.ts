@@ -129,6 +129,12 @@ export interface DocumentExtractionTemplateSummary {
   locale: string;
 }
 
+export interface DocumentExtractionCorrectionMessage {
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
 export interface DocumentExtraction {
   document_id: string;
   status: DocumentExtractionStatus;
@@ -138,6 +144,7 @@ export interface DocumentExtraction {
   overall_confidence: number | null;
   reasoning_summary: string | null;
   error: string | null;
+  correction_messages: DocumentExtractionCorrectionMessage[];
   result: DocumentExtractionResult | null;
   extracted_at: string | null;
   reviewed_at: string | null;
@@ -150,6 +157,13 @@ export interface DocumentExtractionSession {
   thread_id: string;
   document_id: string;
   template_id: string;
+  status: DocumentExtractionStatus;
+}
+
+export interface DocumentExtractionCorrectionSession {
+  assistant_id: string;
+  thread_id: string;
+  document_id: string;
   status: DocumentExtractionStatus;
 }
 

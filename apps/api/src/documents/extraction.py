@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 
 class DocumentExtractionStatus(str, Enum):
@@ -29,6 +30,14 @@ class ParsedDocumentExtractionMetadata:
     overall_confidence: float | None = None
     reasoning_summary: str | None = None
     error: str | None = None
+    correction_messages: tuple["ParsedDocumentExtractionCorrectionMessage", ...] = ()
+
+
+@dataclass(frozen=True)
+class ParsedDocumentExtractionCorrectionMessage:
+    role: Literal["user", "assistant"]
+    content: str
+    created_at: datetime | None = None
 
 
 def build_extraction_metadata(
@@ -37,6 +46,7 @@ def build_extraction_metadata(
     overall_confidence: float | None = None,
     reasoning_summary: str | None = None,
     error: str | None = None,
+    correction_messages: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     metadata: dict[str, Any] = {}
 
@@ -48,6 +58,8 @@ def build_extraction_metadata(
         metadata["reasoning_summary"] = reasoning_summary
     if error:
         metadata["error"] = error
+    if correction_messages:
+        metadata["correction_messages"] = correction_messages
 
     return metadata
 
@@ -84,9 +96,42 @@ def parse_extraction_metadata(
     if error == "":
         error = None
 
+    correction_messages_raw = metadata.get("correction_messages")
+    correction_messages: list[ParsedDocumentExtractionCorrectionMessage] = []
+    if isinstance(correction_messages_raw, list):
+        for item in correction_messages_raw:
+            if not isinstance(item, dict):
+                continue
+
+            role_raw = item.get("role")
+            if role_raw not in {"user", "assistant"}:
+                continue
+
+            content_raw = item.get("content")
+            content = content_raw.strip() if isinstance(content_raw, str) else ""
+            if content == "":
+                continue
+
+            created_at = None
+            created_at_raw = item.get("created_at")
+            if isinstance(created_at_raw, str):
+                try:
+                    created_at = datetime.fromisoformat(created_at_raw)
+                except ValueError:
+                    created_at = None
+
+            correction_messages.append(
+                ParsedDocumentExtractionCorrectionMessage(
+                    role=role_raw,
+                    content=content,
+                    created_at=created_at,
+                )
+            )
+
     return ParsedDocumentExtractionMetadata(
         thread_id=thread_id,
         overall_confidence=overall_confidence,
         reasoning_summary=reasoning_summary,
         error=error,
+        correction_messages=tuple(correction_messages),
     )

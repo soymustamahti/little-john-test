@@ -17,12 +17,14 @@ This repository is now in early implementation.
   streamed progress plus human review for suggested new categories
 - `apps/api` now also exposes the first structured-extraction slice: AI extraction session
   bootstrap, a LangGraph extraction agent with hybrid retrieval tools, persisted reviewable
-  extraction drafts, and confirmation endpoints for human-reviewed extraction results
+  extraction drafts, a correction-chat assistant for draft revisions, and confirmation endpoints
+  for human-reviewed extraction results
 - `apps/web` now includes a documents workspace for upload, list, detail, and delete flows in
   addition to the existing template and document-category screens
 - `apps/web` now includes a document-processing flow on the document detail page for manual or AI
   classification, including review of AI-suggested categories plus template-driven extraction
-  review with editable values and confidence inputs
+  review with editable values, read-only confidence, and a correction chat that can revise the
+  draft through a streamed deep-agent run
 - `apps/web` now includes the first real operator UI for template management
 - Agent guidance files remain part of the repository so future slices follow the same constraints
 

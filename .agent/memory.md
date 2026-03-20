@@ -88,6 +88,18 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Hardened the correction-chat finalizer boundary so correction runs no longer fail when the
+  model emits an empty patch like `updates: []`; the correction schema now normalizes empty or
+  module-list-shaped patches before validation, trims finalizer text fields defensively, and keeps
+  the typed merge path intact
+- Reworked the extraction correction UI into a more explicit ChatGPT-style workspace with message
+  bubbles, quick correction prompts, a dedicated live-activity rail, keyboard send shortcuts, and
+  clearer streaming visibility while preserving the existing correction-session backend flow and
+  persisted chat history
+- Added the first chat-based extraction-correction slice across backend and frontend: operators can
+  now open a correction chat on an extraction draft, ask a deep LangGraph correction agent to fix
+  values or re-search document evidence, watch live streamed correction activity, and persist the
+  revised draft plus chat history back into `document_extractions`
 - Added a comprehensive end-to-end walkthrough under
   `docs/end-to-end-document-workflow-walkthrough.md` that explains the live repository workflow
   from upload and digestion through classification, extraction, streaming, review, persistence,

@@ -6,7 +6,11 @@ from uuid import UUID
 
 import pytest
 from src.documents.classification import DocumentClassificationStatus
-from src.documents.extraction import DocumentExtractionMethod, DocumentExtractionStatus
+from src.documents.extraction import (
+    DocumentExtractionMethod,
+    DocumentExtractionStatus,
+    parse_extraction_metadata,
+)
 from src.documents.extraction_schemas import (
     DocumentExtractionResultRead,
     DocumentExtractionReviewUpdate,
@@ -258,9 +262,82 @@ async def test_start_ai_extraction_session_creates_processing_record(
     assert session.status == DocumentExtractionStatus.PROCESSING
     assert stored is not None
     assert stored.status == DocumentExtractionStatus.PROCESSING.value
+
+
+@pytest.mark.asyncio
+async def test_start_correction_session_marks_existing_draft_processing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, template, repository = build_service(monkeypatch)
+    await service.start_ai_extraction_session(
+        document_id=document.id,
+        template_id=template.id,
+    )
+    await service.save_ai_draft(
+        document_id=document.id,
+        template_id=template.id,
+        thread_id="thread-1",
+        result=build_result_payload(),
+        reasoning_summary="Initial extraction summary.",
+    )
+
+    session = await service.start_correction_session(document_id=document.id)
+    stored = await repository.get(document.id)
+
+    assert session.assistant_id == "document_extraction_correction_agent"
+    assert session.document_id == document.id
+    assert stored is not None
+    assert stored.status == DocumentExtractionStatus.PROCESSING.value
+
+
+@pytest.mark.asyncio
+async def test_save_chat_correction_persists_updated_result_and_messages(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, template, repository = build_service(monkeypatch)
+    await service.start_ai_extraction_session(
+        document_id=document.id,
+        template_id=template.id,
+    )
+    await service.save_ai_draft(
+        document_id=document.id,
+        template_id=template.id,
+        thread_id="thread-1",
+        result=build_result_payload(),
+        reasoning_summary="Initial extraction summary.",
+    )
+
+    corrected_result = build_result_payload().model_copy(deep=True)
+    corrected_result.modules[0].fields[0].value = "Acme Corporation"
+    corrected_result.modules[0].fields[0].raw_value = "Acme Corporation"
+
+    await service.save_chat_correction(
+        document_id=document.id,
+        user_message="The vendor name is incorrect. Use Acme Corporation.",
+        assistant_response="I updated the vendor name to Acme Corporation.",
+        result=corrected_result,
+        reasoning_summary="Updated the vendor name from the operator correction.",
+    )
+
+    stored = await repository.get(document.id)
+
+    assert stored is not None
+    assert stored.status == DocumentExtractionStatus.PENDING_REVIEW.value
+    assert stored.extraction_result is not None
+    assert (
+        stored.extraction_result["modules"][0]["fields"][0]["value"]
+        == "Acme Corporation"
+    )
+
+    metadata = parse_extraction_metadata(stored.extraction_metadata)
+    assert metadata.reasoning_summary == "Updated the vendor name from the operator correction."
+    assert [message.role for message in metadata.correction_messages] == [
+        "user",
+        "assistant",
+    ]
     assert stored.method == DocumentExtractionMethod.AI.value
     assert stored.extraction_metadata is not None
-    assert stored.extraction_metadata["thread_id"] == session.thread_id
+    assert stored.extraction_metadata["thread_id"] == "thread-1"
 
 
 @pytest.mark.asyncio

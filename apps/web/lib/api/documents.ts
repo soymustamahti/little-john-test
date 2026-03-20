@@ -3,6 +3,7 @@ import axios from "axios";
 import { apiClient } from "@/lib/api/client";
 import type {
   Document,
+  DocumentExtractionCorrectionSession,
   DocumentClassificationSession,
   DocumentExtraction,
   DocumentExtractionReviewPayload,
@@ -57,6 +58,13 @@ export async function createDocumentAiExtractionSession(
     {
       template_id: templateId,
     },
+  );
+  return response.data;
+}
+
+export async function createDocumentExtractionCorrectionSession(documentId: string) {
+  const response = await apiClient.post<DocumentExtractionCorrectionSession>(
+    `/api/documents/${documentId}/extraction/correction-session`,
   );
   return response.data;
 }

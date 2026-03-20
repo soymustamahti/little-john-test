@@ -3,7 +3,8 @@
   "dependencies": ["./src"],
   "graphs": {
     "document_classification_agent": "./src/agents/document_classification_agent/graph.py:graph",
-    "document_extraction_agent": "./src/agents/document_extraction_agent/graph.py:graph"
+    "document_extraction_agent": "./src/agents/document_extraction_agent/graph.py:graph",
+    "document_extraction_correction_agent": "./src/agents/document_extraction_correction_agent/graph.py:graph"
   },
   "http": {
     "app": "src.main:app"
