@@ -275,3 +275,30 @@ and streams progress back to the client.
   detail page only shows extraction results and correction chat after confirmation, confidence
   indicators are compact chips instead of input-looking boxes, and extraction-template editing now
   uses collapsible module/field sections for a denser readable layout
+- Persisted the correction-chat event explorers across the confirm/revisit flow on the frontend:
+  the detail-page correction chat now restores each turn's collapsible agent-activity groups after
+  the component remounts, so the operator can still inspect what the deep correction agent did even
+  after confirming extraction and returning to the document detail view
+- Adjusted the document-detail extraction workspace visibility so a previously confirmed document
+  keeps showing its saved extraction overview and correction chat when later corrections push the
+  extraction back to `pending_review`; duplicate UI is still avoided while the dedicated processing
+  drawer is open
+- Promoted correction-chat activity explorers from transient UI state into persisted extraction
+  metadata: correction event groups are now saved via a dedicated API path, returned by
+  `/api/documents/{id}/extraction`, reused by both review and confirmed-detail chats, and preserved
+  when the operator confirms extraction or revisits the document later
+- Updated the correction-chat activity persistence cadence so event groups are pushed while the
+  stream is still running instead of waiting for the final refresh, which keeps the event explorer
+  aligned with real-time correction activity
+- Removed `document_id` from the model-visible retrieval tool schemas in both extraction and
+  correction graphs by switching the shared tool list to `StructuredTool` wrappers with
+  `InjectedState("document_id")`; the graph now injects the document context itself, preventing
+  malformed LLM-generated UUIDs from crashing retrieval tool calls like `inspect_chunk`
+- Fixed a frontend race in the correction chat streaming flow: opening a correction session no
+  longer invalidates the extraction query before the live stream starts, the chat marks itself as
+  streaming before session bootstrap, and server-sync effects now preserve the optimistic user turn
+  until the backend refresh catches up, so live correction events stay visible in real time
+- Hardened correction-chat event syncing against stale backend snapshots: the UI now prefers the
+  more advanced local event-group state when the server is behind on status, item count, or
+  expanded/collapsed state, and correction-activity mutation responses no longer regress the query
+  cache when an older save finishes after a newer one

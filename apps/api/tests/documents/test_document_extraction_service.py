@@ -12,6 +12,7 @@ from src.documents.extraction import (
     parse_extraction_metadata,
 )
 from src.documents.extraction_schemas import (
+    DocumentExtractionCorrectionActivityUpdate,
     DocumentExtractionResultRead,
     DocumentExtractionReviewUpdate,
 )
@@ -386,6 +387,30 @@ async def test_confirm_review_marks_extraction_confirmed(
         result=result,
         reasoning_summary="Vendor details extracted from the first chunk.",
     )
+    await service.save_correction_activity(
+        document_id=document.id,
+        payload=DocumentExtractionCorrectionActivityUpdate.model_validate(
+            {
+                "groups": [
+                    {
+                        "id": "turn-1",
+                        "user_turn_index": 0,
+                        "summary": "Applied the requested correction to the extraction draft.",
+                        "status": "complete",
+                        "expanded": False,
+                        "items": [
+                            {
+                                "id": "event-1",
+                                "kind": "progress",
+                                "summary": "Running keyword search for vendor name evidence.",
+                                "occurred_at": 1_710_000_000_000,
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+    )
 
     reviewed = DocumentExtractionReviewUpdate(result=result)
     extraction = await service.confirm_review(
@@ -397,3 +422,60 @@ async def test_confirm_review_marks_extraction_confirmed(
     assert extraction.result is not None
     assert extraction.overall_confidence == pytest.approx(0.91)
     assert extraction.reviewed_at is not None
+    assert len(extraction.correction_event_groups) == 1
+    assert extraction.correction_event_groups[0].summary == (
+        "Applied the requested correction to the extraction draft."
+    )
+
+
+@pytest.mark.asyncio
+async def test_save_correction_activity_persists_event_groups(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, document, template, repository = build_service(monkeypatch)
+    await service.start_ai_extraction_session(
+        document_id=document.id,
+        template_id=template.id,
+    )
+    await service.save_ai_draft(
+        document_id=document.id,
+        template_id=template.id,
+        thread_id="thread-1",
+        result=build_result_payload(),
+        reasoning_summary="Initial extraction summary.",
+    )
+
+    extraction = await service.save_correction_activity(
+        document_id=document.id,
+        payload=DocumentExtractionCorrectionActivityUpdate.model_validate(
+            {
+                "groups": [
+                    {
+                        "id": "turn-1",
+                        "user_turn_index": 0,
+                        "summary": "Applied the requested correction to the extraction draft.",
+                        "status": "complete",
+                        "expanded": False,
+                        "items": [
+                            {
+                                "id": "event-1",
+                                "kind": "progress",
+                                "summary": "Running keyword search for vendor name evidence.",
+                                "occurred_at": 1_710_000_000_000,
+                            }
+                        ],
+                    }
+                ]
+            }
+        ),
+    )
+
+    stored = await repository.get(document.id)
+
+    assert stored is not None
+    metadata = parse_extraction_metadata(stored.extraction_metadata)
+    assert len(metadata.correction_event_groups) == 1
+    assert metadata.correction_event_groups[0].summary == (
+        "Applied the requested correction to the extraction draft."
+    )
+    assert len(extraction.correction_event_groups) == 1

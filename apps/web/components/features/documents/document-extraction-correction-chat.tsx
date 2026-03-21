@@ -28,7 +28,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateDocumentExtractionCorrectionSessionMutation } from "@/hooks/use-documents";
+import {
+  useCreateDocumentExtractionCorrectionSessionMutation,
+  useSaveDocumentExtractionCorrectionActivityMutation,
+} from "@/hooks/use-documents";
 import {
   buildStreamTimelineItem,
   extractProgressItem,
@@ -78,6 +81,9 @@ interface PendingTurnState {
 
 type LocaleMessages = ReturnType<typeof useLocale>["messages"];
 
+const CORRECTION_EVENT_GROUPS_STORAGE_PREFIX =
+  "document-extraction-correction-events";
+
 export function DocumentExtractionCorrectionChat({
   documentId,
   extraction,
@@ -89,23 +95,154 @@ export function DocumentExtractionCorrectionChat({
 }) {
   const { locale, messages } = useLocale();
   const correctionSessionMutation = useCreateDocumentExtractionCorrectionSessionMutation();
+  const correctionActivityMutation = useSaveDocumentExtractionCorrectionActivityMutation();
+  const serverEventGroups = useMemo(
+    () => normalizeApiEventGroups(extraction.correction_event_groups),
+    [extraction.correction_event_groups],
+  );
 
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState(extraction.correction_messages);
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
   const [chatError, setChatError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [eventGroups, setEventGroups] = useState<TurnEventGroup[]>([]);
+  const [eventGroups, setEventGroups] = useState<TurnEventGroup[]>(() =>
+    buildInitialEventGroups(documentId, extraction),
+  );
 
   const streamAbortControllerRef = useRef<AbortController | null>(null);
   const conversationViewportRef = useRef<HTMLDivElement | null>(null);
   const pendingTurnRef = useRef<PendingTurnState | null>(null);
+  const lastPersistedEventGroupsRef = useRef("");
 
   useEffect(() => {
     if (!isStreaming) {
       setChatMessages(extraction.correction_messages);
     }
   }, [extraction.correction_messages, isStreaming]);
+
+  useEffect(() => {
+    if (isStreaming) {
+      return;
+    }
+
+    const serverUserTurnCount = countUserTurns(extraction.correction_messages);
+    const localUserTurnCount = countUserTurns(chatMessages);
+
+    // Keep the optimistic user turn and its live event explorer visible until the
+    // backend refresh catches up with the newly submitted correction request.
+    if (
+      pendingTurnRef.current &&
+      serverUserTurnCount < localUserTurnCount
+    ) {
+      return;
+    }
+
+    const userTurnCount = serverUserTurnCount;
+    if (userTurnCount === 0) {
+      setEventGroups([]);
+      clearPersistedEventGroups(documentId);
+      lastPersistedEventGroupsRef.current = "";
+      return;
+    }
+
+    setEventGroups((currentGroups) => {
+      const nextGroups = reconcileEventGroups({
+        currentGroups,
+        serverGroups: serverEventGroups,
+        documentId,
+        userTurnCount,
+      });
+
+      if (serializeEventGroups(nextGroups) === serializeEventGroups(currentGroups)) {
+        return currentGroups;
+      }
+
+      persistEventGroups(documentId, nextGroups);
+      lastPersistedEventGroupsRef.current = serializeEventGroups(nextGroups);
+      return nextGroups;
+    });
+  }, [
+    chatMessages,
+    documentId,
+    extraction.correction_messages,
+    isStreaming,
+    serverEventGroups,
+  ]);
+
+  useEffect(() => {
+    const userTurnCount = countUserTurns(chatMessages);
+    if (userTurnCount === 0) {
+      clearPersistedEventGroups(documentId);
+      return;
+    }
+
+    const normalizedGroups = trimEventGroupsToUserTurns(eventGroups, userTurnCount);
+    if (normalizedGroups.length === 0) {
+      return;
+    }
+
+    persistEventGroups(documentId, normalizedGroups);
+  }, [chatMessages, documentId, eventGroups]);
+
+  useEffect(() => {
+    const userTurnCount = countUserTurns(chatMessages);
+    if (userTurnCount === 0) {
+      return;
+    }
+
+    const normalizedGroups = trimEventGroupsToUserTurns(eventGroups, userTurnCount);
+    if (normalizedGroups.length === 0) {
+      return;
+    }
+
+    const currentSignature = serializeEventGroups(normalizedGroups);
+    const serverSignature = serializeEventGroups(
+      trimEventGroupsToUserTurns(serverEventGroups, userTurnCount),
+    );
+
+    if (
+      currentSignature === serverSignature ||
+      currentSignature === lastPersistedEventGroupsRef.current
+    ) {
+      return;
+    }
+
+    lastPersistedEventGroupsRef.current = currentSignature;
+    correctionActivityMutation.mutate(
+      {
+        documentId,
+        payload: {
+          groups: normalizedGroups.map((group) => ({
+            id: group.id,
+            user_turn_index: group.userTurnIndex,
+            summary: group.summary,
+            status: group.status,
+            expanded: group.expanded,
+            items: group.items.map((item) => ({
+              id: item.id,
+              kind: item.kind,
+              summary: item.summary,
+              occurred_at: item.occurredAt,
+            })),
+          })),
+        },
+      },
+      {
+        onError: () => {
+          if (lastPersistedEventGroupsRef.current === currentSignature) {
+            lastPersistedEventGroupsRef.current = "";
+          }
+        },
+      },
+    );
+  }, [
+    chatMessages,
+    correctionActivityMutation,
+    documentId,
+    eventGroups,
+    serverEventGroups,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -226,6 +363,7 @@ export function DocumentExtractionCorrectionChat({
       baselineResult: extraction.result ? structuredClone(extraction.result) : null,
       correctionMessageCount: extraction.correction_messages.length,
     };
+    setIsStreaming(true);
 
     try {
       const session = await correctionSessionMutation.mutateAsync(documentId);
@@ -239,7 +377,6 @@ export function DocumentExtractionCorrectionChat({
 
       const controller = new AbortController();
       streamAbortControllerRef.current = controller;
-      setIsStreaming(true);
 
       await streamAgentRun({
         threadId: session.thread_id,
@@ -295,9 +432,12 @@ export function DocumentExtractionCorrectionChat({
       );
       pendingTurnRef.current = null;
     } finally {
-      setIsStreaming(false);
       streamAbortControllerRef.current = null;
-      await onExtractionRefresh();
+      try {
+        await onExtractionRefresh();
+      } finally {
+        setIsStreaming(false);
+      }
     }
   }
 
@@ -813,4 +953,316 @@ function compactEventSummary(value: string): string {
     return normalized;
   }
   return `${normalized.slice(0, 69).trimEnd()}...`;
+}
+
+function countUserTurns(
+  messages: DocumentExtraction["correction_messages"],
+): number {
+  return messages.filter((message) => message.role === "user").length;
+}
+
+function buildInitialEventGroups(
+  documentId: string,
+  extraction: DocumentExtraction,
+): TurnEventGroup[] {
+  const userTurnCount = countUserTurns(extraction.correction_messages);
+  const normalizedServerGroups = trimEventGroupsToUserTurns(
+    normalizeApiEventGroups(extraction.correction_event_groups),
+    userTurnCount,
+  );
+
+  if (normalizedServerGroups.length > 0) {
+    return normalizedServerGroups;
+  }
+
+  return readPersistedEventGroups(documentId, userTurnCount);
+}
+
+function getCorrectionEventGroupsStorageKey(documentId: string): string {
+  return `${CORRECTION_EVENT_GROUPS_STORAGE_PREFIX}:${documentId}`;
+}
+
+function readPersistedEventGroups(
+  documentId: string,
+  userTurnCount: number,
+): TurnEventGroup[] {
+  if (typeof window === "undefined" || userTurnCount === 0) {
+    return [];
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(
+      getCorrectionEventGroupsStorageKey(documentId),
+    );
+    if (!storedValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(storedValue);
+    if (!isRecord(parsedValue) || !Array.isArray(parsedValue.groups)) {
+      return [];
+    }
+
+    return trimEventGroupsToUserTurns(
+      parsedValue.groups
+        .map((group) => normalizePersistedEventGroup(group))
+        .filter((group): group is TurnEventGroup => group !== null),
+      userTurnCount,
+    );
+  } catch {
+    return [];
+  }
+}
+
+function persistEventGroups(
+  documentId: string,
+  eventGroups: TurnEventGroup[],
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(
+      getCorrectionEventGroupsStorageKey(documentId),
+      JSON.stringify({
+        version: 1,
+        groups: eventGroups,
+      }),
+    );
+  } catch {
+    return;
+  }
+}
+
+function clearPersistedEventGroups(documentId: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(getCorrectionEventGroupsStorageKey(documentId));
+  } catch {
+    return;
+  }
+}
+
+function normalizeApiEventGroups(
+  groups: DocumentExtraction["correction_event_groups"],
+): TurnEventGroup[] {
+  return groups.map((group) => ({
+    id: group.id,
+    userTurnIndex: group.user_turn_index,
+    summary: compactEventSummary(group.summary),
+    status: group.status,
+    expanded: group.expanded,
+    items: group.items.map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      summary: compactEventSummary(item.summary),
+      occurredAt: item.occurred_at ?? Date.now(),
+    })),
+  }));
+}
+
+function trimEventGroupsToUserTurns(
+  eventGroups: TurnEventGroup[],
+  userTurnCount: number,
+): TurnEventGroup[] {
+  if (userTurnCount <= 0) {
+    return [];
+  }
+
+  return eventGroups
+    .filter((group) => group.userTurnIndex >= 0 && group.userTurnIndex < userTurnCount)
+    .map((group) => ({
+      ...group,
+      items: dedupeTurnEventItems(group.items),
+    }));
+}
+
+function reconcileEventGroups({
+  currentGroups,
+  serverGroups,
+  documentId,
+  userTurnCount,
+}: {
+  currentGroups: TurnEventGroup[];
+  serverGroups: TurnEventGroup[];
+  documentId: string;
+  userTurnCount: number;
+}): TurnEventGroup[] {
+  const normalizedCurrentGroups = trimEventGroupsToUserTurns(
+    currentGroups,
+    userTurnCount,
+  );
+  const normalizedServerGroups = trimEventGroupsToUserTurns(
+    serverGroups,
+    userTurnCount,
+  );
+
+  if (normalizedCurrentGroups.length === 0 && normalizedServerGroups.length === 0) {
+    return readPersistedEventGroups(documentId, userTurnCount);
+  }
+
+  if (normalizedCurrentGroups.length === 0) {
+    return normalizedServerGroups;
+  }
+
+  if (normalizedServerGroups.length === 0) {
+    return normalizedCurrentGroups;
+  }
+
+  const currentGroupsById = new Map(
+    normalizedCurrentGroups.map((group) => [group.id, group]),
+  );
+  const mergedGroups: TurnEventGroup[] = normalizedServerGroups.map((serverGroup) => {
+    const currentGroup = currentGroupsById.get(serverGroup.id);
+    if (!currentGroup) {
+      return serverGroup;
+    }
+
+    const mergedItems = mergeTurnEventItems(currentGroup.items, serverGroup.items);
+    const currentStatusRank = getEventGroupStatusRank(currentGroup.status);
+    const serverStatusRank = getEventGroupStatusRank(serverGroup.status);
+
+    return {
+      ...serverGroup,
+      items: mergedItems,
+      status:
+        currentStatusRank >= serverStatusRank ? currentGroup.status : serverGroup.status,
+      summary:
+        currentStatusRank > serverStatusRank ||
+        currentGroup.items.length >= serverGroup.items.length
+          ? currentGroup.summary
+          : serverGroup.summary,
+      expanded: currentGroup.expanded,
+    };
+  });
+
+  for (const currentGroup of normalizedCurrentGroups) {
+    if (!mergedGroups.some((group) => group.id === currentGroup.id)) {
+      mergedGroups.push(currentGroup);
+    }
+  }
+
+  return mergedGroups.sort((left, right) => left.userTurnIndex - right.userTurnIndex);
+}
+
+function mergeTurnEventItems(
+  currentItems: TurnEventItem[],
+  serverItems: TurnEventItem[],
+): TurnEventItem[] {
+  const itemsById = new Map<string, TurnEventItem>();
+
+  for (const item of [...serverItems, ...currentItems]) {
+    itemsById.set(item.id, item);
+  }
+
+  return Array.from(itemsById.values())
+    .sort((left, right) => left.occurredAt - right.occurredAt)
+    .slice(-12);
+}
+
+function getEventGroupStatusRank(status: TurnEventGroup["status"]): number {
+  if (status === "error") {
+    return 3;
+  }
+
+  if (status === "complete") {
+    return 2;
+  }
+
+  return 1;
+}
+
+function serializeEventGroups(eventGroups: TurnEventGroup[]): string {
+  return JSON.stringify(
+    eventGroups.map((group) => ({
+      id: group.id,
+      userTurnIndex: group.userTurnIndex,
+      summary: group.summary,
+      status: group.status,
+      expanded: group.expanded,
+      items: group.items.map((item) => ({
+        id: item.id,
+        kind: item.kind,
+        summary: item.summary,
+        occurredAt: item.occurredAt,
+      })),
+    })),
+  );
+}
+
+function normalizePersistedEventGroup(value: object): TurnEventGroup | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const id = typeof value.id === "string" ? value.id : "";
+  const summary =
+    typeof value.summary === "string"
+      ? compactEventSummary(value.summary)
+      : "";
+  const userTurnIndex =
+    typeof value.userTurnIndex === "number" && Number.isInteger(value.userTurnIndex)
+      ? value.userTurnIndex
+      : -1;
+  const status =
+    value.status === "running" || value.status === "complete" || value.status === "error"
+      ? value.status
+      : "complete";
+  const expanded = typeof value.expanded === "boolean" ? value.expanded : false;
+  const items = Array.isArray(value.items)
+    ? value.items
+        .map((item) => normalizePersistedEventItem(item))
+        .filter((item): item is TurnEventItem => item !== null)
+    : [];
+
+  if (id === "" || summary === "" || userTurnIndex < 0) {
+    return null;
+  }
+
+  return {
+    id,
+    userTurnIndex,
+    summary,
+    items,
+    status,
+    expanded,
+  };
+}
+
+function normalizePersistedEventItem(value: object): TurnEventItem | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const id = typeof value.id === "string" ? value.id : "";
+  const summary =
+    typeof value.summary === "string"
+      ? compactEventSummary(value.summary)
+      : "";
+  const kind =
+    value.kind === "progress" ||
+    value.kind === "error" ||
+    value.kind === "end" ||
+    value.kind === "change"
+      ? value.kind
+      : "progress";
+  const occurredAt =
+    typeof value.occurredAt === "number" && Number.isFinite(value.occurredAt)
+      ? value.occurredAt
+      : Date.now();
+
+  if (id === "" || summary === "") {
+    return null;
+  }
+
+  return {
+    id,
+    kind,
+    summary,
+    occurredAt,
+  };
 }

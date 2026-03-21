@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from functools import lru_cache
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
+from langchain_core.tools import BaseTool, StructuredTool
 from langgraph.config import get_stream_writer
+from langgraph.prebuilt import InjectedState
 
 from src.documents.retrieval import DocumentRetrievalService
 from src.documents.runtime import get_document_retrieval_service
+
+DocumentIdFromState = Annotated[str, InjectedState("document_id")]
 
 
 @lru_cache
@@ -43,14 +47,19 @@ def _pluralize(count: int, singular: str, plural: str | None = None) -> str:
     return plural or f"{singular}s"
 
 
-async def keyword_search(document_id: str, query: str, top_k: int = 5) -> dict[str, object]:
-    """Search the document with lexical matching for exact terms, identifiers, and labels."""
+def _parse_document_id(document_id: str) -> UUID:
+    return UUID(document_id)
+
+
+async def _keyword_search_impl(
+    *, document_id: str, query: str, top_k: int = 5
+) -> dict[str, object]:
     summarized_query = _summarize_query(query)
     _emit_progress(
         f"Running keyword search for '{summarized_query}' across the document chunks."
     )
     results = await _get_retrieval_service().keyword_search(
-        document_id=UUID(document_id),
+        document_id=_parse_document_id(document_id),
         query=query,
         top_k=max(1, min(top_k, 8)),
     )
@@ -72,14 +81,15 @@ async def keyword_search(document_id: str, query: str, top_k: int = 5) -> dict[s
     }
 
 
-async def semantic_search(document_id: str, query: str, top_k: int = 5) -> dict[str, object]:
-    """Search the document with embedding similarity for paraphrased or descriptive queries."""
+async def _semantic_search_impl(
+    *, document_id: str, query: str, top_k: int = 5
+) -> dict[str, object]:
     summarized_query = _summarize_query(query)
     _emit_progress(
         f"Running semantic retrieval for '{summarized_query}' with document embeddings."
     )
     results = await _get_retrieval_service().semantic_search(
-        document_id=UUID(document_id),
+        document_id=_parse_document_id(document_id),
         query=query,
         top_k=max(1, min(top_k, 8)),
     )
@@ -101,15 +111,16 @@ async def semantic_search(document_id: str, query: str, top_k: int = 5) -> dict[
     }
 
 
-async def hybrid_search(document_id: str, query: str, top_k: int = 5) -> dict[str, object]:
-    """Run keyword and semantic retrieval, then return the merged evidence set."""
+async def _hybrid_search_impl(
+    *, document_id: str, query: str, top_k: int = 5
+) -> dict[str, object]:
     summarized_query = _summarize_query(query)
     _emit_progress(
         "Running hybrid retrieval for "
         f"'{summarized_query}' with keyword, semantic, and reranking stages."
     )
     results = await _get_retrieval_service().hybrid_search(
-        document_id=UUID(document_id),
+        document_id=_parse_document_id(document_id),
         query=query,
         top_k=max(1, min(top_k, 8)),
     )
@@ -131,11 +142,10 @@ async def hybrid_search(document_id: str, query: str, top_k: int = 5) -> dict[st
     }
 
 
-async def inspect_chunk(document_id: str, chunk_index: int) -> dict[str, object]:
-    """Read a specific document chunk in full when a search result looks promising."""
+async def _inspect_chunk_impl(*, document_id: str, chunk_index: int) -> dict[str, object]:
     _emit_progress(f"Inspecting chunk {chunk_index} in full to verify the evidence.")
     result = await _get_retrieval_service().inspect_chunk(
-        document_id=UUID(document_id),
+        document_id=_parse_document_id(document_id),
         chunk_index=chunk_index,
     )
     _emit_progress(
@@ -148,18 +158,18 @@ async def inspect_chunk(document_id: str, chunk_index: int) -> dict[str, object]
     }
 
 
-async def inspect_spreadsheet(
+async def _inspect_spreadsheet_impl(
+    *,
     document_id: str,
     sheet_name: str | None = None,
     max_rows: int = 20,
 ) -> dict[str, object]:
-    """Inspect a spreadsheet sheet preview with pandas when tabular structure matters."""
     selected_sheet = sheet_name.strip() if sheet_name else "the first sheet"
     _emit_progress(
         f"Opening {selected_sheet} with pandas to inspect the tabular structure."
     )
     result = await _get_retrieval_service().inspect_spreadsheet(
-        document_id=UUID(document_id),
+        document_id=_parse_document_id(document_id),
         sheet_name=sheet_name,
         max_rows=max(1, min(max_rows, 50)),
     )
@@ -174,10 +184,62 @@ async def inspect_spreadsheet(
     return result
 
 
-TOOLS: list[Callable[..., Any]] = [
-    hybrid_search,
-    keyword_search,
-    semantic_search,
-    inspect_chunk,
-    inspect_spreadsheet,
+async def keyword_search(
+    document_id: DocumentIdFromState,
+    query: str,
+    top_k: int = 5,
+) -> dict[str, object]:
+    """Search the document with lexical matching for exact terms, identifiers, and labels."""
+    return await _keyword_search_impl(document_id=document_id, query=query, top_k=top_k)
+
+
+async def semantic_search(
+    document_id: DocumentIdFromState,
+    query: str,
+    top_k: int = 5,
+) -> dict[str, object]:
+    """Search the document with embedding similarity for paraphrased or descriptive queries."""
+    return await _semantic_search_impl(document_id=document_id, query=query, top_k=top_k)
+
+
+async def hybrid_search(
+    document_id: DocumentIdFromState,
+    query: str,
+    top_k: int = 5,
+) -> dict[str, object]:
+    """Run keyword and semantic retrieval, then return the merged evidence set."""
+    return await _hybrid_search_impl(document_id=document_id, query=query, top_k=top_k)
+
+
+async def inspect_chunk(
+    document_id: DocumentIdFromState,
+    chunk_index: int,
+) -> dict[str, object]:
+    """Read a specific document chunk in full when a search result looks promising."""
+    return await _inspect_chunk_impl(document_id=document_id, chunk_index=chunk_index)
+
+
+async def inspect_spreadsheet(
+    document_id: DocumentIdFromState,
+    sheet_name: str | None = None,
+    max_rows: int = 20,
+) -> dict[str, object]:
+    """Inspect a spreadsheet sheet preview with pandas when tabular structure matters."""
+    return await _inspect_spreadsheet_impl(
+        document_id=document_id,
+        sheet_name=sheet_name,
+        max_rows=max_rows,
+    )
+
+
+def _build_tool(coroutine: Callable[..., Awaitable[Any]]) -> BaseTool:
+    return StructuredTool.from_function(coroutine=coroutine)
+
+
+TOOLS: list[BaseTool] = [
+    _build_tool(hybrid_search),
+    _build_tool(keyword_search),
+    _build_tool(semantic_search),
+    _build_tool(inspect_chunk),
+    _build_tool(inspect_spreadsheet),
 ]

@@ -135,6 +135,22 @@ export interface DocumentExtractionCorrectionMessage {
   created_at: string;
 }
 
+export interface DocumentExtractionCorrectionEventItem {
+  id: string;
+  kind: "progress" | "error" | "end" | "change";
+  summary: string;
+  occurred_at: number | null;
+}
+
+export interface DocumentExtractionCorrectionEventGroup {
+  id: string;
+  user_turn_index: number;
+  summary: string;
+  status: "running" | "complete" | "error";
+  expanded: boolean;
+  items: DocumentExtractionCorrectionEventItem[];
+}
+
 export interface DocumentExtraction {
   document_id: string;
   status: DocumentExtractionStatus;
@@ -145,6 +161,7 @@ export interface DocumentExtraction {
   reasoning_summary: string | null;
   error: string | null;
   correction_messages: DocumentExtractionCorrectionMessage[];
+  correction_event_groups: DocumentExtractionCorrectionEventGroup[];
   result: DocumentExtractionResult | null;
   extracted_at: string | null;
   reviewed_at: string | null;
@@ -169,6 +186,10 @@ export interface DocumentExtractionCorrectionSession {
 
 export interface DocumentExtractionReviewPayload {
   result: DocumentExtractionResult;
+}
+
+export interface DocumentExtractionCorrectionActivityPayload {
+  groups: DocumentExtractionCorrectionEventGroup[];
 }
 
 export interface DocumentUploadSuccessResult {

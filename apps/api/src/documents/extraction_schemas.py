@@ -89,6 +89,22 @@ class DocumentExtractionCorrectionMessageRead(BaseModel):
     created_at: datetime
 
 
+class DocumentExtractionCorrectionEventItemRead(BaseModel):
+    id: Annotated[str, Field(min_length=1, max_length=120)]
+    kind: Literal["progress", "error", "end", "change"]
+    summary: Annotated[str, Field(min_length=1, max_length=200)]
+    occurred_at: Annotated[float | None, Field(default=None, ge=0)]
+
+
+class DocumentExtractionCorrectionEventGroupRead(BaseModel):
+    id: Annotated[str, Field(min_length=1, max_length=120)]
+    user_turn_index: Annotated[int, Field(ge=0)]
+    summary: Annotated[str, Field(min_length=1, max_length=200)]
+    status: Literal["running", "complete", "error"]
+    expanded: bool = False
+    items: list[DocumentExtractionCorrectionEventItemRead] = Field(default_factory=list)
+
+
 class DocumentExtractionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -101,6 +117,9 @@ class DocumentExtractionRead(BaseModel):
     reasoning_summary: str | None = None
     error: str | None = None
     correction_messages: list[DocumentExtractionCorrectionMessageRead] = Field(default_factory=list)
+    correction_event_groups: list[DocumentExtractionCorrectionEventGroupRead] = Field(
+        default_factory=list
+    )
     result: DocumentExtractionResultRead | None = None
     extracted_at: datetime | None = None
     reviewed_at: datetime | None = None
@@ -125,6 +144,10 @@ class DocumentExtractionCorrectionSessionRead(BaseModel):
     thread_id: str
     document_id: UUID
     status: DocumentExtractionStatus
+
+
+class DocumentExtractionCorrectionActivityUpdate(BaseModel):
+    groups: list[DocumentExtractionCorrectionEventGroupRead] = Field(default_factory=list)
 
 
 class DocumentExtractionReviewUpdate(BaseModel):

@@ -10,6 +10,7 @@ from src.core.database import get_async_db_session, get_async_session_factory
 from src.core.pagination import PaginatedResponse, PaginationParams, get_pagination_params
 from src.documents.classification_service import DocumentClassificationService
 from src.documents.extraction_schemas import (
+    DocumentExtractionCorrectionActivityUpdate,
     DocumentExtractionCorrectionSessionRead,
     DocumentExtractionRead,
     DocumentExtractionReviewUpdate,
@@ -174,6 +175,21 @@ async def get_document_extraction(
     service: DocumentExtractionService = Depends(get_document_extraction_service),
 ) -> DocumentExtractionRead:
     return await service.get_extraction(document_id)
+
+
+@router.put(
+    "/{document_id}/extraction/correction-activity",
+    response_model=DocumentExtractionRead,
+)
+async def save_document_extraction_correction_activity(
+    document_id: UUID,
+    payload: DocumentExtractionCorrectionActivityUpdate,
+    service: DocumentExtractionService = Depends(get_document_extraction_service),
+) -> DocumentExtractionRead:
+    return await service.save_correction_activity(
+        document_id=document_id,
+        payload=payload,
+    )
 
 
 @router.put(

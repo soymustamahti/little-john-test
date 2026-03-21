@@ -147,9 +147,12 @@ export function DocumentDetailScreen({
     ? getDocumentCategoryDisplayName(classification.category, messages)
     : null;
   const processActionDisabled = extraction?.status === "confirmed";
-  const hasConfirmedExtraction = extraction?.status === "confirmed" && Boolean(extraction?.result);
+  const hasExtractionResult = Boolean(extraction?.result);
   const hasPendingExtractionReview =
-    extraction?.status === "pending_review" && Boolean(extraction?.result);
+    extraction?.status === "pending_review" && hasExtractionResult;
+  const showInlineExtractionWorkspace =
+    hasExtractionResult && !isProcessingPanelOpen;
+  const visibleExtraction = showInlineExtractionWorkspace ? extraction ?? null : null;
   const processActionLabel =
     hasPendingExtractionReview
       ? messages.documentDetailScreen.continueReviewAction
@@ -384,13 +387,13 @@ export function DocumentDetailScreen({
                   {messages.documentDetailScreen.extractionTitle}
                 </div>
                 <div className="text-sm text-[color:var(--color-muted)]">
-                  {hasConfirmedExtraction
+                  {showInlineExtractionWorkspace
                     ? messages.documentDetailScreen.extractionDescription
                     : messages.documentDetailScreen.extractionPendingDescription}
                 </div>
               </div>
 
-              {hasPendingExtractionReview ? (
+              {hasPendingExtractionReview && !isProcessingPanelOpen ? (
                 <Button
                   type="button"
                   variant="secondary"
@@ -406,12 +409,28 @@ export function DocumentDetailScreen({
               <div className="rounded-2xl border border-[color:var(--color-line)] bg-white px-4 py-4 text-sm text-[color:var(--color-muted)]">
                 {messages.documentDetailScreen.extractionLoading}
               </div>
-            ) : hasConfirmedExtraction ? (
+            ) : visibleExtraction ? (
               <div className="space-y-5">
-                <DocumentExtractionOverview extraction={extraction} messages={messages} />
+                {hasPendingExtractionReview ? (
+                  <div className="rounded-[24px] border border-[color:var(--color-line)] bg-white px-5 py-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="warm">
+                        {messages.documentProcessing.extraction.statuses.pending_review}
+                      </Badge>
+                      <Badge>{visibleExtraction.template.name}</Badge>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                      {messages.documentDetailScreen.extractionPendingHint}
+                    </p>
+                  </div>
+                ) : null}
+                <DocumentExtractionOverview
+                  extraction={visibleExtraction}
+                  messages={messages}
+                />
                 <DocumentExtractionCorrectionChat
                   documentId={documentId}
-                  extraction={extraction}
+                  extraction={visibleExtraction}
                   onExtractionRefresh={async () => {
                     await Promise.all([
                       extractionQuery.refetch(),

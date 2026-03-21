@@ -3,6 +3,7 @@ import axios from "axios";
 import { apiClient } from "@/lib/api/client";
 import type {
   Document,
+  DocumentExtractionCorrectionActivityPayload,
   DocumentExtractionCorrectionSession,
   DocumentClassificationSession,
   DocumentExtraction,
@@ -65,6 +66,17 @@ export async function createDocumentAiExtractionSession(
 export async function createDocumentExtractionCorrectionSession(documentId: string) {
   const response = await apiClient.post<DocumentExtractionCorrectionSession>(
     `/api/documents/${documentId}/extraction/correction-session`,
+  );
+  return response.data;
+}
+
+export async function saveDocumentExtractionCorrectionActivity(
+  documentId: string,
+  payload: DocumentExtractionCorrectionActivityPayload,
+) {
+  const response = await apiClient.put<DocumentExtraction>(
+    `/api/documents/${documentId}/extraction/correction-activity`,
+    payload,
   );
   return response.data;
 }

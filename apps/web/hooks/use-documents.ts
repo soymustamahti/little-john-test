@@ -12,10 +12,15 @@ import {
   getDocument,
   getDocumentExtraction,
   listDocuments,
+  saveDocumentExtractionCorrectionActivity,
   uploadDocumentBatch,
 } from "@/lib/api/documents";
 import { getApiErrorMessage } from "@/lib/api/errors";
-import type { DocumentExtractionReviewPayload } from "@/types/documents";
+import type {
+  DocumentExtraction,
+  DocumentExtractionCorrectionActivityPayload,
+  DocumentExtractionReviewPayload,
+} from "@/types/documents";
 import type { PaginationParams } from "@/types/pagination";
 
 const DOCUMENTS_QUERY_KEY = ["documents"];
@@ -130,15 +135,45 @@ export function useCreateDocumentAiExtractionSessionMutation() {
 }
 
 export function useCreateDocumentExtractionCorrectionSessionMutation() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (documentId: string) =>
       createDocumentExtractionCorrectionSession(documentId),
-    onSuccess: async (_, documentId) => {
-      await queryClient.invalidateQueries({
-        queryKey: [...DOCUMENTS_QUERY_KEY, documentId, "extraction"],
-      });
+  });
+}
+
+export function useSaveDocumentExtractionCorrectionActivityMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      documentId,
+      payload,
+    }: {
+      documentId: string;
+      payload: DocumentExtractionCorrectionActivityPayload;
+    }) => saveDocumentExtractionCorrectionActivity(documentId, payload),
+    onSuccess: async (extraction, variables) => {
+      await queryClient.setQueryData(
+        [...DOCUMENTS_QUERY_KEY, variables.documentId, "extraction"],
+        (current: DocumentExtraction | null | undefined) => {
+          if (!current) {
+            return extraction;
+          }
+
+          const currentUpdatedAt = Date.parse(current.updated_at);
+          const nextUpdatedAt = Date.parse(extraction.updated_at);
+
+          if (
+            Number.isFinite(currentUpdatedAt) &&
+            Number.isFinite(nextUpdatedAt) &&
+            nextUpdatedAt < currentUpdatedAt
+          ) {
+            return current;
+          }
+
+          return extraction;
+        },
+      );
     },
   });
 }

@@ -12,12 +12,15 @@ from src.documents.classification import DocumentClassificationStatus
 from src.documents.extraction import (
     DocumentExtractionMethod,
     DocumentExtractionStatus,
+    ParsedDocumentExtractionCorrectionEventGroup,
     ParsedDocumentExtractionCorrectionMessage,
     build_extraction_metadata,
     parse_extraction_metadata,
 )
 from src.documents.extraction_repository import DocumentExtractionRepository
 from src.documents.extraction_schemas import (
+    DocumentExtractionCorrectionActivityUpdate,
+    DocumentExtractionCorrectionEventGroupRead,
     DocumentExtractionCorrectionMessageRead,
     DocumentExtractionCorrectionSessionRead,
     DocumentExtractionRead,
@@ -164,6 +167,9 @@ class DocumentExtractionService:
                     reasoning_summary=metadata.reasoning_summary,
                     correction_messages=_serialize_correction_messages(
                         metadata.correction_messages
+                    ),
+                    correction_event_groups=_serialize_correction_event_groups(
+                        metadata.correction_event_groups
                     ),
                 ),
                 result=extraction.extraction_result,
@@ -319,6 +325,9 @@ class DocumentExtractionService:
                     correction_messages=_serialize_correction_messages(
                         existing_metadata.correction_messages
                     ),
+                    correction_event_groups=_serialize_correction_event_groups(
+                        existing_metadata.correction_event_groups
+                    ),
                 ),
                 result=result.model_dump(mode="json"),
                 extracted_at=datetime.now(UTC),
@@ -351,6 +360,9 @@ class DocumentExtractionService:
                     reasoning_summary=existing_metadata.reasoning_summary,
                     correction_messages=_serialize_correction_messages(
                         existing_metadata.correction_messages
+                    ),
+                    correction_event_groups=_serialize_correction_event_groups(
+                        existing_metadata.correction_event_groups
                     ),
                 ),
                 result=payload.result.model_dump(mode="json"),
@@ -385,6 +397,9 @@ class DocumentExtractionService:
                     error=error_message,
                     correction_messages=_serialize_correction_messages(
                         existing_metadata.correction_messages
+                    ),
+                    correction_event_groups=_serialize_correction_event_groups(
+                        existing_metadata.correction_event_groups
                     ),
                 ),
                 result=None,
@@ -430,6 +445,9 @@ class DocumentExtractionService:
                     or existing_metadata.reasoning_summary
                     or "Extraction draft updated from correction chat.",
                     correction_messages=correction_messages,
+                    correction_event_groups=_serialize_correction_event_groups(
+                        existing_metadata.correction_event_groups
+                    ),
                 ),
                 result=result.model_dump(mode="json"),
                 extracted_at=datetime.now(UTC),
@@ -473,11 +491,50 @@ class DocumentExtractionService:
                     reasoning_summary=existing_metadata.reasoning_summary,
                     error=error_message,
                     correction_messages=correction_messages,
+                    correction_event_groups=_serialize_correction_event_groups(
+                        existing_metadata.correction_event_groups
+                    ),
                 ),
                 result=extraction.extraction_result,
                 extracted_at=extraction.extracted_at,
                 reviewed_at=extraction.reviewed_at,
             )
+
+    async def save_correction_activity(
+        self,
+        *,
+        document_id: UUID,
+        payload: DocumentExtractionCorrectionActivityUpdate,
+    ) -> DocumentExtractionRead:
+        async with self._session_factory() as session:
+            extraction_repository = DocumentExtractionRepository(session)
+            extraction = await extraction_repository.get(document_id)
+            if extraction is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Extraction for document {document_id} was not found.",
+                )
+
+            existing_metadata = parse_extraction_metadata(extraction.extraction_metadata)
+            updated_extraction = await extraction_repository.save_result(
+                extraction=extraction,
+                status=DocumentExtractionStatus(extraction.status),
+                metadata=build_extraction_metadata(
+                    thread_id=existing_metadata.thread_id,
+                    overall_confidence=existing_metadata.overall_confidence,
+                    reasoning_summary=existing_metadata.reasoning_summary,
+                    error=existing_metadata.error,
+                    correction_messages=_serialize_correction_messages(
+                        existing_metadata.correction_messages
+                    ),
+                    correction_event_groups=payload.model_dump(mode="json")["groups"],
+                ),
+                result=extraction.extraction_result,
+                extracted_at=extraction.extracted_at,
+                reviewed_at=extraction.reviewed_at,
+            )
+
+        return build_document_extraction_read(updated_extraction)
 
 
 def build_document_extraction_read(extraction: DocumentExtractionModel) -> DocumentExtractionRead:
@@ -514,6 +571,27 @@ def build_document_extraction_read(extraction: DocumentExtractionModel) -> Docum
                     created_at=item.created_at or extraction.updated_at,
                 )
                 for item in metadata.correction_messages
+            ],
+            "correction_event_groups": [
+                DocumentExtractionCorrectionEventGroupRead.model_validate(
+                    {
+                        "id": group.id,
+                        "user_turn_index": group.user_turn_index,
+                        "summary": group.summary,
+                        "status": group.status,
+                        "expanded": group.expanded,
+                        "items": [
+                            {
+                                "id": item.id,
+                                "kind": item.kind,
+                                "summary": item.summary,
+                                "occurred_at": item.occurred_at,
+                            }
+                            for item in group.items
+                        ],
+                    }
+                )
+                for group in metadata.correction_event_groups
             ],
             "result": result_payload,
             "extracted_at": extraction.extracted_at,
@@ -582,3 +660,29 @@ def _serialize_correction_messages(
             }
         )
     return serialized[-CORRECTION_MESSAGE_HISTORY_LIMIT:]
+
+
+def _serialize_correction_event_groups(
+    groups: Sequence[ParsedDocumentExtractionCorrectionEventGroup],
+) -> list[dict[str, object]]:
+    serialized: list[dict[str, object]] = []
+    for group in groups:
+        serialized.append(
+            {
+                "id": group.id,
+                "user_turn_index": group.user_turn_index,
+                "summary": group.summary,
+                "status": group.status,
+                "expanded": group.expanded,
+                "items": [
+                    {
+                        "id": item.id,
+                        "kind": item.kind,
+                        "summary": item.summary,
+                        "occurred_at": item.occurred_at,
+                    }
+                    for item in group.items
+                ],
+            }
+        )
+    return serialized

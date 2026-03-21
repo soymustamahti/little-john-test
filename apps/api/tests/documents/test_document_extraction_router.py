@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from src.documents.extraction import DocumentExtractionStatus
 from src.documents.extraction_schemas import (
+    DocumentExtractionCorrectionActivityUpdate,
     DocumentExtractionCorrectionSessionRead,
     DocumentExtractionRead,
     DocumentExtractionReviewUpdate,
@@ -17,6 +18,7 @@ class FakeDocumentExtractionService:
         self.start_calls: list[tuple[str, str]] = []
         self.get_calls: list[str] = []
         self.review_calls: list[str] = []
+        self.activity_calls: list[str] = []
 
     async def start_ai_extraction_session(
         self,
@@ -58,6 +60,15 @@ class FakeDocumentExtractionService:
         self.review_calls.append(str(document_id))
         return build_extraction_payload(document_id, status="confirmed")
 
+    async def save_correction_activity(
+        self,
+        *,
+        document_id,
+        payload: DocumentExtractionCorrectionActivityUpdate,
+    ) -> DocumentExtractionRead:
+        self.activity_calls.append(str(document_id))
+        return build_extraction_payload(document_id)
+
 
 def build_extraction_payload(
     document_id,
@@ -79,6 +90,7 @@ def build_extraction_payload(
             "overall_confidence": 0.87,
             "reasoning_summary": "Vendor evidence was found in the first chunk.",
             "error": None,
+            "correction_event_groups": [],
             "result": {
                 "modules": [
                     {
@@ -208,3 +220,35 @@ def test_confirm_document_extraction_review_endpoint_returns_confirmed_payload()
     assert response.status_code == 200
     assert service.review_calls == [str(document_id)]
     assert response.json()["status"] == "confirmed"
+
+
+def test_save_document_extraction_correction_activity_endpoint_returns_payload() -> None:
+    service = FakeDocumentExtractionService()
+    client = build_client(service)
+    document_id = uuid4()
+
+    response = client.put(
+        f"/api/documents/{document_id}/extraction/correction-activity",
+        json={
+            "groups": [
+                {
+                    "id": "turn-1",
+                    "user_turn_index": 0,
+                    "summary": "Applied the requested correction to the extraction draft.",
+                    "status": "complete",
+                    "expanded": False,
+                    "items": [
+                        {
+                            "id": "event-1",
+                            "kind": "progress",
+                            "summary": "Running keyword search for vendor name evidence.",
+                            "occurred_at": 1710000000000,
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+    assert service.activity_calls == [str(document_id)]
