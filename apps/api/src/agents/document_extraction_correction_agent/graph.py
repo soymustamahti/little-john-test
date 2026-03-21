@@ -294,13 +294,7 @@ async def _record_failure(state: State, error_message: str) -> None:
 def _build_evidence_transcript(messages: Sequence[BaseMessage]) -> str:
     transcript_parts: list[str] = []
     for message in messages:
-        if isinstance(message, HumanMessage):
-            transcript_parts.append(f"[human]\n{message.content}")
-        elif isinstance(message, AIMessage):
-            content = str(message.content).strip()
-            if content:
-                transcript_parts.append(f"[assistant]\n{content}")
-        elif isinstance(message, ToolMessage):
+        if isinstance(message, ToolMessage):
             transcript_parts.append(f"[tool:{message.name or 'tool'}]\n{message.content}")
 
     return "\n\n".join(part for part in transcript_parts if part).strip()
