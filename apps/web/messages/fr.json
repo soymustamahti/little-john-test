@@ -44,6 +44,124 @@
     "starterSetupTitle": "Configuration de départ",
     "starterSetupDescription": "Les modèles d'extraction et les catégories documentaires préchargés sont chargés automatiquement après le démarrage de l'API."
   },
+  "joyride": {
+    "replayAction": "Rejouer la visite",
+    "actions": {
+      "back": "Retour",
+      "close": "Fermer",
+      "finish": "Terminer la visite",
+      "next": "Suivant",
+      "nextWithProgress": "Suivant ({current} sur {total})",
+      "open": "Ouvrir la fenêtre",
+      "skip": "Passer la visite"
+    },
+    "steps": {
+      "workspace": {
+        "title": "Bienvenue dans l'espace",
+        "content": "Little John suit un flux simple : définir les modèles d'extraction, mapper les catégories documentaires, puis téléverser les fichiers source."
+      },
+      "templatesNav": {
+        "title": "Commencez par les modèles d'extraction",
+        "content": "Cette zone sert à définir le schéma typé que le backend doit extraire pour chaque document classé."
+      },
+      "templatesTable": {
+        "title": "Revoir ou créer des schémas",
+        "content": "Utilisez les modèles préchargés comme point de départ, ouvrez un schéma pour l'inspecter, ou créez un nouveau modèle d'extraction pour un nouveau format documentaire."
+      },
+      "categoriesNav": {
+        "title": "Mappez vos libellés de routage",
+        "content": "Les catégories documentaires relient les libellés de sortie du classifieur au bon modèle d'extraction."
+      },
+      "categoriesTable": {
+        "title": "Gérez les catégories documentaires",
+        "content": "Revoyez ici les cibles de routage actuelles, puis ouvrez une catégorie pour l'ajuster ou créez-en une nouvelle lorsque votre classifieur a besoin d'une nouvelle destination."
+      },
+      "documentsNav": {
+        "title": "Téléversez les fichiers source",
+        "content": "Une fois la configuration prête, passez à Documents pour ingérer des PDF, des images, des fichiers Word et des exports tableur."
+      },
+      "documentsUpload": {
+        "title": "Voici le panneau d'entrée",
+        "content": "Pour cette visite, le tutoriel précharge le PDF d'exemple « convention mandat MSH.pdf » afin de montrer le vrai flux de traitement, depuis le téléversement jusqu'à la revue."
+      },
+      "documentsUploadAction": {
+        "title": "Téléverser le document d'exemple",
+        "content": "Quand vous continuez, la visite clique sur ce bouton et téléverse le fichier d'exemple vers l'API. Une fois le téléversement réussi, l'application ouvre automatiquement la fiche du document."
+      },
+      "processDocument": {
+        "title": "Ouvrir le flux de traitement",
+        "content": "Ce bouton lance le workflow du document. C'est ici que l'opérateur choisit le modèle d'extraction, décide entre classification manuelle ou IA, puis révise le brouillon avant confirmation."
+      },
+      "templateSelection": {
+        "title": "Choisir le modèle d'extraction",
+        "content": "Pour cet exemple, on utilise « Convention de mandat de maîtrise d'ouvrage ». Le modèle sélectionné définit les champs que l'agent d'extraction doit retrouver et faire réviser."
+      },
+      "aiClassification": {
+        "title": "Classification manuelle ou IA",
+        "content": "L'opérateur peut classer le document manuellement ou lancer la classification IA. Pour cette visite, on utilise l'IA. Si le classifieur ne trouve pas de catégorie existante, il s'arrête ici pour demander une confirmation. Pour ce document d'exemple, la catégorie existe déjà, donc le flux continue automatiquement."
+      },
+      "liveProcessing": {
+        "title": "Suivre l'exécution en direct",
+        "content": "Cette frise affiche la progression de l'agent en temps réel. Vous pouvez voir d'abord la classification, puis la phase d'extraction, et consulter la trace des événements pendant toute l'exécution."
+      },
+      "categorySuggestion": {
+        "title": "Accepter une catégorie suggérée si nécessaire",
+        "content": "Lorsque l'IA ne trouve pas de catégorie existante, elle s'arrête ici et propose une nouvelle catégorie. Dans ce cas, la visite explique cette étape puis accepte automatiquement la suggestion pour relancer l'extraction. Si aucune suggestion n'apparaît, la visite passe directement au brouillon extrait."
+      },
+      "extractionWait": {
+        "title": "Extraction en cours, on attend la fin",
+        "content": "Après la classification, l'agent lance l'extraction structurée. Pendant cette phase, la visite reste bloquée ici, sans permettre d'avancer manuellement, puis continue automatiquement dès que l'état passe à terminé et que le brouillon extrait est disponible."
+      },
+      "initialExtraction": {
+        "title": "Relire le premier brouillon",
+        "content": "Le premier brouillon d'extraction est prêt ici. Dans cet exemple, le SIRET se termine par 17 et l'adresse du maître d'ouvrage doit encore être corrigée, donc on va corriger ces deux champs via le chat."
+      },
+      "initialAddress": {
+        "title": "Vérifier l'adresse extraite",
+        "content": "Ici, la visite montre aussi le champ « Adresse du mandataire ». C'est cette valeur qui doit être remplacée par 11 Rue Jaufre Rudel 34080 Montpellier avant de confirmer l'extraction."
+      },
+      "correctionPrompt": {
+        "title": "Envoyer une correction ciblée",
+        "content": "Le chat de correction permet de demander des changements très précis. Pour cette visite, le message est prérempli avec exactement : « The address is 11 Rue Jaufre Rudel 34080 Montpellier and the siret number ends with a 3 »."
+      },
+      "sendCorrection": {
+        "title": "Demander la mise à jour du brouillon",
+        "content": "Quand vous continuez, la visite envoie ce message. L'agent relance ensuite sa recherche dans le document, journalise son activité, puis met à jour uniquement les champs concernés."
+      },
+      "correctionActivity": {
+        "title": "Observer l'activité de correction",
+        "content": "Chaque demande de correction garde ici sa propre trace d'activité en direct. Pendant que l'agent travaille, la visite reste bloquée sur cette zone et n'autorise aucune interaction manuelle, puis continue automatiquement quand la correction est terminée."
+      },
+      "correctedValues": {
+        "title": "Les valeurs corrigées sont revenues",
+        "content": "Le brouillon a maintenant été mis à jour. Le SIRET se termine par 3 et l'adresse du maître d'ouvrage est définie sur 11 Rue Jaufre Rudel 34080 Montpellier."
+      },
+      "correctedAddress": {
+        "title": "L'adresse corrigée est bien appliquée",
+        "content": "Le champ « Adresse du mandataire » affiche maintenant 11 Rue Jaufre Rudel 34080 Montpellier. La visite montre donc séparément le SIRET corrigé puis l'adresse corrigée avant la validation finale."
+      },
+      "confirmReview": {
+        "title": "Confirmer l'extraction relue",
+        "content": "Une fois le brouillon correct, validez-le ici. La confirmation ferme l'espace de revue et publie le résultat relu sur la page principale du document."
+      },
+      "finalOverview": {
+        "title": "Résultat confirmé sur la fiche document",
+        "content": "La fiche du document affiche maintenant l'extraction confirmée et conserve le chat de correction pour d'éventuels ajustements ultérieurs."
+      },
+      "documentsTable": {
+        "title": "Suivez tout ce que vous ingérez",
+        "content": "Les fichiers téléversés apparaissent dans ce registre afin de les prévisualiser, d'inspecter leurs métadonnées et d'ouvrir la vue détaillée du document."
+      },
+      "language": {
+        "title": "Changez la langue de l'interface",
+        "content": "L'espace peut être utilisé en anglais ou en français, et l'interface se met à jour immédiatement lors du changement."
+      },
+      "replay": {
+        "title": "Besoin de revoir la visite ?",
+        "content": "Utilisez ce bouton à tout moment pour rejouer le tutoriel d'onboarding pour vous-même ou pour un autre opérateur."
+      }
+    }
+  },
   "stats": {
     "extractionTemplates": "Modèles d'extraction",
     "documentCategories": "Catégories documentaires",

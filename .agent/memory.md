@@ -88,6 +88,10 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Reworked the API reranking path so deployment builds no longer pull a local
+  `sentence-transformers` and `torch` stack: hybrid retrieval reranking now uses a remote OpenAI
+  Responses API call with structured output, controlled by `OPENAI_RERANKING_MODEL`, and falls
+  back to fused keyword-plus-embedding ranking when OpenAI credentials are absent
 - Reworked the document detail page into the post-processing home for a document: it now shows an
   inline source preview, a compact extraction overview, and the correction chat directly on the
   detail screen, while the confirm-review action closes the processing panel and returns the
@@ -302,3 +306,25 @@ and streams progress back to the client.
   more advanced local event-group state when the server is behind on status, item count, or
   expanded/collapsed state, and correction-activity mutation responses no longer regress the query
   cache when an older save finishes after a newer one
+  <<<<<<< HEAD
+  =======
+- Extended the frontend onboarding tour into a document-processing walkthrough that preloads the
+  `convention mandat MSH.pdf` sample, uploads it, drives AI classification/extraction, sends a
+  correction prompt, and now conditionally accepts a suggested category when classification pauses
+  for human review instead of assuming the document always auto-matches an existing category
+- Switched frontend PDF/image previews from direct backend content URLs to browser `blob:` URLs
+  created from fetched bytes so the inline preview no longer depends on the browser PDF viewer
+  streaming the API endpoint directly, which was causing previews to appear while staying stuck in
+  a perpetual loading state
+- Hardened the onboarding upload-to-detail transition so the Joyride does not advance on route
+  change alone: the document-detail step now waits for the actual process button to mount on the
+  `/documents/:id` screen before presenting the next tooltip, preventing the step-8 handoff from
+  skipping or breaking on slower detail-page loads
+- Expanded the correction segment of the onboarding tour so it highlights both the SIRET field and
+  the “Adresse du mandataire” field before sending the correction, locks the live correction
+  activity step until the agent finishes updating both values, then shows the corrected SIRET and
+  corrected address separately before the final review confirmation
+- Tightened the onboarding tour interaction model so normal Joyride steps expose only the primary
+  button and globally block clicks on the underlying page, preventing accidental clicks on upload
+  or other workspace actions from desynchronizing the walkthrough
+  > > > > > > > origin

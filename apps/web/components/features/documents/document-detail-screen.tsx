@@ -34,13 +34,7 @@ import {
   getDocumentShaPreview,
 } from "@/types/documents";
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-[color:var(--color-line)] bg-white px-4 py-3">
       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
@@ -53,11 +47,7 @@ function InfoRow({
   );
 }
 
-export function DocumentDetailScreen({
-  documentId,
-}: {
-  documentId: string;
-}) {
+export function DocumentDetailScreen({ documentId }: { documentId: string }) {
   const router = useRouter();
   const { locale, messages, formatDate } = useLocale();
   const documentQuery = useDocumentQuery(documentId);
@@ -134,7 +124,8 @@ export function DocumentDetailScreen({
   const classificationVariant =
     classification.status === "classified"
       ? "success"
-      : classification.status === "pending_review" || classification.status === "failed"
+      : classification.status === "pending_review" ||
+          classification.status === "failed"
         ? "warm"
         : classification.status === "processing"
           ? "accent"
@@ -152,20 +143,22 @@ export function DocumentDetailScreen({
     extraction?.status === "pending_review" && hasExtractionResult;
   const showInlineExtractionWorkspace =
     hasExtractionResult && !isProcessingPanelOpen;
-  const visibleExtraction = showInlineExtractionWorkspace ? extraction ?? null : null;
-  const processActionLabel =
-    hasPendingExtractionReview
-      ? messages.documentDetailScreen.continueReviewAction
-      : extraction?.status === "processing"
-        ? messages.documentDetailScreen.viewProcessingAction
-        : messages.documentProcessing.openAction;
+  const visibleExtraction = showInlineExtractionWorkspace
+    ? (extraction ?? null)
+    : null;
+  const processActionLabel = hasPendingExtractionReview
+    ? messages.documentDetailScreen.continueReviewAction
+    : extraction?.status === "processing"
+      ? messages.documentDetailScreen.viewProcessingAction
+      : messages.documentProcessing.openAction;
 
   return (
     <div className="space-y-6 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm text-[color:var(--color-muted)]">
-            {messages.common.labels.workspace} / {messages.documentDetailScreen.breadcrumbSection} /{" "}
+            {messages.common.labels.workspace} /{" "}
+            {messages.documentDetailScreen.breadcrumbSection} /{" "}
             {document.original_filename}
           </p>
           <h2 className="mt-1 text-3xl font-semibold text-[color:var(--color-ink)]">
@@ -192,10 +185,14 @@ export function DocumentDetailScreen({
                 <Badge variant="accent">
                   {getDocumentKindLabel(document.file_kind, messages)}
                 </Badge>
-                <Badge>{document.file_extension.toUpperCase().replace(".", "")}</Badge>
+                <Badge>
+                  {document.file_extension.toUpperCase().replace(".", "")}
+                </Badge>
                 {extraction ? (
                   <Badge
-                    variant={extraction.status === "confirmed" ? "success" : "warm"}
+                    variant={
+                      extraction.status === "confirmed" ? "success" : "warm"
+                    }
                   >
                     {messages.documentDetailScreen.extractionAvailableBadge}
                   </Badge>
@@ -225,6 +222,7 @@ export function DocumentDetailScreen({
               ) : null}
               <Button
                 type="button"
+                data-tour="document-process-action"
                 onClick={() => setIsProcessingPanelOpen(true)}
                 disabled={processActionDisabled}
               >
@@ -253,7 +251,9 @@ export function DocumentDetailScreen({
             <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
               <FileCheck2 className="h-4 w-4 text-[color:var(--color-accent)]" />
               {messages.documentDetailScreen.summaryTitle}
-              <Badge variant={classificationVariant}>{classificationLabel}</Badge>
+              <Badge variant={classificationVariant}>
+                {classificationLabel}
+              </Badge>
               {classifiedCategoryName ? (
                 <Badge variant="accent">{classifiedCategoryName}</Badge>
               ) : null}
@@ -348,11 +348,16 @@ export function DocumentDetailScreen({
                     value={getDocumentShaPreview(document.sha256)}
                   />
                   <InfoRow
-                    label={messages.documentDetailScreen.fields.classificationStatus}
+                    label={
+                      messages.documentDetailScreen.fields.classificationStatus
+                    }
                     value={classificationLabel}
                   />
                   <InfoRow
-                    label={messages.documentDetailScreen.fields.classificationCategory}
+                    label={
+                      messages.documentDetailScreen.fields
+                        .classificationCategory
+                    }
                     value={
                       classifiedCategoryName ??
                       (classification.suggested_category
@@ -380,7 +385,10 @@ export function DocumentDetailScreen({
             </div>
           </div>
 
-          <section className="space-y-4 rounded-[28px] border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-5">
+          <section
+            className="space-y-4 rounded-[28px] border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-5"
+            data-tour="document-inline-extraction"
+          >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-1">
                 <div className="text-sm font-semibold text-[color:var(--color-ink)]">
@@ -389,7 +397,8 @@ export function DocumentDetailScreen({
                 <div className="text-sm text-[color:var(--color-muted)]">
                   {showInlineExtractionWorkspace
                     ? messages.documentDetailScreen.extractionDescription
-                    : messages.documentDetailScreen.extractionPendingDescription}
+                    : messages.documentDetailScreen
+                        .extractionPendingDescription}
                 </div>
               </div>
 
@@ -415,7 +424,10 @@ export function DocumentDetailScreen({
                   <div className="rounded-[24px] border border-[color:var(--color-line)] bg-white px-5 py-5">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="warm">
-                        {messages.documentProcessing.extraction.statuses.pending_review}
+                        {
+                          messages.documentProcessing.extraction.statuses
+                            .pending_review
+                        }
                       </Badge>
                       <Badge>{visibleExtraction.template.name}</Badge>
                     </div>
@@ -443,7 +455,10 @@ export function DocumentDetailScreen({
               <div className="rounded-[24px] border border-[color:var(--color-line)] bg-white px-5 py-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="warm">
-                    {messages.documentProcessing.extraction.statuses.pending_review}
+                    {
+                      messages.documentProcessing.extraction.statuses
+                        .pending_review
+                    }
                   </Badge>
                   <Badge>{extraction.template.name}</Badge>
                 </div>
@@ -470,7 +485,8 @@ export function DocumentDetailScreen({
                   </Badge>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[color:var(--color-accent-warm)]">
-                  {extraction.error ?? messages.documentDetailScreen.extractionFailedHint}
+                  {extraction.error ??
+                    messages.documentDetailScreen.extractionFailedHint}
                 </p>
               </div>
             ) : (

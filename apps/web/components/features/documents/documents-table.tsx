@@ -46,12 +46,14 @@ export function DocumentsTable({
   const { locale, messages, formatDate, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="documents-table">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="accent">{messages.documentsTable.badges.layer}</Badge>
+              <Badge variant="accent">
+                {messages.documentsTable.badges.layer}
+              </Badge>
               <Badge>
                 {formatText(messages.documentsTable.badges.files, {
                   count: totalItems,
@@ -61,7 +63,9 @@ export function DocumentsTable({
             <CardTitle className="mt-3 text-2xl">
               {messages.documentsTable.title}
             </CardTitle>
-            <CardDescription>{messages.documentsTable.description}</CardDescription>
+            <CardDescription>
+              {messages.documentsTable.description}
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -118,7 +122,9 @@ export function DocumentsTable({
                       key={document.id}
                       className={cn(
                         "cursor-pointer border-t border-[color:var(--color-line)] transition hover:bg-[color:var(--color-background)]/70",
-                        isSelected ? "bg-[color:var(--color-accent-soft)]" : "bg-white",
+                        isSelected
+                          ? "bg-[color:var(--color-accent-soft)]"
+                          : "bg-white",
                       )}
                       onClick={() => onSelect(document)}
                     >

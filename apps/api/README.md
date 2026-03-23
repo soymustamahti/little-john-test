@@ -36,8 +36,14 @@ that build from the repository root:
 docker build -f apps/api/Dockerfile -t little-john-api .
 ```
 
-For managed PostgreSQL, prefer `DATABASE_URL`. The backend still supports individual
-`POSTGRES_*` variables for local compose usage.
+For managed PostgreSQL, prefer `DATABASE_URL`. Aegra runs its own migrations before the custom app
+starts, so the container needs the real runtime database connection string, not just build-time
+arguments. The backend still supports individual `POSTGRES_*` variables for local compose usage.
+
+Hybrid retrieval reranking now uses an OpenAI API call instead of a local `sentence-transformers`
+cross-encoder. The default remote reranking model is `gpt-4o-mini`, and you can override it with
+`OPENAI_RERANKING_MODEL`. If the OpenAI API key is missing, the backend falls back to fused
+keyword-plus-embedding ranking.
 
 ## Files
 

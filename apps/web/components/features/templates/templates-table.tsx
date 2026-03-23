@@ -1,6 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
@@ -34,12 +40,14 @@ export function TemplatesTable({
   const { messages, formatDate, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="templates-table">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="accent">{messages.templatesTable.badges.layer}</Badge>
+              <Badge variant="accent">
+                {messages.templatesTable.badges.layer}
+              </Badge>
               <Badge>
                 {formatText(messages.templatesTable.badges.schemas, {
                   count: totalItems,
@@ -53,7 +61,9 @@ export function TemplatesTable({
               {messages.templatesTable.description}
             </CardDescription>
           </div>
-          <Button onClick={onCreate}>{messages.templatesTable.createAction}</Button>
+          <Button data-tour="templates-create" onClick={onCreate}>
+            {messages.templatesTable.createAction}
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -110,7 +120,9 @@ export function TemplatesTable({
                       key={template.id}
                       className={cn(
                         "cursor-pointer border-t border-[color:var(--color-line)] transition hover:bg-[color:var(--color-background)]/70",
-                        isSelected ? "bg-[color:var(--color-accent-soft)]" : "bg-white",
+                        isSelected
+                          ? "bg-[color:var(--color-accent-soft)]"
+                          : "bg-white",
                       )}
                       onClick={() => onSelect(template)}
                     >
@@ -120,12 +132,15 @@ export function TemplatesTable({
                             {template.name}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            {template.description ?? messages.templatesTable.noDescription}
+                            {template.description ??
+                              messages.templatesTable.noDescription}
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
-                        <Badge variant={template.locale === "fr" ? "warm" : "accent"}>
+                        <Badge
+                          variant={template.locale === "fr" ? "warm" : "accent"}
+                        >
                           {template.locale.toUpperCase()}
                         </Badge>
                       </td>

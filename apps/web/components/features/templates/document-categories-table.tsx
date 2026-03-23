@@ -43,16 +43,21 @@ export function DocumentCategoriesTable({
   const { messages, formatDate, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="categories-table">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Badge variant="warm">{messages.documentCategoriesTable.badges.layer}</Badge>
+              <Badge variant="warm">
+                {messages.documentCategoriesTable.badges.layer}
+              </Badge>
               <Badge>
-                {formatText(messages.documentCategoriesTable.badges.categories, {
-                  count: totalItems,
-                })}
+                {formatText(
+                  messages.documentCategoriesTable.badges.categories,
+                  {
+                    count: totalItems,
+                  },
+                )}
               </Badge>
             </div>
             <CardTitle className="mt-3 text-2xl">
@@ -62,7 +67,11 @@ export function DocumentCategoriesTable({
               {messages.documentCategoriesTable.description}
             </CardDescription>
           </div>
-          <Button variant="secondary" onClick={onCreate}>
+          <Button
+            data-tour="categories-create"
+            variant="secondary"
+            onClick={onCreate}
+          >
             {messages.documentCategoriesTable.createAction}
           </Button>
         </div>
@@ -108,14 +117,19 @@ export function DocumentCategoriesTable({
               <tbody>
                 {categories.map((category) => {
                   const isSelected = selectedCategoryId === category.id;
-                  const displayName = getDocumentCategoryDisplayName(category, messages);
+                  const displayName = getDocumentCategoryDisplayName(
+                    category,
+                    messages,
+                  );
 
                   return (
                     <tr
                       key={category.id}
                       className={cn(
                         "cursor-pointer border-t border-[color:var(--color-line)] transition hover:bg-[color:var(--color-background)]/70",
-                        isSelected ? "bg-[color:var(--color-warm-soft)]/65" : "bg-white",
+                        isSelected
+                          ? "bg-[color:var(--color-warm-soft)]/65"
+                          : "bg-white",
                       )}
                       onClick={() => onSelect(category)}
                     >
@@ -125,15 +139,21 @@ export function DocumentCategoriesTable({
                             {displayName}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            {formatText(messages.documentCategoriesTable.classifierName, {
-                              name: category.name,
-                            })}
+                            {formatText(
+                              messages.documentCategoriesTable.classifierName,
+                              {
+                                name: category.name,
+                              },
+                            )}
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 align-top">
                         <Badge variant="accent">
-                          {messages.documentCategoriesTable.badges.classifierOutput}
+                          {
+                            messages.documentCategoriesTable.badges
+                              .classifierOutput
+                          }
                         </Badge>
                       </td>
                       <td className="px-4 py-4 align-top text-[color:var(--color-muted)]">

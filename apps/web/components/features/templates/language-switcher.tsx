@@ -13,7 +13,7 @@ export function LanguageSwitcher() {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-tour="workspace-language">
       <div className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
         {messages.common.language.label}
       </div>

@@ -76,22 +76,27 @@ export function DocumentProcessingPanel({
     pageSize: TEMPLATE_PAGE_SIZE,
   });
   const extractionQuery = useDocumentExtractionQuery(documentId, open);
-  const manualClassificationMutation = useManualDocumentClassificationMutation();
+  const manualClassificationMutation =
+    useManualDocumentClassificationMutation();
   const aiSessionMutation = useCreateDocumentAiClassificationSessionMutation();
-  const extractionSessionMutation = useCreateDocumentAiExtractionSessionMutation();
+  const extractionSessionMutation =
+    useCreateDocumentAiExtractionSessionMutation();
   const extractionReviewMutation = useConfirmDocumentExtractionReviewMutation();
 
-  const [selectedMode, setSelectedMode] = useState<"choose" | "manual" | "ai">("choose");
+  const [selectedMode, setSelectedMode] = useState<"choose" | "manual" | "ai">(
+    "choose",
+  );
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [pendingExtractionTemplateId, setPendingExtractionTemplateId] = useState<string | null>(
-    null,
-  );
+  const [pendingExtractionTemplateId, setPendingExtractionTemplateId] =
+    useState<string | null>(null);
   const [customCategoryName, setCustomCategoryName] = useState("");
   const [customCategoryLabelKey, setCustomCategoryLabelKey] = useState("");
   const [suggestionResolved, setSuggestionResolved] = useState(false);
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
-  const [streamTimeline, setStreamTimeline] = useState<StreamTimelineItem[]>([]);
+  const [streamTimeline, setStreamTimeline] = useState<StreamTimelineItem[]>(
+    [],
+  );
   const [aiError, setAiError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeStreamKind, setActiveStreamKind] = useState<
@@ -126,9 +131,13 @@ export function DocumentProcessingPanel({
       setSuggestionResolved(false);
       setSelectedMode("ai");
       setCustomCategoryName(
-        formatDocumentCategoryName(document.classification.suggested_category.name),
+        formatDocumentCategoryName(
+          document.classification.suggested_category.name,
+        ),
       );
-      setCustomCategoryLabelKey(document.classification.suggested_category.label_key);
+      setCustomCategoryLabelKey(
+        document.classification.suggested_category.label_key,
+      );
       return;
     }
 
@@ -195,9 +204,13 @@ export function DocumentProcessingPanel({
     ) {
       setSuggestionResolved(false);
       setCustomCategoryName(
-        formatDocumentCategoryName(document.classification.suggested_category.name),
+        formatDocumentCategoryName(
+          document.classification.suggested_category.name,
+        ),
       );
-      setCustomCategoryLabelKey(document.classification.suggested_category.label_key);
+      setCustomCategoryLabelKey(
+        document.classification.suggested_category.label_key,
+      );
     }
   }, [
     document.classification.method,
@@ -464,7 +477,7 @@ export function DocumentProcessingPanel({
           const progressItem = extractProgressItem(event);
           if (progressItem) {
             setProgressItems((currentItems) =>
-              upsertProgressItem(currentItems, progressItem)
+              upsertProgressItem(currentItems, progressItem),
             );
           }
 
@@ -480,10 +493,7 @@ export function DocumentProcessingPanel({
       setIsStreaming(false);
       setActiveStreamKind(null);
       streamAbortControllerRef.current = null;
-      await Promise.all([
-        onDocumentRefresh(),
-        extractionQuery.refetch(),
-      ]);
+      await Promise.all([onDocumentRefresh(), extractionQuery.refetch()]);
     }
   }
 
@@ -499,10 +509,7 @@ export function DocumentProcessingPanel({
           result,
         },
       });
-      await Promise.all([
-        extractionQuery.refetch(),
-        onDocumentRefresh(),
-      ]);
+      await Promise.all([extractionQuery.refetch(), onDocumentRefresh()]);
       onOpenChange(false);
     } catch {
       return;
@@ -519,12 +526,17 @@ export function DocumentProcessingPanel({
   }
 
   return (
-    <Card className="border-[color:var(--color-line-strong)]">
+    <Card
+      className="border-[color:var(--color-line-strong)]"
+      data-tour="processing-panel"
+    >
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="accent">{messages.documentProcessing.badge}</Badge>
+              <Badge variant="accent">
+                {messages.documentProcessing.badge}
+              </Badge>
               {document.classification.status === "pending_review" ? (
                 <Badge variant="warm">
                   {messages.documentProcessing.pendingBadge}
@@ -549,6 +561,7 @@ export function DocumentProcessingPanel({
           </Label>
           <select
             id="document-processing-template"
+            data-tour="processing-template-select"
             className="flex h-11 w-full rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none focus:border-[color:var(--color-accent)]"
             value={selectedTemplateId}
             onChange={(event) => setSelectedTemplateId(event.target.value)}
@@ -574,6 +587,7 @@ export function DocumentProcessingPanel({
           <div className="grid gap-4 lg:grid-cols-2">
             <button
               type="button"
+              data-tour="processing-manual-option"
               className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-[color:var(--color-accent)] hover:shadow-[0_16px_36px_rgba(29,91,219,0.12)]"
               onClick={() => setSelectedMode("manual")}
             >
@@ -590,6 +604,7 @@ export function DocumentProcessingPanel({
 
             <button
               type="button"
+              data-tour="processing-ai-option"
               className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-[color:var(--color-accent)] hover:shadow-[0_16px_36px_rgba(29,91,219,0.12)]"
               onClick={handleAiStart}
               disabled={aiSessionMutation.isPending}
@@ -675,13 +690,23 @@ export function DocumentProcessingPanel({
                 {messages.documentProcessing.ai.title}
               </div>
               {extraction ? (
-                <Badge variant={extraction.status === "confirmed" ? "success" : "accent"}>
-                  {getDocumentExtractionStatusLabel(extraction.status, messages)}
+                <Badge
+                  variant={
+                    extraction.status === "confirmed" ? "success" : "accent"
+                  }
+                >
+                  {getDocumentExtractionStatusLabel(
+                    extraction.status,
+                    messages,
+                  )}
                 </Badge>
               ) : null}
             </div>
 
-            <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+            <div
+              className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4"
+              data-tour="processing-live-progress"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
@@ -691,7 +716,9 @@ export function DocumentProcessingPanel({
                       <Bot className="h-4 w-4 text-[color:var(--color-accent)]" />
                     )}
                     {streamingTitle}
-                    <Badge variant={streamStatusVariant}>{streamStatusLabel}</Badge>
+                    <Badge variant={streamStatusVariant}>
+                      {streamStatusLabel}
+                    </Badge>
                   </div>
                   <p className="mt-1 text-xs text-[color:var(--color-muted)]">
                     {latestProgressItem?.message ??
@@ -724,9 +751,7 @@ export function DocumentProcessingPanel({
                   ))
                 ) : (
                   <div className="text-xs text-[color:var(--color-muted)]">
-                    {isStreaming
-                      ? streamingEmptyMessage
-                      : timelineEmptyMessage}
+                    {isStreaming ? streamingEmptyMessage : timelineEmptyMessage}
                   </div>
                 )}
               </div>
@@ -735,7 +760,10 @@ export function DocumentProcessingPanel({
             {document.classification.status === "pending_review" &&
             pendingSuggestion &&
             !suggestionResolved ? (
-              <div className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+              <div
+                className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4"
+                data-tour="processing-category-suggestion"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="warm">
                     {messages.documentProcessing.ai.reviewBadge}
@@ -756,7 +784,10 @@ export function DocumentProcessingPanel({
                       {messages.documentProcessing.ai.suggestedName}
                     </div>
                     <div className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
-                      {getDocumentCategoryDisplayName(pendingSuggestion, messages)}
+                      {getDocumentCategoryDisplayName(
+                        pendingSuggestion,
+                        messages,
+                      )}
                     </div>
                   </div>
                   <div className="rounded-xl border border-[color:var(--color-line)] bg-white px-4 py-3">
@@ -811,7 +842,9 @@ export function DocumentProcessingPanel({
                             slugifyDocumentCategoryLabelKey(event.target.value),
                           )
                         }
-                        placeholder={messages.documentProcessing.ai.customLabelKey}
+                        placeholder={
+                          messages.documentProcessing.ai.customLabelKey
+                        }
                       />
                     </div>
                   </div>
@@ -819,6 +852,7 @@ export function DocumentProcessingPanel({
 
                 <div className="flex flex-wrap gap-2">
                   <Button
+                    data-tour="processing-category-suggestion-accept"
                     onClick={() => handleSuggestedCategoryResponse("accept")}
                     disabled={isStreaming}
                   >
@@ -829,7 +863,9 @@ export function DocumentProcessingPanel({
                     variant="secondary"
                     onClick={() => handleSuggestedCategoryResponse("edit")}
                     disabled={
-                      isStreaming || !customCategoryName.trim() || !customCategoryLabelKey.trim()
+                      isStreaming ||
+                      !customCategoryName.trim() ||
+                      !customCategoryLabelKey.trim()
                     }
                   >
                     <PencilLine className="h-4 w-4" />
@@ -853,9 +889,14 @@ export function DocumentProcessingPanel({
                     {messages.documentProcessing.extraction.reviewTitle}
                   </Badge>
                   <Badge
-                    variant={extraction.status === "confirmed" ? "success" : "warm"}
+                    variant={
+                      extraction.status === "confirmed" ? "success" : "warm"
+                    }
                   >
-                    {getDocumentExtractionStatusLabel(extraction.status, messages)}
+                    {getDocumentExtractionStatusLabel(
+                      extraction.status,
+                      messages,
+                    )}
                   </Badge>
                 </div>
                 <DocumentExtractionReview
@@ -891,7 +932,10 @@ export function DocumentProcessingPanel({
               {!isStreaming &&
               document.classification.status !== "pending_review" &&
               !hasExtractionDraft ? (
-                <Button onClick={handleAiStart} disabled={aiSessionMutation.isPending}>
+                <Button
+                  onClick={handleAiStart}
+                  disabled={aiSessionMutation.isPending}
+                >
                   {aiSessionMutation.isPending
                     ? messages.documentProcessing.ai.startingAction
                     : messages.documentProcessing.ai.startAction}
@@ -903,7 +947,9 @@ export function DocumentProcessingPanel({
                 <Button
                   variant="secondary"
                   onClick={() => handleExtractionStart(selectedTemplateId)}
-                  disabled={!selectedTemplateId || extractionSessionMutation.isPending}
+                  disabled={
+                    !selectedTemplateId || extractionSessionMutation.isPending
+                  }
                 >
                   {extractionSessionMutation.isPending
                     ? messages.documentProcessing.extraction.startingAction

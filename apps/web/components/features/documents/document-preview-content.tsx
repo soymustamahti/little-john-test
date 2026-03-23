@@ -3,13 +3,19 @@
 import mammoth from "mammoth";
 import { FileSpreadsheet, FileText, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import * as XLSX from "xlsx";
 
-import { getDocumentContent, getDocumentContentUrl } from "@/lib/api/documents";
+import { getDocumentContent } from "@/lib/api/documents";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
 import type { Document } from "@/types/documents";
+
+GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.mjs",
+  import.meta.url,
+).toString();
 
 interface SpreadsheetSheetPreview {
   name: string;
@@ -21,11 +27,41 @@ interface SpreadsheetPreview {
   isTruncated: boolean;
 }
 
-function SpreadsheetPreviewView({
-  preview,
+interface PdfPreviewPage {
+  pageNumber: number;
+  dataUrl: string;
+}
+
+function PdfPreviewView({
+  pages,
+  fileName,
 }: {
-  preview: SpreadsheetPreview;
+  pages: PdfPreviewPage[];
+  fileName: string;
 }) {
+  return (
+    <div className="space-y-4">
+      {pages.map((page) => (
+        <div
+          key={`${fileName}-${page.pageNumber}`}
+          className="overflow-hidden rounded-[28px] border border-[color:var(--color-line)] bg-white shadow-[0_18px_40px_rgba(20,27,45,0.08)]"
+        >
+          <div className="border-b border-[color:var(--color-line)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Page {page.pageNumber}
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={page.dataUrl}
+            alt={`${fileName} - page ${page.pageNumber}`}
+            className="h-auto w-full bg-[color:var(--color-background)] object-contain"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SpreadsheetPreviewView({ preview }: { preview: SpreadsheetPreview }) {
   const { messages } = useLocale();
 
   return (
@@ -89,20 +125,22 @@ export function DocumentPreviewContent({
   const { messages } = useLocale();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [binaryPreviewUrl, setBinaryPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewPages, setPdfPreviewPages] = useState<
+    PdfPreviewPage[] | null
+  >(null);
   const [textPreview, setTextPreview] = useState<string | null>(null);
-  const [spreadsheetPreview, setSpreadsheetPreview] = useState<SpreadsheetPreview | null>(
-    null,
-  );
+  const [spreadsheetPreview, setSpreadsheetPreview] =
+    useState<SpreadsheetPreview | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
+    let createdObjectUrl: string | null = null;
     setErrorMessage(null);
+    setBinaryPreviewUrl(null);
+    setPdfPreviewPages(null);
     setTextPreview(null);
     setSpreadsheetPreview(null);
-
-    if (document.file_kind === "pdf" || document.file_kind === "image") {
-      return;
-    }
 
     setIsLoading(true);
 
@@ -111,6 +149,27 @@ export function DocumentPreviewContent({
         const content = await getDocumentContent(document.id);
 
         if (isCancelled) {
+          return;
+        }
+
+        if (document.file_kind === "pdf") {
+          const pdfPages = await buildPdfPreviewPages(content, variant);
+          if (!isCancelled) {
+            setPdfPreviewPages(pdfPages);
+          }
+          return;
+        }
+
+        if (document.file_kind === "image") {
+          createdObjectUrl = URL.createObjectURL(
+            new Blob([content], {
+              type: document.content_type,
+            }),
+          );
+
+          if (!isCancelled) {
+            setBinaryPreviewUrl(createdObjectUrl);
+          }
           return;
         }
 
@@ -140,12 +199,21 @@ export function DocumentPreviewContent({
 
     return () => {
       isCancelled = true;
+      if (createdObjectUrl) {
+        URL.revokeObjectURL(createdObjectUrl);
+      }
     };
-  }, [document, messages.common.apiError]);
+  }, [
+    document.content_type,
+    document.file_kind,
+    document.id,
+    messages.common.apiError,
+    variant,
+  ]);
 
-  const contentUrl = getDocumentContentUrl(document.id);
   const pdfHeightClassName = variant === "modal" ? "h-[75vh]" : "h-[36rem]";
-  const imageHeightClassName = variant === "modal" ? "max-h-[72vh]" : "max-h-[32rem]";
+  const imageHeightClassName =
+    variant === "modal" ? "max-h-[72vh]" : "max-h-[32rem]";
   const imageContainerClassName =
     variant === "modal" ? "min-h-[360px]" : "min-h-[28rem]";
 
@@ -165,33 +233,35 @@ export function DocumentPreviewContent({
       ) : null}
 
       {!isLoading && !errorMessage && document.file_kind === "pdf" ? (
-        <iframe
-          title={document.original_filename}
-          src={contentUrl}
-          className={cn(
-            pdfHeightClassName,
-            "w-full rounded-[28px] border border-[color:var(--color-line)] bg-white",
-          )}
-        />
+        pdfPreviewPages?.length ? (
+          <div className={cn(pdfHeightClassName, "overflow-y-auto pr-1")}>
+            <PdfPreviewView
+              pages={pdfPreviewPages}
+              fileName={document.original_filename}
+            />
+          </div>
+        ) : null
       ) : null}
 
       {!isLoading && !errorMessage && document.file_kind === "image" ? (
-        <div
-          className={cn(
-            imageContainerClassName,
-            "flex items-center justify-center rounded-[28px] border border-[color:var(--color-line)] bg-white p-4",
-          )}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={contentUrl}
-            alt={document.original_filename}
+        binaryPreviewUrl ? (
+          <div
             className={cn(
-              imageHeightClassName,
-              "w-auto max-w-full rounded-2xl object-contain",
+              imageContainerClassName,
+              "flex items-center justify-center rounded-[28px] border border-[color:var(--color-line)] bg-white p-4",
             )}
-          />
-        </div>
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={binaryPreviewUrl}
+              alt={document.original_filename}
+              className={cn(
+                imageHeightClassName,
+                "w-auto max-w-full rounded-2xl object-contain",
+              )}
+            />
+          </div>
+        ) : null
       ) : null}
 
       {!isLoading && !errorMessage && document.file_kind === "docx" ? (
@@ -234,15 +304,18 @@ function buildSpreadsheetPreview(workbook: XLSX.WorkBook): SpreadsheetPreview {
 
   const sheets = workbook.SheetNames.slice(0, MAX_SHEETS).map((sheetName) => {
     const sheet = workbook.Sheets[sheetName];
-    const rows = (XLSX.utils.sheet_to_json(sheet, {
-      header: 1,
-      raw: false,
-      blankrows: false,
-    }) as unknown[][]).map((row) =>
-      row.slice(0, MAX_COLUMNS).map((cell) => String(cell ?? "")),
-    );
+    const rows = (
+      XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        raw: false,
+        blankrows: false,
+      }) as unknown[][]
+    ).map((row) => row.slice(0, MAX_COLUMNS).map((cell) => String(cell ?? "")));
 
-    if (rows.length > MAX_ROWS || rows.some((row) => row.length > MAX_COLUMNS)) {
+    if (
+      rows.length > MAX_ROWS ||
+      rows.some((row) => row.length > MAX_COLUMNS)
+    ) {
       isTruncated = true;
     }
 
@@ -256,4 +329,47 @@ function buildSpreadsheetPreview(workbook: XLSX.WorkBook): SpreadsheetPreview {
     sheets,
     isTruncated,
   };
+}
+
+async function buildPdfPreviewPages(
+  content: ArrayBuffer,
+  variant: "inline" | "modal",
+): Promise<PdfPreviewPage[]> {
+  const loadingTask = getDocument({ data: content });
+  const pdf = await loadingTask.promise;
+  const scale = variant === "modal" ? 1.45 : 1.15;
+  const pages: PdfPreviewPage[] = [];
+
+  try {
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        continue;
+      }
+
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+
+      await page.render({
+        canvas: canvas,
+        canvasContext: context,
+        viewport,
+      }).promise;
+
+      pages.push({
+        pageNumber,
+        dataUrl: canvas.toDataURL("image/jpeg", 0.92),
+      });
+
+      page.cleanup();
+    }
+  } finally {
+    await pdf.destroy();
+  }
+
+  return pages;
 }

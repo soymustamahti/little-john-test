@@ -552,9 +552,7 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
                                 "label": "Acceptance Required",
                                 "value_type": "boolean",
                                 "required": False,
-                                "description": (
-                                    "Whether formal approval is required."
-                                ),
+                                "description": ("Whether formal approval is required."),
                             },
                         ],
                     }
@@ -595,9 +593,7 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
                         "key": "adresse_fournisseur",
                         "label": "Adresse du fournisseur",
                         "required": False,
-                        "description": (
-                            "Adresse de facturation ou de siege."
-                        ),
+                        "description": ("Adresse de facturation ou de siege."),
                         "kind": "scalar",
                         "value_type": "string",
                     },
@@ -870,9 +866,7 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
                         "key": "mandataire_representant",
                         "label": "Representant du mandataire",
                         "required": False,
-                        "description": (
-                            "Personne habilitee a engager le mandataire."
-                        ),
+                        "description": ("Personne habilitee a engager le mandataire."),
                         "kind": "scalar",
                         "value_type": "string",
                     },
@@ -906,9 +900,7 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
                         "key": "budget_total_operation_ht",
                         "label": "Budget total operation HT",
                         "required": False,
-                        "description": (
-                            "Montant total hors taxes de l'operation."
-                        ),
+                        "description": ("Montant total hors taxes de l'operation."),
                         "kind": "scalar",
                         "value_type": "number",
                     },
@@ -983,9 +975,7 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
                                 "label": "Reference annexe",
                                 "value_type": "string",
                                 "required": True,
-                                "description": (
-                                    "Numero ou identifiant de l'annexe."
-                                ),
+                                "description": ("Numero ou identifiant de l'annexe."),
                             },
                             {
                                 "key": "intitule_annexe",
@@ -996,6 +986,115 @@ RAW_EXTRACTION_TEMPLATE_SEEDS = [
                             },
                         ],
                     },
+                ],
+            },
+        ],
+    },
+    {
+        "id": "66666666-6666-4666-8666-666666666666",
+        "name": "Excel Data Extraction",
+        "description": (
+            "Template designed to map and extract structured data from Excel "
+            "workbooks, including sheet-level metadata and tabular row data."
+        ),
+        "locale": "en",
+        "modules": [
+            {
+                "key": "workbook_metadata",
+                "label": "Workbook Metadata",
+                "fields": [
+                    {
+                        "key": "file_name",
+                        "label": "File Name",
+                        "required": True,
+                        "description": "The name of the uploaded Excel file.",
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "sheet_count",
+                        "label": "Sheet Count",
+                        "required": False,
+                        "description": "Total number of worksheets in the file.",
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                    {
+                        "key": "author",
+                        "label": "Author",
+                        "required": False,
+                        "description": "The document creator from file properties.",
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                ],
+            },
+            {
+                "key": "extraction_summary",
+                "label": "Extraction Summary",
+                "fields": [
+                    {
+                        "key": "target_sheet_name",
+                        "label": "Target Sheet Name",
+                        "required": True,
+                        "description": "The specific worksheet being processed.",
+                        "kind": "scalar",
+                        "value_type": "string",
+                    },
+                    {
+                        "key": "total_rows_extracted",
+                        "label": "Total Rows Extracted",
+                        "required": False,
+                        "description": "Count of data rows identified in the sheet.",
+                        "kind": "scalar",
+                        "value_type": "number",
+                    },
+                ],
+            },
+            {
+                "key": "tabular_data",
+                "label": "Sheet Content",
+                "fields": [
+                    {
+                        "key": "rows",
+                        "label": "Rows",
+                        "required": True,
+                        "description": (
+                            "The primary data table extracted from the Excel sheet."
+                        ),
+                        "kind": "table",
+                        "min_rows": 0,
+                        "columns": [
+                            {
+                                "key": "row_index",
+                                "label": "Row Index",
+                                "value_type": "number",
+                                "required": True,
+                                "description": "The original Excel row number.",
+                            },
+                            {
+                                "key": "column_a",
+                                "label": "Column A / Header 1",
+                                "value_type": "string",
+                                "required": False,
+                                "description": "Data from the first relevant column.",
+                            },
+                            {
+                                "key": "column_b",
+                                "label": "Column B / Header 2",
+                                "value_type": "string",
+                                "required": False,
+                                "description": "Data from the second relevant column.",
+                            },
+                            {
+                                "key": "amount",
+                                "label": "Amount",
+                                "value_type": "number",
+                                "required": False,
+                                "description": "Financial value column if present.",
+                            },
+                        ],
+                    }
                 ],
             },
         ],
@@ -1033,5 +1132,7 @@ async def seed_extraction_templates(session: AsyncSession) -> int:
     insert_statement = postgresql.insert(ExtractionTemplateModel).values(
         [seed.to_insert_values() for seed in missing_seeds]
     )
-    await session.execute(insert_statement.on_conflict_do_nothing(index_elements=["id"]))
+    await session.execute(
+        insert_statement.on_conflict_do_nothing(index_elements=["id"])
+    )
     return len(missing_seeds)

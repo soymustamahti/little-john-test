@@ -94,15 +94,19 @@ export function DocumentExtractionCorrectionChat({
   onExtractionRefresh: () => Promise<unknown>;
 }) {
   const { locale, messages } = useLocale();
-  const correctionSessionMutation = useCreateDocumentExtractionCorrectionSessionMutation();
-  const correctionActivityMutation = useSaveDocumentExtractionCorrectionActivityMutation();
+  const correctionSessionMutation =
+    useCreateDocumentExtractionCorrectionSessionMutation();
+  const correctionActivityMutation =
+    useSaveDocumentExtractionCorrectionActivityMutation();
   const serverEventGroups = useMemo(
     () => normalizeApiEventGroups(extraction.correction_event_groups),
     [extraction.correction_event_groups],
   );
 
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState(extraction.correction_messages);
+  const [chatMessages, setChatMessages] = useState(
+    extraction.correction_messages,
+  );
   const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
   const [chatError, setChatError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -131,10 +135,7 @@ export function DocumentExtractionCorrectionChat({
 
     // Keep the optimistic user turn and its live event explorer visible until the
     // backend refresh catches up with the newly submitted correction request.
-    if (
-      pendingTurnRef.current &&
-      serverUserTurnCount < localUserTurnCount
-    ) {
+    if (pendingTurnRef.current && serverUserTurnCount < localUserTurnCount) {
       return;
     }
 
@@ -154,7 +155,9 @@ export function DocumentExtractionCorrectionChat({
         userTurnCount,
       });
 
-      if (serializeEventGroups(nextGroups) === serializeEventGroups(currentGroups)) {
+      if (
+        serializeEventGroups(nextGroups) === serializeEventGroups(currentGroups)
+      ) {
         return currentGroups;
       }
 
@@ -177,7 +180,10 @@ export function DocumentExtractionCorrectionChat({
       return;
     }
 
-    const normalizedGroups = trimEventGroupsToUserTurns(eventGroups, userTurnCount);
+    const normalizedGroups = trimEventGroupsToUserTurns(
+      eventGroups,
+      userTurnCount,
+    );
     if (normalizedGroups.length === 0) {
       return;
     }
@@ -191,7 +197,10 @@ export function DocumentExtractionCorrectionChat({
       return;
     }
 
-    const normalizedGroups = trimEventGroupsToUserTurns(eventGroups, userTurnCount);
+    const normalizedGroups = trimEventGroupsToUserTurns(
+      eventGroups,
+      userTurnCount,
+    );
     if (normalizedGroups.length === 0) {
       return;
     }
@@ -268,7 +277,10 @@ export function DocumentExtractionCorrectionChat({
       return;
     }
 
-    if (extraction.correction_messages.length <= pendingTurn.correctionMessageCount) {
+    if (
+      extraction.correction_messages.length <=
+      pendingTurn.correctionMessageCount
+    ) {
       return;
     }
 
@@ -307,17 +319,27 @@ export function DocumentExtractionCorrectionChat({
     () => [
       {
         icon: Sparkles,
-        label: messages.documentProcessing.extraction.correction.suggestionDirectLabel,
-        prompt: messages.documentProcessing.extraction.correction.suggestionDirectPrompt,
+        label:
+          messages.documentProcessing.extraction.correction
+            .suggestionDirectLabel,
+        prompt:
+          messages.documentProcessing.extraction.correction
+            .suggestionDirectPrompt,
       },
       {
         icon: Search,
-        label: messages.documentProcessing.extraction.correction.suggestionSearchLabel,
-        prompt: messages.documentProcessing.extraction.correction.suggestionSearchPrompt,
+        label:
+          messages.documentProcessing.extraction.correction
+            .suggestionSearchLabel,
+        prompt:
+          messages.documentProcessing.extraction.correction
+            .suggestionSearchPrompt,
       },
       {
         icon: WandSparkles,
-        label: messages.documentProcessing.extraction.correction.suggestionSpreadsheetLabel,
+        label:
+          messages.documentProcessing.extraction.correction
+            .suggestionSpreadsheetLabel,
         prompt:
           messages.documentProcessing.extraction.correction
             .suggestionSpreadsheetPrompt,
@@ -333,7 +355,9 @@ export function DocumentExtractionCorrectionChat({
     }
 
     const turnId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const userTurnIndex = chatMessages.filter((item) => item.role === "user").length;
+    const userTurnIndex = chatMessages.filter(
+      (item) => item.role === "user",
+    ).length;
 
     setChatError(null);
     setChatInput("");
@@ -351,7 +375,8 @@ export function DocumentExtractionCorrectionChat({
       {
         id: turnId,
         userTurnIndex,
-        summary: messages.documentProcessing.extraction.correction.eventSummaryRunning,
+        summary:
+          messages.documentProcessing.extraction.correction.eventSummaryRunning,
         items: [],
         status: "running",
         expanded: true,
@@ -360,7 +385,9 @@ export function DocumentExtractionCorrectionChat({
 
     pendingTurnRef.current = {
       groupId: turnId,
-      baselineResult: extraction.result ? structuredClone(extraction.result) : null,
+      baselineResult: extraction.result
+        ? structuredClone(extraction.result)
+        : null,
       correctionMessageCount: extraction.correction_messages.length,
     };
     setIsStreaming(true);
@@ -461,7 +488,10 @@ export function DocumentExtractionCorrectionChat({
   }
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-[color:var(--color-line)] bg-[radial-gradient(circle_at_top_left,rgba(207,226,255,0.42),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,245,239,0.94))] shadow-[0_24px_60px_rgba(20,27,45,0.08)]">
+    <section
+      className="overflow-hidden rounded-[28px] border border-[color:var(--color-line)] bg-[radial-gradient(circle_at_top_left,rgba(207,226,255,0.42),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,245,239,0.94))] shadow-[0_24px_60px_rgba(20,27,45,0.08)]"
+      data-tour="correction-chat"
+    >
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[color:var(--color-line)] px-5 py-5">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--color-ink)]">
@@ -487,10 +517,16 @@ export function DocumentExtractionCorrectionChat({
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--color-line)] px-5 py-4">
             <div className="space-y-1">
               <div className="text-sm font-semibold text-[color:var(--color-ink)]">
-                {messages.documentProcessing.extraction.correction.conversationTitle}
+                {
+                  messages.documentProcessing.extraction.correction
+                    .conversationTitle
+                }
               </div>
               <div className="text-xs leading-5 text-[color:var(--color-muted)]">
-                {messages.documentProcessing.extraction.correction.conversationDescription}
+                {
+                  messages.documentProcessing.extraction.correction
+                    .conversationDescription
+                }
               </div>
             </div>
             <Badge>
@@ -503,6 +539,7 @@ export function DocumentExtractionCorrectionChat({
 
           <div
             ref={conversationViewportRef}
+            data-tour="correction-chat-conversation"
             className="flex-1 space-y-5 overflow-y-auto px-5 py-5"
           >
             {chatMessages.length ? (
@@ -549,8 +586,12 @@ export function DocumentExtractionCorrectionChat({
               </Label>
               <Textarea
                 id="extraction-correction-input"
+                data-tour="correction-chat-input"
                 className="min-h-32 rounded-[24px] border-[color:var(--color-line)] bg-white/95 px-4 py-3 text-sm leading-6 text-[color:var(--color-ink)] shadow-none"
-                placeholder={messages.documentProcessing.extraction.correction.inputPlaceholder}
+                placeholder={
+                  messages.documentProcessing.extraction.correction
+                    .inputPlaceholder
+                }
                 value={chatInput}
                 onChange={(event) => setChatInput(event.target.value)}
                 onKeyDown={handleInputKeyDown}
@@ -559,11 +600,19 @@ export function DocumentExtractionCorrectionChat({
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1 text-xs text-[color:var(--color-muted)]">
-                <div>{messages.documentProcessing.extraction.correction.hint}</div>
-                <div>{messages.documentProcessing.extraction.correction.shortcutHint}</div>
+                <div>
+                  {messages.documentProcessing.extraction.correction.hint}
+                </div>
+                <div>
+                  {
+                    messages.documentProcessing.extraction.correction
+                      .shortcutHint
+                  }
+                </div>
               </div>
               <Button
                 type="button"
+                data-tour="correction-chat-send"
                 className="min-w-44"
                 onClick={() => void handleSend()}
                 disabled={!chatInput.trim() || isBusy}
@@ -574,8 +623,10 @@ export function DocumentExtractionCorrectionChat({
                   <ArrowUp className="h-4 w-4" />
                 )}
                 {isBusy
-                  ? messages.documentProcessing.extraction.correction.sendingAction
-                  : messages.documentProcessing.extraction.correction.sendAction}
+                  ? messages.documentProcessing.extraction.correction
+                      .sendingAction
+                  : messages.documentProcessing.extraction.correction
+                      .sendAction}
               </Button>
             </div>
           </div>
@@ -630,7 +681,10 @@ function renderConversation({
             <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
               <Bot className="h-3.5 w-3.5 text-[color:var(--color-accent)]" />
               <span>
-                {messages.documentProcessing.extraction.correction.assistantBadge}
+                {
+                  messages.documentProcessing.extraction.correction
+                    .assistantBadge
+                }
               </span>
               <span className="text-[10px]">
                 {timeFormatter.format(new Date(message.created_at))}
@@ -647,7 +701,9 @@ function renderConversation({
             </div>
             <div className="mt-3 flex items-center justify-end gap-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/62">
               <User className="h-3 w-3" />
-              <span>{messages.documentProcessing.extraction.correction.userBadge}</span>
+              <span>
+                {messages.documentProcessing.extraction.correction.userBadge}
+              </span>
               <span>{timeFormatter.format(new Date(message.created_at))}</span>
             </div>
           </div>
@@ -711,7 +767,8 @@ function renderConversation({
                   <span>
                     {isBusy && latestProgressItem
                       ? compactEventSummary(latestProgressItem.message)
-                      : messages.documentProcessing.extraction.correction.activityEmpty}
+                      : messages.documentProcessing.extraction.correction
+                          .activityEmpty}
                   </span>
                 </div>
               )}
@@ -765,7 +822,9 @@ function renderEventItemIcon(kind: TurnEventItem["kind"]) {
   );
 }
 
-function mapTimelineItemKind(kind: StreamTimelineItem["kind"]): TurnEventItem["kind"] {
+function mapTimelineItemKind(
+  kind: StreamTimelineItem["kind"],
+): TurnEventItem["kind"] {
   if (kind === "error") {
     return "error";
   }
@@ -818,7 +877,8 @@ function finalizeEventGroup(
         ...group,
         expanded: false,
         status: "error",
-        summary: messages.documentProcessing.extraction.correction.eventSummaryError,
+        summary:
+          messages.documentProcessing.extraction.correction.eventSummaryError,
       };
     }
 
@@ -835,7 +895,8 @@ function finalizeEventGroup(
               "{count}",
               String(nextItems.length),
             )
-          : messages.documentProcessing.extraction.correction.eventSummaryNoChange;
+          : messages.documentProcessing.extraction.correction
+              .eventSummaryNoChange;
 
     return {
       ...group,
@@ -869,7 +930,8 @@ function markEventGroupErrored(
           occurredAt: Date.now(),
         },
       ]),
-      summary: messages.documentProcessing.extraction.correction.eventSummaryError,
+      summary:
+        messages.documentProcessing.extraction.correction.eventSummaryError,
       status: "error",
       expanded: true,
     };
@@ -1041,7 +1103,9 @@ function clearPersistedEventGroups(documentId: string): void {
   }
 
   try {
-    window.localStorage.removeItem(getCorrectionEventGroupsStorageKey(documentId));
+    window.localStorage.removeItem(
+      getCorrectionEventGroupsStorageKey(documentId),
+    );
   } catch {
     return;
   }
@@ -1074,7 +1138,10 @@ function trimEventGroupsToUserTurns(
   }
 
   return eventGroups
-    .filter((group) => group.userTurnIndex >= 0 && group.userTurnIndex < userTurnCount)
+    .filter(
+      (group) =>
+        group.userTurnIndex >= 0 && group.userTurnIndex < userTurnCount,
+    )
     .map((group) => ({
       ...group,
       items: dedupeTurnEventItems(group.items),
@@ -1101,7 +1168,10 @@ function reconcileEventGroups({
     userTurnCount,
   );
 
-  if (normalizedCurrentGroups.length === 0 && normalizedServerGroups.length === 0) {
+  if (
+    normalizedCurrentGroups.length === 0 &&
+    normalizedServerGroups.length === 0
+  ) {
     return readPersistedEventGroups(documentId, userTurnCount);
   }
 
@@ -1116,29 +1186,36 @@ function reconcileEventGroups({
   const currentGroupsById = new Map(
     normalizedCurrentGroups.map((group) => [group.id, group]),
   );
-  const mergedGroups: TurnEventGroup[] = normalizedServerGroups.map((serverGroup) => {
-    const currentGroup = currentGroupsById.get(serverGroup.id);
-    if (!currentGroup) {
-      return serverGroup;
-    }
+  const mergedGroups: TurnEventGroup[] = normalizedServerGroups.map(
+    (serverGroup) => {
+      const currentGroup = currentGroupsById.get(serverGroup.id);
+      if (!currentGroup) {
+        return serverGroup;
+      }
 
-    const mergedItems = mergeTurnEventItems(currentGroup.items, serverGroup.items);
-    const currentStatusRank = getEventGroupStatusRank(currentGroup.status);
-    const serverStatusRank = getEventGroupStatusRank(serverGroup.status);
+      const mergedItems = mergeTurnEventItems(
+        currentGroup.items,
+        serverGroup.items,
+      );
+      const currentStatusRank = getEventGroupStatusRank(currentGroup.status);
+      const serverStatusRank = getEventGroupStatusRank(serverGroup.status);
 
-    return {
-      ...serverGroup,
-      items: mergedItems,
-      status:
-        currentStatusRank >= serverStatusRank ? currentGroup.status : serverGroup.status,
-      summary:
-        currentStatusRank > serverStatusRank ||
-        currentGroup.items.length >= serverGroup.items.length
-          ? currentGroup.summary
-          : serverGroup.summary,
-      expanded: currentGroup.expanded,
-    };
-  });
+      return {
+        ...serverGroup,
+        items: mergedItems,
+        status:
+          currentStatusRank >= serverStatusRank
+            ? currentGroup.status
+            : serverGroup.status,
+        summary:
+          currentStatusRank > serverStatusRank ||
+          currentGroup.items.length >= serverGroup.items.length
+            ? currentGroup.summary
+            : serverGroup.summary,
+        expanded: currentGroup.expanded,
+      };
+    },
+  );
 
   for (const currentGroup of normalizedCurrentGroups) {
     if (!mergedGroups.some((group) => group.id === currentGroup.id)) {
@@ -1146,7 +1223,9 @@ function reconcileEventGroups({
     }
   }
 
-  return mergedGroups.sort((left, right) => left.userTurnIndex - right.userTurnIndex);
+  return mergedGroups.sort(
+    (left, right) => left.userTurnIndex - right.userTurnIndex,
+  );
 }
 
 function mergeTurnEventItems(
@@ -1201,15 +1280,16 @@ function normalizePersistedEventGroup(value: object): TurnEventGroup | null {
 
   const id = typeof value.id === "string" ? value.id : "";
   const summary =
-    typeof value.summary === "string"
-      ? compactEventSummary(value.summary)
-      : "";
+    typeof value.summary === "string" ? compactEventSummary(value.summary) : "";
   const userTurnIndex =
-    typeof value.userTurnIndex === "number" && Number.isInteger(value.userTurnIndex)
+    typeof value.userTurnIndex === "number" &&
+    Number.isInteger(value.userTurnIndex)
       ? value.userTurnIndex
       : -1;
   const status =
-    value.status === "running" || value.status === "complete" || value.status === "error"
+    value.status === "running" ||
+    value.status === "complete" ||
+    value.status === "error"
       ? value.status
       : "complete";
   const expanded = typeof value.expanded === "boolean" ? value.expanded : false;
@@ -1240,9 +1320,7 @@ function normalizePersistedEventItem(value: object): TurnEventItem | null {
 
   const id = typeof value.id === "string" ? value.id : "";
   const summary =
-    typeof value.summary === "string"
-      ? compactEventSummary(value.summary)
-      : "";
+    typeof value.summary === "string" ? compactEventSummary(value.summary) : "";
   const kind =
     value.kind === "progress" ||
     value.kind === "error" ||

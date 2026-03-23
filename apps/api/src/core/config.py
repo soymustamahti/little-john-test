@@ -21,12 +21,16 @@ class DatabaseSettings(BaseSettings):
     port: str = Field(default="5432", description="Database port")
     db: str = Field(default="postgres", description="Database name")
     user: str = Field(default="postgres", description="Database username")
-    password: SecretStr = Field(default=SecretStr("postgres"), description="Database password")
+    password: SecretStr = Field(
+        default=SecretStr("postgres"), description="Database password"
+    )
     database_url: str | None = Field(default=None, alias="DATABASE_URL")
 
     ssl: bool = Field(default=False, description="Use SSL connection")
     pool_size: int = Field(default=5, ge=1, le=20, description="connection pool size")
-    max_overflow: int = Field(default=10, ge=0, le=50, description="Max overflow connections")
+    max_overflow: int = Field(
+        default=10, ge=0, le=50, description="Max overflow connections"
+    )
 
     @staticmethod
     def _normalize_scheme(url: str, target_scheme: str) -> str:
@@ -134,10 +138,6 @@ class DocumentUploadSettings(BaseSettings):
         le=32,
         description="Candidate pool size before hybrid retrieval reranking.",
     )
-    hybrid_reranker_model: str = Field(
-        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
-        description="Cross-encoder model used to rerank merged hybrid retrieval candidates.",
-    )
     pdf_direct_text_min_characters: int = Field(
         default=120,
         ge=1,
@@ -172,6 +172,10 @@ class OpenAIProviderSettings(BaseSettings):
         default="text-embedding-3-small",
         description="Model used for chunk embeddings",
     )
+    reranking_model: str = Field(
+        default="gpt-4o-mini",
+        description="Model used for remote reranking of retrieval candidates",
+    )
     ocr_model: str = Field(
         default="gpt-4o",
         description="Model used for OCR and document transcription",
@@ -202,7 +206,9 @@ class Settings(BaseSettings):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     r2: R2Settings = Field(default_factory=R2Settings)
     documents: DocumentUploadSettings = Field(default_factory=DocumentUploadSettings)
-    openai_provider: OpenAIProviderSettings = Field(default_factory=OpenAIProviderSettings)
+    openai_provider: OpenAIProviderSettings = Field(
+        default_factory=OpenAIProviderSettings
+    )
 
     @property
     def is_production(self) -> bool:
