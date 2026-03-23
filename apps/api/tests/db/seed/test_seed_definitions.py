@@ -32,6 +32,7 @@ def test_extraction_template_seeds_match_expected_starter_templates() -> None:
         "33333333-3333-4333-8333-333333333333",
         "44444444-4444-4444-8444-444444444444",
         "55555555-5555-4555-8555-555555555555",
+        "66666666-6666-4666-8666-666666666666",
     ]
     assert template_names == [
         "Vendor Invoice",
@@ -39,6 +40,7 @@ def test_extraction_template_seeds_match_expected_starter_templates() -> None:
         "Service Contract",
         "Facture Fournisseur",
         "Convention de mandat de maîtrise d'ouvrage",
+        "Excel Data Extraction",
     ]
 
 
@@ -71,4 +73,5 @@ def test_extraction_template_seed_filtering_skips_existing_ids_and_names() -> No
     assert missing_names == [
         "Purchase Order",
         "Convention de mandat de maîtrise d'ouvrage",
+        "Excel Data Extraction",
     ]
