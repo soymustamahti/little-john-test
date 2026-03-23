@@ -24,7 +24,10 @@ export function proxy(request: NextRequest): NextResponse {
   }
 
   const accessUrl = new URL("/access", request.url);
-  accessUrl.searchParams.set("next", normalizeAccessRedirect(`${pathname}${search}`));
+  accessUrl.searchParams.set(
+    "next",
+    normalizeAccessRedirect(`${pathname}${search}`),
+  );
   return NextResponse.redirect(accessUrl);
 }
 
