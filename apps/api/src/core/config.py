@@ -1,3 +1,4 @@
+import re
 from functools import lru_cache
 from typing import Literal
 
@@ -21,13 +22,20 @@ class DatabaseSettings(BaseSettings):
     db: str = Field(default="postgres", description="Database name")
     user: str = Field(default="postgres", description="Database username")
     password: SecretStr = Field(default=SecretStr("postgres"), description="Database password")
+    database_url: str | None = Field(default=None, alias="DATABASE_URL")
 
     ssl: bool = Field(default=False, description="Use SSL connection")
     pool_size: int = Field(default=5, ge=1, le=20, description="connection pool size")
     max_overflow: int = Field(default=10, ge=0, le=50, description="Max overflow connections")
 
+    @staticmethod
+    def _normalize_scheme(url: str, target_scheme: str) -> str:
+        return re.sub(r"^postgres(?:ql)?(\+\w+)?://", f"{target_scheme}://", url)
+
     @property
     def url(self) -> str:
+        if self.database_url:
+            return self._normalize_scheme(self.database_url, "postgresql+psycopg")
         ssl_param = "?sslmode=require" if self.ssl else ""
         return (
             f"postgresql+psycopg://{self.user}:{self.password.get_secret_value()}"
@@ -36,6 +44,8 @@ class DatabaseSettings(BaseSettings):
 
     @property
     def async_url(self) -> str:
+        if self.database_url:
+            return self._normalize_scheme(self.database_url, "postgresql+asyncpg")
         ssl_param = "?sslmode=require" if self.ssl else ""
         return (
             f"postgresql+asyncpg://{self.user}:{self.password.get_secret_value()}"

@@ -27,6 +27,18 @@ pnpm typecheck
 pnpm seed:reference
 ```
 
+## Docker
+
+Build the API image from the repo root so the Docker build context matches deployment platforms
+that build from the repository root:
+
+```bash
+docker build -f apps/api/Dockerfile -t little-john-api .
+```
+
+For managed PostgreSQL, prefer `DATABASE_URL`. The backend still supports individual
+`POSTGRES_*` variables for local compose usage.
+
 ## Files
 
 - `aegra.json`: graph registration for Aegra

@@ -21,12 +21,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first (cached layer)
-COPY pyproject.toml ./
-COPY uv.loc[k] ./
+COPY apps/api/pyproject.toml ./pyproject.toml
+COPY apps/api/uv.lock ./uv.lock
 RUN uv sync --no-dev --no-install-project --compile-bytecode
 
 # Copy source and install project
-COPY src/ ./src/
+COPY apps/api/src/ ./src/
 RUN uv sync --no-dev --compile-bytecode
 
 # -----------------------------
@@ -41,7 +41,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/.venv /app/.venv
-COPY aegra.json .
+COPY --from=builder /app/src /app/src
+COPY apps/api/aegra.json ./aegra.json
 
 ENV PATH="/app/.venv/bin:$PATH"
 
