@@ -3,7 +3,6 @@
 import mammoth from "mammoth";
 import { FileSpreadsheet, FileText, LoaderCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 import * as XLSX from "xlsx";
 
 import { getDocumentContent } from "@/lib/api/documents";
@@ -12,10 +11,24 @@ import { cn } from "@/lib/utils";
 import { useLocale } from "@/providers/locale-provider";
 import type { Document } from "@/types/documents";
 
-GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.mjs",
-  import.meta.url,
-).toString();
+type PdfJsModule = typeof import("pdfjs-dist");
+
+let pdfJsModulePromise: Promise<PdfJsModule> | null = null;
+
+async function loadPdfJs(): Promise<PdfJsModule> {
+  if (!pdfJsModulePromise) {
+    pdfJsModulePromise = import("pdfjs-dist").then((module) => {
+      module.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.mjs",
+        import.meta.url,
+      ).toString();
+
+      return module;
+    });
+  }
+
+  return pdfJsModulePromise;
+}
 
 interface SpreadsheetSheetPreview {
   name: string;
@@ -334,6 +347,11 @@ async function buildPdfPreviewPages(
   content: ArrayBuffer,
   variant: "inline" | "modal",
 ): Promise<PdfPreviewPage[]> {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const { getDocument } = await loadPdfJs();
   const loadingTask = getDocument({ data: content });
   const pdf = await loadingTask.promise;
   const scale = variant === "modal" ? 1.45 : 1.15;
