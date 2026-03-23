@@ -201,6 +201,7 @@ export function DocumentExtractionReview({
               return (
                 <div
                   key={field.key}
+                  data-tour={`extraction-field-${field.key}`}
                   className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4"
                 >
                   <div className="space-y-3">
@@ -236,6 +237,7 @@ export function DocumentExtractionReview({
                     ) : (
                       <Input
                         id={`${field.key}-value`}
+                        data-tour={`extraction-input-${field.key}`}
                         type={field.value_type === "number" ? "number" : "text"}
                         step={field.value_type === "number" ? "any" : undefined}
                         value={renderScalarValue(field.value)}
@@ -362,6 +364,7 @@ export function DocumentExtractionReview({
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
+          data-tour="processing-review-save"
           onClick={() => onSave(draft)}
           disabled={isSaving}
         >

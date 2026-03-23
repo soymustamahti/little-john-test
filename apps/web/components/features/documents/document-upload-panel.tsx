@@ -68,7 +68,7 @@ export function DocumentUploadPanel({
   const { messages, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="documents-upload">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -98,6 +98,7 @@ export function DocumentUploadPanel({
               type="button"
               onClick={onUpload}
               disabled={!selectedFiles.length || isUploading}
+              data-tour="documents-upload-action"
             >
               <CloudUpload className="h-4 w-4" />
               {isUploading
@@ -114,6 +115,7 @@ export function DocumentUploadPanel({
         <label
           htmlFor="documents-upload-input"
           className="block cursor-pointer rounded-[28px] border border-dashed border-[color:var(--color-line-strong)] bg-[linear-gradient(135deg,rgba(229,237,255,0.6),rgba(255,255,255,0.92))] p-6 transition hover:border-[color:var(--color-accent)] hover:bg-[linear-gradient(135deg,rgba(229,237,255,0.8),rgba(255,255,255,0.98))]"
+          data-tour="documents-dropzone"
         >
           <input
             id="documents-upload-input"

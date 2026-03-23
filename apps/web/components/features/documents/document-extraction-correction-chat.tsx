@@ -461,7 +461,10 @@ export function DocumentExtractionCorrectionChat({
   }
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-[color:var(--color-line)] bg-[radial-gradient(circle_at_top_left,rgba(207,226,255,0.42),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,245,239,0.94))] shadow-[0_24px_60px_rgba(20,27,45,0.08)]">
+    <section
+      className="overflow-hidden rounded-[28px] border border-[color:var(--color-line)] bg-[radial-gradient(circle_at_top_left,rgba(207,226,255,0.42),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,245,239,0.94))] shadow-[0_24px_60px_rgba(20,27,45,0.08)]"
+      data-tour="correction-chat"
+    >
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[color:var(--color-line)] px-5 py-5">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-sm font-semibold text-[color:var(--color-ink)]">
@@ -503,6 +506,7 @@ export function DocumentExtractionCorrectionChat({
 
           <div
             ref={conversationViewportRef}
+            data-tour="correction-chat-conversation"
             className="flex-1 space-y-5 overflow-y-auto px-5 py-5"
           >
             {chatMessages.length ? (
@@ -549,6 +553,7 @@ export function DocumentExtractionCorrectionChat({
               </Label>
               <Textarea
                 id="extraction-correction-input"
+                data-tour="correction-chat-input"
                 className="min-h-32 rounded-[24px] border-[color:var(--color-line)] bg-white/95 px-4 py-3 text-sm leading-6 text-[color:var(--color-ink)] shadow-none"
                 placeholder={messages.documentProcessing.extraction.correction.inputPlaceholder}
                 value={chatInput}
@@ -564,6 +569,7 @@ export function DocumentExtractionCorrectionChat({
               </div>
               <Button
                 type="button"
+                data-tour="correction-chat-send"
                 className="min-w-44"
                 onClick={() => void handleSend()}
                 disabled={!chatInput.trim() || isBusy}

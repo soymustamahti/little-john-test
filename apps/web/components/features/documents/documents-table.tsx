@@ -46,7 +46,7 @@ export function DocumentsTable({
   const { locale, messages, formatDate, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="documents-table">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

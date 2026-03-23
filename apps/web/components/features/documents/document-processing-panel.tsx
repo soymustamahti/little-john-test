@@ -519,7 +519,10 @@ export function DocumentProcessingPanel({
   }
 
   return (
-    <Card className="border-[color:var(--color-line-strong)]">
+    <Card
+      className="border-[color:var(--color-line-strong)]"
+      data-tour="processing-panel"
+    >
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -549,6 +552,7 @@ export function DocumentProcessingPanel({
           </Label>
           <select
             id="document-processing-template"
+            data-tour="processing-template-select"
             className="flex h-11 w-full rounded-2xl border border-[color:var(--color-line)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none focus:border-[color:var(--color-accent)]"
             value={selectedTemplateId}
             onChange={(event) => setSelectedTemplateId(event.target.value)}
@@ -574,6 +578,7 @@ export function DocumentProcessingPanel({
           <div className="grid gap-4 lg:grid-cols-2">
             <button
               type="button"
+              data-tour="processing-manual-option"
               className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-[color:var(--color-accent)] hover:shadow-[0_16px_36px_rgba(29,91,219,0.12)]"
               onClick={() => setSelectedMode("manual")}
             >
@@ -590,6 +595,7 @@ export function DocumentProcessingPanel({
 
             <button
               type="button"
+              data-tour="processing-ai-option"
               className="rounded-2xl border border-[color:var(--color-line)] bg-white p-5 text-left transition duration-200 hover:-translate-y-1 hover:border-[color:var(--color-accent)] hover:shadow-[0_16px_36px_rgba(29,91,219,0.12)]"
               onClick={handleAiStart}
               disabled={aiSessionMutation.isPending}
@@ -681,7 +687,10 @@ export function DocumentProcessingPanel({
               ) : null}
             </div>
 
-            <div className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+            <div
+              className="rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4"
+              data-tour="processing-live-progress"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-[color:var(--color-ink)]">
@@ -735,7 +744,10 @@ export function DocumentProcessingPanel({
             {document.classification.status === "pending_review" &&
             pendingSuggestion &&
             !suggestionResolved ? (
-              <div className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4">
+              <div
+                className="space-y-4 rounded-2xl border border-[color:var(--color-line)] bg-[color:var(--color-background)]/70 p-4"
+                data-tour="processing-category-suggestion"
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="warm">
                     {messages.documentProcessing.ai.reviewBadge}
@@ -819,6 +831,7 @@ export function DocumentProcessingPanel({
 
                 <div className="flex flex-wrap gap-2">
                   <Button
+                    data-tour="processing-category-suggestion-accept"
                     onClick={() => handleSuggestedCategoryResponse("accept")}
                     disabled={isStreaming}
                   >

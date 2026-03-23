@@ -43,7 +43,7 @@ export function DocumentCategoriesTable({
   const { messages, formatDate, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="categories-table">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -62,7 +62,7 @@ export function DocumentCategoriesTable({
               {messages.documentCategoriesTable.description}
             </CardDescription>
           </div>
-          <Button variant="secondary" onClick={onCreate}>
+          <Button data-tour="categories-create" variant="secondary" onClick={onCreate}>
             {messages.documentCategoriesTable.createAction}
           </Button>
         </div>

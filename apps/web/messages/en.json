@@ -44,6 +44,124 @@
     "starterSetupTitle": "Starter setup",
     "starterSetupDescription": "Seeded extraction templates and document categories are loaded automatically after the API starts."
   },
+  "joyride": {
+    "replayAction": "Replay tour",
+    "actions": {
+      "back": "Back",
+      "close": "Close",
+      "finish": "Finish tour",
+      "next": "Next",
+      "nextWithProgress": "Next ({current} of {total})",
+      "open": "Open dialog",
+      "skip": "Skip tour"
+    },
+    "steps": {
+      "workspace": {
+        "title": "Welcome to the workspace",
+        "content": "Little John is organized around a simple setup flow: define extraction templates, map document categories, then upload source files."
+      },
+      "templatesNav": {
+        "title": "Start with extraction templates",
+        "content": "This area is where you define the typed schema the backend should extract from each classified document."
+      },
+      "templatesTable": {
+        "title": "Review or create schemas",
+        "content": "Use the seeded templates as a starting point, open a schema to inspect it, or create a new extraction template for a new document shape."
+      },
+      "categoriesNav": {
+        "title": "Map your routing labels",
+        "content": "Document categories connect classifier output labels to the correct extraction template."
+      },
+      "categoriesTable": {
+        "title": "Manage document categories",
+        "content": "Review the current routing targets here, then open a category to refine it or create a new category when your classifier needs a new destination."
+      },
+      "documentsNav": {
+        "title": "Upload source files",
+        "content": "Once setup is ready, switch to Documents to ingest PDFs, images, Word files, and spreadsheet exports."
+      },
+      "documentsUpload": {
+        "title": "This is the intake panel",
+        "content": "For this walkthrough, the tour preloads the sample PDF “convention mandat MSH.pdf” so you can see the real document-processing flow from intake to review."
+      },
+      "documentsUploadAction": {
+        "title": "Upload the sample document",
+        "content": "When you continue, the tour clicks this button and uploads the sample file to the API. Once the upload succeeds, the app opens the document detail page automatically."
+      },
+      "processDocument": {
+        "title": "Open the processing flow",
+        "content": "This button launches the document workflow. It is where operators choose the extraction template, decide between manual or AI classification, and review the extraction draft before confirmation."
+      },
+      "templateSelection": {
+        "title": "Pick the extraction template",
+        "content": "For this sample, we use “Convention de mandat de maîtrise d'ouvrage”. The selected template defines the fields the extraction agent must retrieve and review."
+      },
+      "aiClassification": {
+        "title": "Manual or AI classification",
+        "content": "Operators can classify the document manually or use AI. In this visit we use AI. If the classifier cannot match the document to an existing category, it pauses here and asks for confirmation. For this sample, the category is already known, so the workflow continues automatically."
+      },
+    "liveProcessing": {
+      "title": "Follow the run live",
+      "content": "This timeline streams the agent progress in real time. You can watch classification first, then the extraction phase, and inspect the event trail while the workflow is running."
+    },
+    "categorySuggestion": {
+      "title": "Accept a suggested category when needed",
+      "content": "If AI cannot match the document to an existing category, it pauses here and proposes a new one. In that case, the tour now explains this branch and automatically accepts the suggestion so extraction can continue. If no suggestion appears, the tour skips this step and goes straight to the extraction draft."
+    },
+    "extractionWait": {
+      "title": "Extraction is running, wait for completion",
+      "content": "After classification, the agent starts the structured extraction run. During this phase the tour stays locked on this progress panel, does not allow manual advance, and moves on automatically as soon as the run is marked complete and the extraction draft is ready."
+    },
+    "initialExtraction": {
+      "title": "Review the first extraction draft",
+      "content": "The first draft is ready here. In this example, the SIRET ends with 17 and the maître d’ouvrage address still needs correction, so we are going to fix both through the chat."
+    },
+    "initialAddress": {
+      "title": "Review the extracted address",
+      "content": "This step also highlights the “Adresse du mandataire” field. That is the value that needs to be replaced with 11 Rue Jaufre Rudel 34080 Montpellier before the extraction is confirmed."
+    },
+      "correctionPrompt": {
+        "title": "Send a targeted correction",
+        "content": "The correction chat lets you request very precise changes. For this tour, the prompt is filled with the exact instruction: “The address is 11 Rue Jaufre Rudel 34080 Montpellier and the siret number ends with a 3”."
+      },
+      "sendCorrection": {
+        "title": "Ask the agent to update the draft",
+        "content": "When you continue, the tour sends that message. The agent then searches the document again, records its activity, and updates only the affected fields."
+      },
+      "correctionActivity": {
+        "title": "Watch the correction activity",
+        "content": "Each correction request keeps its own live activity trace here. While the agent is working, the tour stays locked on this area and prevents manual interaction, then continues automatically once the correction is complete."
+      },
+      "correctedValues": {
+        "title": "The corrected values are back",
+        "content": "The draft has now been updated. The SIRET ends with 3 and the maître d’ouvrage address is set to 11 Rue Jaufre Rudel 34080 Montpellier."
+      },
+      "correctedAddress": {
+        "title": "The corrected address is now applied",
+        "content": "The “Adresse du mandataire” field now shows 11 Rue Jaufre Rudel 34080 Montpellier. The tour therefore shows the corrected SIRET and the corrected address separately before the final confirmation."
+      },
+      "confirmReview": {
+        "title": "Confirm the reviewed extraction",
+        "content": "Once the draft looks correct, validate it here. Confirmation closes the review workspace and promotes the reviewed extraction to the main document page."
+      },
+      "finalOverview": {
+        "title": "Confirmed result on the document page",
+        "content": "The document detail page now shows the confirmed extraction and keeps the correction chat available for later follow-up if an operator wants to request more changes."
+      },
+      "documentsTable": {
+        "title": "Track everything you ingest",
+        "content": "Uploaded files appear in this registry so you can preview them, inspect their metadata, and open the full document detail view."
+      },
+      "language": {
+        "title": "Switch the interface language",
+        "content": "The workspace can be used in English or French, and the UI updates immediately when you switch."
+      },
+      "replay": {
+        "title": "Need the walkthrough again?",
+        "content": "Use this button anytime to replay the onboarding tour for yourself or for another operator."
+      }
+    }
+  },
   "stats": {
     "extractionTemplates": "Extraction templates",
     "documentCategories": "Document categories",

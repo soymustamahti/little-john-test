@@ -34,7 +34,7 @@ export function TemplatesTable({
   const { messages, formatDate, formatText } = useLocale();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-tour="templates-table">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -53,7 +53,9 @@ export function TemplatesTable({
               {messages.templatesTable.description}
             </CardDescription>
           </div>
-          <Button onClick={onCreate}>{messages.templatesTable.createAction}</Button>
+          <Button data-tour="templates-create" onClick={onCreate}>
+            {messages.templatesTable.createAction}
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">

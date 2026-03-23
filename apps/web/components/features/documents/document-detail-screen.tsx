@@ -225,6 +225,7 @@ export function DocumentDetailScreen({
               ) : null}
               <Button
                 type="button"
+                data-tour="document-process-action"
                 onClick={() => setIsProcessingPanelOpen(true)}
                 disabled={processActionDisabled}
               >
@@ -380,7 +381,10 @@ export function DocumentDetailScreen({
             </div>
           </div>
 
-          <section className="space-y-4 rounded-[28px] border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-5">
+          <section
+            className="space-y-4 rounded-[28px] border border-[color:var(--color-line)] bg-[color:var(--color-background)]/65 p-5"
+            data-tour="document-inline-extraction"
+          >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="space-y-1">
                 <div className="text-sm font-semibold text-[color:var(--color-ink)]">
