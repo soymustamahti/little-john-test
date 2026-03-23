@@ -88,6 +88,10 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Reworked the API reranking path so deployment builds no longer pull a local
+  `sentence-transformers` and `torch` stack: hybrid retrieval reranking now uses a remote OpenAI
+  Responses API call with structured output, controlled by `OPENAI_RERANKING_MODEL`, and falls
+  back to fused keyword-plus-embedding ranking when OpenAI credentials are absent
 - Reworked the document detail page into the post-processing home for a document: it now shows an
   inline source preview, a compact extraction overview, and the correction chat directly on the
   detail screen, while the confirm-review action closes the processing panel and returns the

@@ -134,10 +134,6 @@ class DocumentUploadSettings(BaseSettings):
         le=32,
         description="Candidate pool size before hybrid retrieval reranking.",
     )
-    hybrid_reranker_model: str = Field(
-        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
-        description="Cross-encoder model used to rerank merged hybrid retrieval candidates.",
-    )
     pdf_direct_text_min_characters: int = Field(
         default=120,
         ge=1,
@@ -171,6 +167,10 @@ class OpenAIProviderSettings(BaseSettings):
     embedding_model: str = Field(
         default="text-embedding-3-small",
         description="Model used for chunk embeddings",
+    )
+    reranking_model: str = Field(
+        default="gpt-4o-mini",
+        description="Model used for remote reranking of retrieval candidates",
     )
     ocr_model: str = Field(
         default="gpt-4o",
