@@ -1,0 +1,540 @@
+{
+  "metadata": {
+    "title": "Espace Little John",
+    "description": "Espace de configuration documentaire pour la classification et l'extraction."
+  },
+  "common": {
+    "apiError": "Une erreur s'est produite lors de la communication avec l'API.",
+    "language": {
+      "label": "Langue",
+      "english": "Anglais",
+      "french": "Français"
+    },
+    "actions": {
+      "create": "Créer",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "delete": "Supprimer",
+      "deleting": "Suppression...",
+      "preview": "Aperçu",
+      "reset": "Réinitialiser",
+      "view": "Voir",
+      "backToList": "Retour à la liste"
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "pageStatus": "Page {page} sur {total}",
+      "resultsSummary": "Affichage de {start} à {end} sur {total}"
+    },
+    "labels": {
+      "workspace": "Espace",
+      "new": "Nouveau",
+      "edit": "Modifier"
+    }
+  },
+  "shell": {
+    "title": "Little John",
+    "workspaceLabel": "Espace",
+    "description": "Espace opérateur pour la configuration de l'extraction et du routage de classification.",
+    "documentSetup": "Configuration documentaire",
+    "extractionTemplates": "Modèles d'extraction",
+    "documentCategories": "Catégories documentaires",
+    "documents": "Documents",
+    "starterSetupTitle": "Configuration de départ",
+    "starterSetupDescription": "Les modèles d'extraction et les catégories documentaires préchargés sont chargés automatiquement après le démarrage de l'API."
+  },
+  "stats": {
+    "extractionTemplates": "Modèles d'extraction",
+    "documentCategories": "Catégories documentaires",
+    "documents": "Documents",
+    "modules": "Modules",
+    "fields": "Champs"
+  },
+  "documentsShared": {
+    "fileKinds": {
+      "pdf": "PDF",
+      "image": "Image",
+      "spreadsheet": "Tableur",
+      "docx": "Document Word"
+    }
+  },
+  "templateShared": {
+    "localeNames": {
+      "en": "Anglais",
+      "fr": "Français"
+    },
+    "valueTypes": {
+      "string": "Texte",
+      "number": "Nombre",
+      "date": "Date",
+      "boolean": "Booléen"
+    },
+    "fieldKinds": {
+      "scalar": "Scalaire",
+      "table": "Tableau"
+    },
+    "defaults": {
+      "module": "Module",
+      "field": "Champ",
+      "table": "Tableau",
+      "column": "Colonne"
+    },
+    "validation": {
+      "nameRequired": "Le nom du modèle d'extraction est obligatoire.",
+      "moduleKeyLabelRequired": "Chaque module doit avoir une clé et un libellé.",
+      "fieldKeyLabelRequired": "Chaque champ doit avoir une clé et un libellé.",
+      "columnKeyLabelRequired": "Chaque colonne de tableau doit avoir une clé et un libellé."
+    }
+  },
+  "templatesDashboard": {
+    "badges": {
+      "layer": "Couche d'extraction",
+      "activeTemplates": "{count} modèles actifs"
+    },
+    "title": "Modèles d'extraction",
+    "description": "Gardez le catalogue visible sous forme de tableau, puis ouvrez un modèle à la fois pour revoir les champs, mettre à jour les modules ou supprimer le schéma."
+  },
+  "templatesTable": {
+    "badges": {
+      "layer": "Couche d'extraction",
+      "schemas": "{count} schémas"
+    },
+    "title": "Modèles d'extraction",
+    "description": "Gérez les schémas qui définissent les champs à capturer une fois le document classé.",
+    "createAction": "Créer un modèle d'extraction",
+    "loading": "Chargement des modèles...",
+    "empty": "Aucun modèle d'extraction pour l'instant. Commencez avec les exemples préchargés ou créez-en un depuis zéro.",
+    "noDescription": "Aucune description",
+    "headers": {
+      "name": "Nom",
+      "locale": "Langue",
+      "modules": "Modules",
+      "fields": "Champs",
+      "updated": "Mis à jour",
+      "open": "Ouvrir"
+    }
+  },
+  "templateEditorScreen": {
+    "loading": "Chargement du modèle d'extraction...",
+    "errorTitle": "Impossible de charger le modèle d'extraction",
+    "backToTemplates": "Retour aux modèles d'extraction",
+    "badge": "Schéma d'extraction",
+    "breadcrumbSection": "Modèles d'extraction",
+    "breadcrumbCreate": "Nouveau",
+    "breadcrumbEditFallback": "Modifier",
+    "titleCreate": "Nouveau modèle d'extraction",
+    "titleEditFallback": "Modifier le modèle d'extraction",
+    "description": "Ouvrez un modèle d'extraction à la fois, revoyez ses modules et ses champs, puis enregistrez les modifications sans gérer un second panneau à côté du tableau.",
+    "status": {
+      "reset": "Les modifications ont été réinitialisées à la dernière version enregistrée.",
+      "cleared": "Brouillon vidé.",
+      "saved": "\"{name}\" a été enregistré.",
+      "created": "\"{name}\" a été créé."
+    },
+    "confirmDelete": "Supprimer \"{name}\" ?"
+  },
+  "templateDetailPanel": {
+    "badges": {
+      "new": "Nouveau modèle d'extraction",
+      "details": "Détails de l'extraction"
+    },
+    "titleCreate": "Créer un modèle d'extraction",
+    "titleEditFallback": "Modifier le modèle d'extraction",
+    "description": "Définissez les champs structurés à extraire après qu'un document a été classé dans la bonne catégorie.",
+    "fields": {
+      "name": "Nom du modèle d'extraction",
+      "locale": "Langue",
+      "description": "Description"
+    },
+    "modules": {
+      "title": "Modules",
+      "description": "Regroupez les champs par domaine métier comme les informations fournisseur, les détails de paiement ou les lignes d'article.",
+      "add": "Ajouter un module",
+      "empty": "Aucun module pour l'instant. Ajoutez-en un pour commencer à définir les champs."
+    },
+    "module": {
+      "title": "Module",
+      "fieldCount": "{count} champs",
+      "remove": "Supprimer le module",
+      "key": "Clé du module",
+      "label": "Libellé du module",
+      "fields": "Champs",
+      "addScalar": "Ajouter un scalaire",
+      "addTable": "Ajouter un tableau",
+      "empty": "Aucun champ dans ce module pour l'instant."
+    },
+    "field": {
+      "table": "Champ tableau",
+      "scalar": "Champ scalaire",
+      "remove": "Supprimer le champ",
+      "key": "Clé",
+      "label": "Libellé",
+      "kind": "Type",
+      "minimumRows": "Nombre minimum de lignes",
+      "valueType": "Type de valeur",
+      "description": "Description",
+      "required": "Champ obligatoire",
+      "columns": "Colonnes",
+      "addColumn": "Ajouter une colonne",
+      "emptyColumns": "Ajoutez au moins une colonne pour ce champ tableau."
+    },
+    "column": {
+      "title": "Colonne",
+      "remove": "Supprimer",
+      "key": "Clé",
+      "label": "Libellé",
+      "type": "Type",
+      "description": "Description",
+      "required": "Colonne obligatoire"
+    }
+  },
+  "documentCategoriesSection": {
+    "badges": {
+      "layer": "Couche de classification",
+      "routingTargets": "{count} cibles de routage"
+    },
+    "title": "Catégories documentaires",
+    "description": "Gérez les libellés de sortie du classifieur dans une seule liste, puis ouvrez chaque catégorie sur sa propre page pour la renommer, enregistrer les modifications ou la supprimer."
+  },
+  "documentsSection": {
+    "badges": {
+      "layer": "Couche d'ingestion",
+      "uploaded": "{count} fichiers téléversés"
+    },
+    "title": "Documents",
+    "description": "Faites entrer les fichiers sources dans l'espace, gardez la liste d'ingestion visible, puis ouvrez un document à la fois lorsque vous devez inspecter ses métadonnées ou le supprimer du stockage."
+  },
+  "documentUploadPanel": {
+    "badges": {
+      "intake": "Entrée sécurisée",
+      "secure": "Validé avant stockage"
+    },
+    "title": "Téléverser des documents",
+    "description": "Le téléverseur accepte les formats actuellement supportés et envoie les fichiers un par un afin qu'un seul onglet navigateur ne sature pas le backend.",
+    "uploadAction": "Téléverser {count} fichier(s)",
+    "uploadingAction": "Téléversement...",
+    "clearAction": "Effacer la sélection",
+    "dropzone": {
+      "title": "Choisissez un ou plusieurs documents",
+      "description": "Les PDF, images documentaires courantes, fichiers Word et exports de tableur sont acceptés."
+    },
+    "selection": {
+      "title": "Fichiers sélectionnés",
+      "empty": "Aucun fichier sélectionné pour l'instant."
+    },
+    "status": {
+      "title": "Résultats du téléversement",
+      "uploaded": "Téléversé avec succès.",
+      "successBadge": "Téléversé",
+      "errorBadge": "Échec"
+    }
+  },
+  "documentPreviewModal": {
+    "badge": "Aperçu du document",
+    "closeAction": "Fermer",
+    "loading": "Préparation de l'aperçu...",
+    "docx": {
+      "title": "Aperçu textuel du document",
+      "empty": "Aucun texte exploitable n'a été extrait de ce document Word."
+    },
+    "spreadsheet": {
+      "title": "Aperçu du tableur",
+      "empty": "Aucune donnée d'aperçu n'est disponible pour ce tableur.",
+      "emptySheet": "Cette feuille est vide.",
+      "truncated": "L'aperçu est volontairement limité aux premières feuilles, lignes et colonnes afin de garder de bonnes performances sur les grands classeurs."
+    }
+  },
+  "documentsTable": {
+    "badges": {
+      "layer": "Originaux stockés",
+      "files": "{count} fichiers"
+    },
+    "title": "Documents téléversés",
+    "description": "Revoyez les fichiers sources stockés avant la classification et l'extraction. Ouvrez une ligne pour inspecter ses métadonnées ou la supprimer.",
+    "loading": "Chargement des documents...",
+    "empty": "Aucun document téléversé pour l'instant. Ajoutez un ou plusieurs fichiers pour commencer à constituer le catalogue d'ingestion.",
+    "headers": {
+      "document": "Document",
+      "kind": "Type",
+      "size": "Taille",
+      "created": "Téléversé",
+      "preview": "Aperçu",
+      "open": "Ouvrir"
+    }
+  },
+  "documentDetailScreen": {
+    "loading": "Chargement du document...",
+    "errorTitle": "Impossible de charger le document",
+    "backToDocuments": "Retour aux documents",
+    "breadcrumbSection": "Documents",
+    "badge": "Original stocké",
+    "description": "Consultez le fichier source, les données extraites et le chat de correction depuis une seule page une fois le document traité.",
+    "cardTitle": "Métadonnées du document",
+    "extractionAvailableBadge": "Extraction disponible",
+    "summaryTitle": "Résumé du téléversement",
+    "summaryDescription": "Cet enregistrement représente le fichier original actuellement stocké dans Cloudflare R2 ainsi que les métadonnées persistées dans PostgreSQL.",
+    "pendingClassification": "Raisonnement de l'IA : {reason}",
+    "openPublicUrl": "Ouvrir l'URL publique",
+    "privateStorageNotice": "Ce document est bien stocké, mais aucune URL publique n'est exposée car le bucket est privé ou `R2_PUBLIC_URL` n'est pas configuré comme domaine public d'assets.",
+    "confirmDelete": "Supprimer \"{name}\" ?",
+    "unclassifiedValue": "Non classé",
+    "previewTitle": "Aperçu du document",
+    "previewDescription": "Gardez le document source visible pendant que vous inspectez les données extraites et discutez des corrections.",
+    "metadataTitle": "Détails du document",
+    "metadataDescription": "Métadonnées principales du fichier source stocké et de l'état actuel de classification.",
+    "extractionTitle": "Informations extraites",
+    "extractionDescription": "Consultez le résultat d'extraction dans un format compact, puis utilisez le chat pour demander des changements ciblés.",
+    "extractionPendingDescription": "Le résultat extrait et le chat de correction apparaîtront ici une fois la revue confirmée.",
+    "extractionLoading": "Chargement des informations extraites...",
+    "extractionEmpty": "Aucune extraction n'a encore été produite pour ce document.",
+    "extractionPendingHint": "Le brouillon d'extraction est prêt mais attend encore votre confirmation. Terminez la revue avant que le résultat final ne soit affiché sur cette page.",
+    "extractionProcessingHint": "L'extraction est toujours en cours. Ouvrez le flux de traitement pour suivre la progression en direct et revoir le brouillon quand il sera prêt.",
+    "extractionFailedHint": "L'extraction a échoué. Ouvrez le flux de traitement pour la relancer ou inspecter l'état du dernier run.",
+    "continueReviewAction": "Reprendre la revue",
+    "viewProcessingAction": "Voir le traitement",
+    "processedAction": "Déjà traité",
+    "processedHint": "Ce document est déjà confirmé. Utilisez le chat de correction ci-dessous si vous souhaitez demander des modifications.",
+    "tableRowsLabel": "{count} lignes extraites",
+    "moreRowsLabel": "+{count} lignes supplémentaires",
+    "fields": {
+      "kind": "Type",
+      "contentType": "Type MIME",
+      "size": "Taille",
+      "created": "Téléversé",
+      "updated": "Mis à jour",
+      "sha": "SHA-256",
+      "classificationStatus": "Statut de classification",
+      "classificationCategory": "Catégorie attribuée"
+    }
+  },
+  "documentProcessing": {
+    "badge": "Flux de traitement",
+    "pendingBadge": "Revue humaine requise",
+    "title": "Traiter le document",
+    "openAction": "Traiter le document",
+    "closeAction": "Fermer",
+    "backAction": "Retour",
+    "missingThread": "Le thread de revue IA est introuvable. Relancez le flux IA.",
+    "templateLabel": "Modèle d'extraction",
+    "templatePlaceholder": "Choisissez un modèle d'extraction",
+    "templateLoading": "Chargement des modèles d'extraction...",
+    "templateDescription": "Le modèle sélectionné définit les champs que l'agent d'extraction doit collecter puis faire réviser.",
+    "templateRequired": "Choisissez un modèle d'extraction avant de lancer le flux.",
+    "statuses": {
+      "unclassified": "Non classé",
+      "processing": "Traitement en cours",
+      "pending_review": "En attente de revue",
+      "classified": "Classé",
+      "failed": "Échec"
+    },
+    "options": {
+      "manualTitle": "Classer manuellement",
+      "manualDescription": "Choisissez vous-même une catégorie existante et enregistrez immédiatement le document.",
+      "aiTitle": "Utiliser la classification IA",
+      "aiDescription": "Échantillonne des chunks déjà stockés, les compare au catalogue de catégories et s'arrête pour revue seulement si une nouvelle catégorie semble nécessaire."
+    },
+    "manual": {
+      "title": "Classification manuelle",
+      "selectLabel": "Catégorie documentaire existante",
+      "placeholder": "Choisissez une catégorie",
+      "saveAction": "Enregistrer la classification manuelle",
+      "savingAction": "Enregistrement..."
+    },
+    "ai": {
+      "title": "Classification IA",
+      "startAction": "Lancer la classification IA",
+      "startingAction": "Démarrage...",
+      "streamingTitle": "Progression de l'agent en direct",
+      "streamingEmpty": "L'agent démarre. Les étapes en direct s'afficheront ici.",
+      "timelineEmpty": "Lancez la classification IA pour voir tout le flux d'événements.",
+      "idleBadge": "Au repos",
+      "liveBadge": "En direct",
+      "completeBadge": "Terminé",
+      "eventCountLabel": "{count} événements",
+      "rawPayloadAction": "Payload brut",
+      "reviewBadge": "Nouvelle catégorie suggérée",
+      "confidenceLabel": "Confiance {value}",
+      "suggestedName": "Nom suggéré",
+      "suggestedLabelKey": "Clé suggérée",
+      "rationaleTitle": "Pourquoi l'agent la suggère",
+      "customizeTitle": "Créer votre propre catégorie à la place",
+      "customName": "Nom de la catégorie",
+      "customLabelKey": "Clé de la catégorie",
+      "acceptAction": "Accepter la suggestion",
+      "createCustomAction": "Créer une catégorie personnalisée",
+      "dismissAction": "Ignorer la suggestion",
+      "eventLabels": {
+        "metadata": "Exécution démarrée",
+        "custom": "Mise à jour de progression",
+        "values": "Instantané d'état",
+        "updates": "Mise à jour d'état",
+        "interrupt": "Revue humaine demandée",
+        "error": "Erreur d'exécution",
+        "end": "Exécution terminée"
+      },
+      "eventDescriptions": {
+        "metadata": "Connexion établie avec l'exécution de classification, en attente des événements.",
+        "custom": "L'agent a émis une mise à jour de progression.",
+        "values": "L'exécution a publié un instantané d'état.",
+        "updates": "L'état a été mis à jour après : {nodes}.",
+        "updatesFallback": "L'exécution a publié une mise à jour d'état.",
+        "interrupt": "L'agent s'est mis en pause et attend une décision humaine sur la catégorie suggérée.",
+        "error": "L'exécution a signalé une erreur.",
+        "end": "Le flux d'exécution est terminé.",
+        "fallback": "Un événement du flux a été reçu."
+      }
+    },
+    "extraction": {
+      "reviewTitle": "Revue de l'extraction",
+      "startAction": "Lancer l'extraction",
+      "startingAction": "Démarrage de l'extraction...",
+      "streamingTitle": "Progression de l'extraction en direct",
+      "streamingEmpty": "L'agent d'extraction démarre. Les étapes en direct s'afficheront ici.",
+      "timelineEmpty": "Lancez l'extraction pour voir les étapes de recherche et d'extraction.",
+      "statuses": {
+        "not_started": "Non démarrée",
+        "processing": "Traitement en cours",
+        "pending_review": "En attente de revue",
+        "confirmed": "Confirmée",
+        "failed": "Échec"
+      },
+      "overallConfidence": "Confiance globale {value}",
+      "reasoningTitle": "Résumé de l'extraction",
+      "moduleLabel": "Module",
+      "fieldConfidence": "Confiance (%)",
+      "requiredBadge": "Obligatoire",
+      "sourceChunks": "Chunks source : {value}",
+      "noSource": "Aucun chunk source n'a été lié à cette valeur.",
+      "tableEmpty": "Aucune ligne appuyée par des preuves n'a été extraite pour ce tableau.",
+      "rowLabel": "Ligne {value}",
+      "rowConfidence": "Confiance de la ligne {value}",
+      "saveAction": "Confirmer l'extraction revue",
+      "savingAction": "Enregistrement de la revue...",
+      "reviewHint": "Vous pouvez modifier les valeurs extraites avant de confirmer le résultat.",
+      "emptyState": "Aucun brouillon d'extraction n'est encore disponible.",
+      "emptyValue": "Valeur vide",
+      "booleanTrue": "Vrai",
+      "booleanFalse": "Faux",
+      "correction": {
+        "title": "Chat de correction",
+        "description": "Discutez du brouillon avec l'agent, demandez des corrections ciblées ou fournissez une correction directe avant de confirmer l'extraction.",
+        "idleBadge": "Au repos",
+        "liveBadge": "Recherche",
+        "assistantBadge": "Assistant",
+        "userBadge": "Vous",
+        "emptyChat": "Aucun message de correction pour l'instant. Demandez à l'agent de corriger ou de revérifier une valeur.",
+        "conversationTitle": "Conversation",
+        "conversationDescription": "Utilisez le chat pour corriger directement une valeur ou demander à l'agent de chercher plus profondément dans le document.",
+        "activityTitle": "Activité de correction en direct",
+        "currentActivityTitle": "Activité en cours",
+        "activityEmpty": "L'agent de correction affichera ici ses étapes de recherche et de mise à jour.",
+        "eventCountLabel": "{count} événements",
+        "messageCountLabel": "{count} messages",
+        "eventSummaryRunning": "Vérification des preuves source",
+        "eventSummaryCompleted": "{count} étapes de correction exécutées",
+        "eventSummaryUpdated": "{count} champs extraits mis à jour",
+        "eventSummaryNoChange": "Aucune valeur extraite n'a changé",
+        "eventSummaryError": "La correction a échoué",
+        "eventFieldChanged": "{field} mis à jour",
+        "eventTableChanged": "Lignes de {field} mises à jour",
+        "inputLabel": "Que doit corriger l'agent ?",
+        "inputPlaceholder": "Exemple : L'adresse de l'entreprise est incorrecte. Recherche à nouveau et mets-la à jour, ou : La bonne adresse est 12 Rue des Fleurs, Bordeaux.",
+        "hint": "L'agent peut appliquer directement les corrections données dans votre message ou relancer une recherche dans le document avec ses outils.",
+        "shortcutHint": "Appuyez sur Ctrl+Entrée ou Cmd+Entrée pour envoyer.",
+        "suggestionDirectLabel": "Corriger directement",
+        "suggestionDirectPrompt": "La valeur extraite est incorrecte. Je vais fournir la bonne valeur directement. Merci de mettre à jour uniquement ce champ et de conserver le reste du brouillon inchangé.",
+        "suggestionSearchLabel": "Relancer la recherche",
+        "suggestionSearchPrompt": "Cette valeur extraite semble incorrecte. Recherche à nouveau dans le document, compare les preuves et mets à jour uniquement le champ erroné.",
+        "suggestionSpreadsheetLabel": "Revérifier le calcul",
+        "suggestionSpreadsheetPrompt": "Merci de revérifier le calcul ou le résultat issu du tableur. Utilise les outils d'inspection du tableur si nécessaire et mets à jour uniquement les valeurs concernées.",
+        "sendAction": "Envoyer la correction",
+        "sendingAction": "Traitement..."
+      }
+    }
+  },
+  "documentCategoriesTable": {
+    "badges": {
+      "layer": "Couche de classification",
+      "categories": "{count} catégories",
+      "classifierOutput": "Sortie du classifieur"
+    },
+    "title": "Catégories documentaires",
+    "description": "Définissez les types de documents normalisés que votre classifieur peut attribuer avant le routage et l'extraction.",
+    "createAction": "Créer une catégorie",
+    "loading": "Chargement des catégories...",
+    "empty": "Aucune catégorie pour l'instant. Ajoutez quelques types de documents normalisés pour que les téléversements puissent être classés avant l'extraction.",
+    "normalizedRoutingTarget": "Utilisée comme cible de routage normalisée.",
+    "classifierName": "Nom du classifieur : {name}",
+    "headers": {
+      "category": "Catégorie",
+      "role": "Rôle",
+      "updated": "Mis à jour",
+      "open": "Ouvrir"
+    }
+  },
+  "documentCategoryValidation": {
+    "nameRequired": "Le nom de la catégorie est obligatoire.",
+    "labelKeyRequired": "La clé d'étiquette est obligatoire.",
+    "labelKeyPattern": "La clé d'étiquette doit utiliser le format snake_case en minuscules."
+  },
+  "documentCategoryEditorScreen": {
+    "loading": "Chargement de la catégorie documentaire...",
+    "errorTitle": "Impossible de charger la catégorie documentaire",
+    "backToCategories": "Retour aux catégories documentaires",
+    "badge": "Cible de classification",
+    "breadcrumbSection": "Catégories documentaires",
+    "breadcrumbCreate": "Nouvelle",
+    "breadcrumbEditFallback": "Modifier",
+    "titleCreate": "Nouvelle catégorie documentaire",
+    "titleEditFallback": "Modifier la catégorie documentaire",
+    "description": "Revoyez une cible de classification à la fois, puis enregistrez-la ou supprimez-la depuis une vue détaillée dédiée plutôt que de partager l'écran.",
+    "status": {
+      "reset": "Les modifications ont été réinitialisées à la dernière version enregistrée.",
+      "cleared": "Brouillon vidé.",
+      "saved": "\"{name}\" a été enregistré.",
+      "created": "\"{name}\" a été créée."
+    },
+    "confirmDelete": "Supprimer \"{name}\" ?"
+  },
+  "documentCategoryDetailPanel": {
+    "badges": {
+      "new": "Nouvelle catégorie",
+      "details": "Détails de la catégorie",
+      "routingTarget": "Cible de routage"
+    },
+    "titleCreate": "Créer une catégorie documentaire",
+    "titleEditFallback": "Modifier la catégorie documentaire",
+    "description": "Gardez les catégories assez larges pour être réutilisables, mais assez précises pour guider la classification et les décisions de routage. La clé d'étiquette est l'identifiant stable utilisé par l'interface pour la traduction.",
+    "fields": {
+      "name": "Nom du classifieur",
+      "labelKey": "Clé d'étiquette"
+    },
+    "preview": {
+      "title": "Aperçu localisé",
+      "description": "L'interface utilise le libellé traduit associé à cette clé lorsqu'il existe. Le classifieur peut continuer à utiliser le nom anglais.",
+      "translatedLabel": "Libellé traduit",
+      "classifierName": "Nom du classifieur",
+      "labelKey": "Clé d'étiquette",
+      "untitled": "Catégorie sans titre"
+    }
+  },
+  "documentCategoryLabels": {
+    "identity_document": "Pièce d'identité",
+    "proof_of_address": "Justificatif de domicile",
+    "bank_statement": "Relevé bancaire",
+    "payslip": "Bulletin de salaire",
+    "tax_notice": "Avis d'imposition",
+    "employment_contract": "Contrat de travail",
+    "purchase_agreement": "Contrat d'achat",
+    "loan_application": "Demande de prêt",
+    "loan_offer": "Offre de prêt",
+    "insurance_certificate": "Attestation d'assurance",
+    "property_valuation_report": "Rapport d'évaluation immobilière",
+    "company_registration_extract": "Extrait d'immatriculation de l'entreprise",
+    "invoice": "Facture",
+    "receipt": "Reçu",
+    "purchase_order": "Bon de commande",
+    "signed_contract": "Contrat signé"
+  }
+}

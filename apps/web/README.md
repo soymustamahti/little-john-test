@@ -24,13 +24,17 @@ pnpm typecheck
 
 The app uses the App Router and lives under `app/`.
 
-## Template Workspace
+## Workspace
 
-The home page now contains the template CRUD workspace:
+The workspace now contains:
 
 - Axios handles HTTP transport
 - TanStack Query owns list and mutation state
-- the page is split into catalog, editor, and live structure preview panels
+- dedicated routes for extraction templates, document categories, and uploaded documents
+- a document upload flow that sends files to the API through multipart requests and then refreshes
+  the catalog from React Query
+- in-app document previews: PDFs and images render inline, while DOCX and spreadsheet formats are
+  previewed through browser-side adapters in a modal
 
 The frontend expects the API to be available at `http://localhost:2026` by default. Override it
 with:

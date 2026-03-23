@@ -7,8 +7,10 @@
     "dev": "uv run aegra dev",
     "serve": "uv run aegra serve",
     "build": "uv build",
-    "seed:templates": "uv run python -m src.db.seeds.templates",
+    "seed:reference": "uv run python -m src.db.seed.runner",
+    "seed:templates": "pnpm seed:reference",
     "lint": "uv run ruff check .",
+    "test": "uv run pytest",
     "typecheck": "uv run mypy src",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down"

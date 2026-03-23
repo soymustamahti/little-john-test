@@ -1,0 +1,21 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/apps/api/.venv/bin/python",
+  "python.envFile": "${workspaceFolder}/apps/api/.env",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/apps/api"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/apps/api"
+  ],
+  "python.analysis.include": [
+    "${workspaceFolder}/apps/api/src",
+    "${workspaceFolder}/apps/api/tests"
+  ],
+  "python.analysis.exclude": [
+    "${workspaceFolder}/apps/api/.venv",
+    "${workspaceFolder}/apps/web/node_modules",
+    "${workspaceFolder}/apps/web/.next"
+  ],
+  "python.analysis.indexing": true,
+  "python.analysis.diagnosticMode": "workspace"
+}

@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncGenerator
 
+from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -62,8 +63,11 @@ async def get_async_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
         try:
             yield session
-        except Exception as e:
-            logging.error("Session rollback due to exception", error=str(e))
+        except HTTPException:
+            await session.rollback()
+            raise
+        except Exception as exc:
+            logging.exception("Session rollback due to exception: %s", exc)
             await session.rollback()
             raise
 

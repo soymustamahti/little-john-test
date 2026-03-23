@@ -1,0 +1,540 @@
+{
+  "metadata": {
+    "title": "Little John Workspace",
+    "description": "Document setup workspace for classification and extraction configuration."
+  },
+  "common": {
+    "apiError": "Something went wrong while talking to the API.",
+    "language": {
+      "label": "Language",
+      "english": "English",
+      "french": "French"
+    },
+    "actions": {
+      "create": "Create",
+      "save": "Save",
+      "saving": "Saving...",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "preview": "Preview",
+      "reset": "Reset",
+      "view": "View",
+      "backToList": "Back to list"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "pageStatus": "Page {page} of {total}",
+      "resultsSummary": "Showing {start}-{end} of {total}"
+    },
+    "labels": {
+      "workspace": "Workspace",
+      "new": "New",
+      "edit": "Edit"
+    }
+  },
+  "shell": {
+    "title": "Little John",
+    "workspaceLabel": "Workspace",
+    "description": "Operator workspace for extraction setup and classification routing.",
+    "documentSetup": "Document Setup",
+    "extractionTemplates": "Extraction Templates",
+    "documentCategories": "Document Categories",
+    "documents": "Documents",
+    "starterSetupTitle": "Starter setup",
+    "starterSetupDescription": "Seeded extraction templates and document categories are loaded automatically after the API starts."
+  },
+  "stats": {
+    "extractionTemplates": "Extraction templates",
+    "documentCategories": "Document categories",
+    "documents": "Documents",
+    "modules": "Modules",
+    "fields": "Fields"
+  },
+  "documentsShared": {
+    "fileKinds": {
+      "pdf": "PDF",
+      "image": "Image",
+      "spreadsheet": "Spreadsheet",
+      "docx": "Word document"
+    }
+  },
+  "templateShared": {
+    "localeNames": {
+      "en": "English",
+      "fr": "French"
+    },
+    "valueTypes": {
+      "string": "String",
+      "number": "Number",
+      "date": "Date",
+      "boolean": "Boolean"
+    },
+    "fieldKinds": {
+      "scalar": "Scalar",
+      "table": "Table"
+    },
+    "defaults": {
+      "module": "Module",
+      "field": "Field",
+      "table": "Table",
+      "column": "Column"
+    },
+    "validation": {
+      "nameRequired": "Extraction template name is required.",
+      "moduleKeyLabelRequired": "Each module needs both a key and a label.",
+      "fieldKeyLabelRequired": "Each field needs both a key and a label.",
+      "columnKeyLabelRequired": "Each table column needs both a key and a label."
+    }
+  },
+  "templatesDashboard": {
+    "badges": {
+      "layer": "Extraction layer",
+      "activeTemplates": "{count} active templates"
+    },
+    "title": "Extraction templates",
+    "description": "Keep the catalog visible as a table, then open one template at a time to review fields, update modules, or remove the schema."
+  },
+  "templatesTable": {
+    "badges": {
+      "layer": "Extraction layer",
+      "schemas": "{count} schemas"
+    },
+    "title": "Extraction templates",
+    "description": "Manage the schemas that define which fields should be captured once a document has been classified.",
+    "createAction": "Create extraction template",
+    "loading": "Loading templates...",
+    "empty": "No extraction templates yet. Start from the seeded examples or create one from scratch.",
+    "noDescription": "No description",
+    "headers": {
+      "name": "Name",
+      "locale": "Locale",
+      "modules": "Modules",
+      "fields": "Fields",
+      "updated": "Updated",
+      "open": "Open"
+    }
+  },
+  "templateEditorScreen": {
+    "loading": "Loading extraction template...",
+    "errorTitle": "Unable to load extraction template",
+    "backToTemplates": "Back to extraction templates",
+    "badge": "Extraction schema",
+    "breadcrumbSection": "Extraction templates",
+    "breadcrumbCreate": "New",
+    "breadcrumbEditFallback": "Edit",
+    "titleCreate": "New extraction template",
+    "titleEditFallback": "Edit extraction template",
+    "description": "Open one extraction template at a time, review its modules and fields, then save changes without juggling a second panel beside the table.",
+    "status": {
+      "reset": "Changes reset to the last saved version.",
+      "cleared": "Draft cleared.",
+      "saved": "Saved \"{name}\".",
+      "created": "Created \"{name}\"."
+    },
+    "confirmDelete": "Delete \"{name}\"?"
+  },
+  "templateDetailPanel": {
+    "badges": {
+      "new": "New extraction template",
+      "details": "Extraction details"
+    },
+    "titleCreate": "Create extraction template",
+    "titleEditFallback": "Edit extraction template",
+    "description": "Define the structured fields that should be extracted after a document has been classified into the right category.",
+    "fields": {
+      "name": "Extraction template name",
+      "locale": "Locale",
+      "description": "Description"
+    },
+    "modules": {
+      "title": "Modules",
+      "description": "Group fields by business area like vendor info, payment details, or line items.",
+      "add": "Add module",
+      "empty": "No modules yet. Add one to start defining fields."
+    },
+    "module": {
+      "title": "Module",
+      "fieldCount": "{count} fields",
+      "remove": "Remove module",
+      "key": "Module key",
+      "label": "Module label",
+      "fields": "Fields",
+      "addScalar": "Add scalar",
+      "addTable": "Add table",
+      "empty": "No fields in this module yet."
+    },
+    "field": {
+      "table": "Table field",
+      "scalar": "Scalar field",
+      "remove": "Remove field",
+      "key": "Key",
+      "label": "Label",
+      "kind": "Kind",
+      "minimumRows": "Minimum rows",
+      "valueType": "Value type",
+      "description": "Description",
+      "required": "Required field",
+      "columns": "Columns",
+      "addColumn": "Add column",
+      "emptyColumns": "Add at least one column for this table field."
+    },
+    "column": {
+      "title": "Column",
+      "remove": "Remove",
+      "key": "Key",
+      "label": "Label",
+      "type": "Type",
+      "description": "Description",
+      "required": "Required column"
+    }
+  },
+  "documentCategoriesSection": {
+    "badges": {
+      "layer": "Classification layer",
+      "routingTargets": "{count} routing targets"
+    },
+    "title": "Document categories",
+    "description": "Manage the classifier output labels in a single list, then open each category on its own page to rename it, save changes, or delete it."
+  },
+  "documentsSection": {
+    "badges": {
+      "layer": "Ingestion layer",
+      "uploaded": "{count} uploaded files"
+    },
+    "title": "Documents",
+    "description": "Bring original files into the workspace, keep the intake list visible, and open one document at a time when you need to inspect metadata or remove it from storage."
+  },
+  "documentUploadPanel": {
+    "badges": {
+      "intake": "Secure intake",
+      "secure": "Validated before storage"
+    },
+    "title": "Upload documents",
+    "description": "The uploader accepts the current supported intake formats and sends files to the API one by one so a single browser tab does not flood the backend.",
+    "uploadAction": "Upload {count} file(s)",
+    "uploadingAction": "Uploading...",
+    "clearAction": "Clear selection",
+    "dropzone": {
+      "title": "Choose one or more documents",
+      "description": "PDFs, common document images, Word files, and spreadsheet exports are accepted."
+    },
+    "selection": {
+      "title": "Selected files",
+      "empty": "No files selected yet."
+    },
+    "status": {
+      "title": "Upload results",
+      "uploaded": "Uploaded successfully.",
+      "successBadge": "Uploaded",
+      "errorBadge": "Failed"
+    }
+  },
+  "documentPreviewModal": {
+    "badge": "Document preview",
+    "closeAction": "Close",
+    "loading": "Preparing preview...",
+    "docx": {
+      "title": "Document text preview",
+      "empty": "No previewable text was extracted from this Word document."
+    },
+    "spreadsheet": {
+      "title": "Spreadsheet preview",
+      "empty": "No preview data is available for this spreadsheet.",
+      "emptySheet": "This sheet is empty.",
+      "truncated": "The preview is intentionally limited to the first sheets, rows, and columns so large workbooks stay responsive."
+    }
+  },
+  "documentsTable": {
+    "badges": {
+      "layer": "Stored originals",
+      "files": "{count} files"
+    },
+    "title": "Uploaded documents",
+    "description": "Review the stored source files before classification and extraction. Open any row to inspect its metadata or remove it.",
+    "loading": "Loading documents...",
+    "empty": "No uploaded documents yet. Add one or more files to start building the ingestion catalog.",
+    "headers": {
+      "document": "Document",
+      "kind": "Kind",
+      "size": "Size",
+      "created": "Uploaded",
+      "preview": "Preview",
+      "open": "Open"
+    }
+  },
+  "documentDetailScreen": {
+    "loading": "Loading document...",
+    "errorTitle": "Unable to load document",
+    "backToDocuments": "Back to documents",
+    "breadcrumbSection": "Documents",
+    "badge": "Stored original",
+    "description": "Review the original file, its extracted data, and the correction chat from one place once the document has been processed.",
+    "cardTitle": "Document metadata",
+    "extractionAvailableBadge": "Extraction available",
+    "summaryTitle": "Upload summary",
+    "summaryDescription": "This record represents the original file currently stored in Cloudflare R2 plus the metadata persisted in PostgreSQL.",
+    "pendingClassification": "AI rationale: {reason}",
+    "openPublicUrl": "Open public URL",
+    "privateStorageNotice": "This document is stored successfully, but no public URL is exposed because the bucket is private or `R2_PUBLIC_URL` is not configured as a public asset domain.",
+    "confirmDelete": "Delete \"{name}\"?",
+    "unclassifiedValue": "Unclassified",
+    "previewTitle": "Document preview",
+    "previewDescription": "Keep the source document visible while you inspect the extracted data and discuss corrections.",
+    "metadataTitle": "Document details",
+    "metadataDescription": "Core metadata for the stored source file and the current classification state.",
+    "extractionTitle": "Extracted information",
+    "extractionDescription": "Review the current extraction result in a compact format, then use the chat to request targeted changes.",
+    "extractionPendingDescription": "The extracted result and correction chat will appear here after you confirm the review.",
+    "extractionLoading": "Loading extracted information...",
+    "extractionEmpty": "No extraction has been produced for this document yet.",
+    "extractionPendingHint": "The extraction draft is ready but still waiting for your confirmation. Finish the review flow before the final result is displayed on this page.",
+    "extractionProcessingHint": "Extraction is still running. Open the processing flow to follow the live progress and review the draft when it is ready.",
+    "extractionFailedHint": "The extraction run failed. Open the processing flow to retry it or inspect the latest run state.",
+    "continueReviewAction": "Continue review",
+    "viewProcessingAction": "View processing",
+    "processedAction": "Already processed",
+    "processedHint": "This document is already confirmed. Use the correction chat below if you want to request changes.",
+    "tableRowsLabel": "{count} extracted rows",
+    "moreRowsLabel": "+{count} more rows",
+    "fields": {
+      "kind": "Kind",
+      "contentType": "Content type",
+      "size": "Size",
+      "created": "Uploaded",
+      "updated": "Updated",
+      "sha": "SHA-256",
+      "classificationStatus": "Classification status",
+      "classificationCategory": "Assigned category"
+    }
+  },
+  "documentProcessing": {
+    "badge": "Processing flow",
+    "pendingBadge": "Human review needed",
+    "title": "Process document",
+    "openAction": "Process document",
+    "closeAction": "Close",
+    "backAction": "Back",
+    "missingThread": "The AI review thread is missing. Start the AI flow again.",
+    "templateLabel": "Extraction template",
+    "templatePlaceholder": "Choose an extraction template",
+    "templateLoading": "Loading extraction templates...",
+    "templateDescription": "The selected template defines which fields the extraction agent must collect and review.",
+    "templateRequired": "Choose an extraction template before starting the workflow.",
+    "statuses": {
+      "unclassified": "Unclassified",
+      "processing": "Processing",
+      "pending_review": "Pending review",
+      "classified": "Classified",
+      "failed": "Failed"
+    },
+    "options": {
+      "manualTitle": "Classify manually",
+      "manualDescription": "Choose an existing category yourself and save the document immediately.",
+      "aiTitle": "Use AI classification",
+      "aiDescription": "Sample stored chunks, compare them with the category catalog, and pause for review only if a new category is needed."
+    },
+    "manual": {
+      "title": "Manual classification",
+      "selectLabel": "Existing document category",
+      "placeholder": "Choose a category",
+      "saveAction": "Save manual classification",
+      "savingAction": "Saving..."
+    },
+    "ai": {
+      "title": "AI classification",
+      "startAction": "Start AI classification",
+      "startingAction": "Starting...",
+      "streamingTitle": "Live agent progress",
+      "streamingEmpty": "The agent is starting. Live progress updates will appear here.",
+      "timelineEmpty": "Start the AI run to see the full event stream.",
+      "idleBadge": "Idle",
+      "liveBadge": "Live",
+      "completeBadge": "Complete",
+      "eventCountLabel": "{count} events",
+      "rawPayloadAction": "Raw payload",
+      "reviewBadge": "Suggested new category",
+      "confidenceLabel": "Confidence {value}",
+      "suggestedName": "Suggested category name",
+      "suggestedLabelKey": "Suggested label key",
+      "rationaleTitle": "Why the agent suggested it",
+      "customizeTitle": "Create your own category instead",
+      "customName": "Category name",
+      "customLabelKey": "Category label key",
+      "acceptAction": "Accept suggestion",
+      "createCustomAction": "Create custom category",
+      "dismissAction": "Dismiss suggestion",
+      "eventLabels": {
+        "metadata": "Run started",
+        "custom": "Progress update",
+        "values": "State snapshot",
+        "updates": "State update",
+        "interrupt": "Human review requested",
+        "error": "Run error",
+        "end": "Run finished"
+      },
+      "eventDescriptions": {
+        "metadata": "Connected to the classification run and waiting for streamed updates.",
+        "custom": "The agent emitted a progress update.",
+        "values": "The run published a state snapshot.",
+        "updates": "State updated after: {nodes}.",
+        "updatesFallback": "The run published a state update.",
+        "interrupt": "The agent paused and is waiting for a human decision on the suggested category.",
+        "error": "The run reported an error.",
+        "end": "The streamed run finished.",
+        "fallback": "A stream event was received."
+      }
+    },
+    "extraction": {
+      "reviewTitle": "Extraction review",
+      "startAction": "Start extraction",
+      "startingAction": "Starting extraction...",
+      "streamingTitle": "Live extraction progress",
+      "streamingEmpty": "The extraction agent is starting. Live progress updates will appear here.",
+      "timelineEmpty": "Start extraction to see the retrieval and extraction steps.",
+      "statuses": {
+        "not_started": "Not started",
+        "processing": "Processing",
+        "pending_review": "Pending review",
+        "confirmed": "Confirmed",
+        "failed": "Failed"
+      },
+      "overallConfidence": "Overall confidence {value}",
+      "reasoningTitle": "Extraction summary",
+      "moduleLabel": "Module",
+      "fieldConfidence": "Confidence (%)",
+      "requiredBadge": "Required",
+      "sourceChunks": "Source chunks: {value}",
+      "noSource": "No source chunks were linked to this value.",
+      "tableEmpty": "No evidence-backed rows were extracted for this table.",
+      "rowLabel": "Row {value}",
+      "rowConfidence": "Row confidence {value}",
+      "saveAction": "Confirm reviewed extraction",
+      "savingAction": "Saving review...",
+      "reviewHint": "You can edit extracted values before confirming the result.",
+      "emptyState": "No extraction draft is available yet.",
+      "emptyValue": "Empty value",
+      "booleanTrue": "True",
+      "booleanFalse": "False",
+      "correction": {
+        "title": "Correction chat",
+        "description": "Discuss the draft with the agent, ask for targeted fixes, or send a direct correction before you confirm the extraction.",
+        "idleBadge": "Idle",
+        "liveBadge": "Searching",
+        "assistantBadge": "Assistant",
+        "userBadge": "You",
+        "emptyChat": "No correction messages yet. Ask the agent to fix or re-check a value.",
+        "conversationTitle": "Conversation",
+        "conversationDescription": "Use the chat to correct values directly or ask the agent to search deeper in the document.",
+        "activityTitle": "Live correction activity",
+        "currentActivityTitle": "Current activity",
+        "activityEmpty": "The correction agent will show its search and update steps here.",
+        "eventCountLabel": "{count} events",
+        "messageCountLabel": "{count} messages",
+        "eventSummaryRunning": "Checking source evidence",
+        "eventSummaryCompleted": "Ran {count} correction steps",
+        "eventSummaryUpdated": "Updated {count} extracted fields",
+        "eventSummaryNoChange": "No extracted values changed",
+        "eventSummaryError": "Correction failed",
+        "eventFieldChanged": "Updated {field}",
+        "eventTableChanged": "Updated {field} rows",
+        "inputLabel": "What should the agent fix?",
+        "inputPlaceholder": "Example: The enterprise address is incorrect. Search again and update it, or: The correct address is 12 Rue des Fleurs, Bordeaux.",
+        "hint": "The agent can apply direct corrections from your message or search the document again with its retrieval tools.",
+        "shortcutHint": "Press Ctrl+Enter or Cmd+Enter to send.",
+        "suggestionDirectLabel": "Correct directly",
+        "suggestionDirectPrompt": "The extracted value is incorrect. I will provide the corrected value directly. Please update only that field and keep the rest of the draft unchanged.",
+        "suggestionSearchLabel": "Search again",
+        "suggestionSearchPrompt": "This extracted value looks wrong. Search the document again, compare the evidence, and update only the incorrect field.",
+        "suggestionSpreadsheetLabel": "Re-check calculations",
+        "suggestionSpreadsheetPrompt": "Please re-check the calculation or spreadsheet-derived result. Use the spreadsheet inspection tools if needed and update only the affected values.",
+        "sendAction": "Send correction",
+        "sendingAction": "Working..."
+      }
+    }
+  },
+  "documentCategoriesTable": {
+    "badges": {
+      "layer": "Classification layer",
+      "categories": "{count} categories",
+      "classifierOutput": "Classifier output"
+    },
+    "title": "Document categories",
+    "description": "Define the normalized document types your classifier can assign before routing and extraction.",
+    "createAction": "Create category",
+    "loading": "Loading categories...",
+    "empty": "No categories yet. Add a few normalized document types so uploads can be classified before extraction.",
+    "normalizedRoutingTarget": "Used as a normalized routing target.",
+    "classifierName": "Classifier name: {name}",
+    "headers": {
+      "category": "Category",
+      "role": "Role",
+      "updated": "Updated",
+      "open": "Open"
+    }
+  },
+  "documentCategoryValidation": {
+    "nameRequired": "Category name is required.",
+    "labelKeyRequired": "Label key is required.",
+    "labelKeyPattern": "Label key must use lowercase snake_case."
+  },
+  "documentCategoryEditorScreen": {
+    "loading": "Loading document category...",
+    "errorTitle": "Unable to load document category",
+    "backToCategories": "Back to document categories",
+    "badge": "Classification target",
+    "breadcrumbSection": "Document categories",
+    "breadcrumbCreate": "New",
+    "breadcrumbEditFallback": "Edit",
+    "titleCreate": "New document category",
+    "titleEditFallback": "Edit document category",
+    "description": "Review one classification target at a time, then save or delete it from a dedicated detail view instead of splitting the screen.",
+    "status": {
+      "reset": "Changes reset to the last saved version.",
+      "cleared": "Draft cleared.",
+      "saved": "Saved \"{name}\".",
+      "created": "Created \"{name}\"."
+    },
+    "confirmDelete": "Delete \"{name}\"?"
+  },
+  "documentCategoryDetailPanel": {
+    "badges": {
+      "new": "New category",
+      "details": "Category details",
+      "routingTarget": "Routing target"
+    },
+    "titleCreate": "Create document category",
+    "titleEditFallback": "Edit document category",
+    "description": "Keep categories broad enough to be reusable, but specific enough to drive classification and routing decisions. The label key is the stable frontend translation handle.",
+    "fields": {
+      "name": "Classifier name",
+      "labelKey": "Label key"
+    },
+    "preview": {
+      "title": "Localized preview",
+      "description": "The frontend uses the translated label for this key when one exists. The classifier can still use the English name.",
+      "translatedLabel": "Translated label",
+      "classifierName": "Classifier name",
+      "labelKey": "Label key",
+      "untitled": "Untitled category"
+    }
+  },
+  "documentCategoryLabels": {
+    "identity_document": "Identity Document",
+    "proof_of_address": "Proof of Address",
+    "bank_statement": "Bank Statement",
+    "payslip": "Payslip",
+    "tax_notice": "Tax Notice",
+    "employment_contract": "Employment Contract",
+    "purchase_agreement": "Purchase Agreement",
+    "loan_application": "Loan Application",
+    "loan_offer": "Loan Offer",
+    "insurance_certificate": "Insurance Certificate",
+    "property_valuation_report": "Property Valuation Report",
+    "company_registration_extract": "Company Registration Extract",
+    "invoice": "Invoice",
+    "receipt": "Receipt",
+    "purchase_order": "Purchase Order",
+    "signed_contract": "Signed Contract"
+  }
+}
