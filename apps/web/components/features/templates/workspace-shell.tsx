@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FileStack,
+  LogOut,
   Shapes,
   Sparkles,
   Tag,
@@ -91,6 +92,15 @@ export function WorkspaceShell({
             </nav>
 
             <LanguageSwitcher />
+
+            <Link
+              href="/access/logout"
+              className="flex items-center gap-3 rounded-xl border border-[color:var(--color-line)] px-4 py-3 text-sm font-medium text-[color:var(--color-muted)] transition hover:bg-white hover:text-[color:var(--color-ink)]"
+              prefetch={false}
+            >
+              <LogOut className="h-4 w-4" />
+              Lock workspace
+            </Link>
 
             <Card className="border-dashed">
               <CardContent className="p-4">

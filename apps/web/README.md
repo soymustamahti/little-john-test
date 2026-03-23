@@ -43,6 +43,18 @@ with:
 NEXT_PUBLIC_API_BASE_URL=http://localhost:2026 pnpm dev
 ```
 
+## Access Gate
+
+The web app now includes a simple password gate implemented entirely in `apps/web`.
+
+- unauthenticated requests are redirected to `/access`
+- entering the correct password sets an HTTP-only cookie in the Next.js app
+- `/access/logout` clears that cookie and locks the workspace again
+
+Set `APP_ACCESS_PASSWORD` in the web deployment environment to change the password. If it is not
+set, the app falls back to a built-in demo password and should be treated only as a temporary
+barrier, not real authentication.
+
 ## Docker
 
 Build the production image from the repo root so PNPM can use the workspace lockfile:
