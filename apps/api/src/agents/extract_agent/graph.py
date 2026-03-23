@@ -6,9 +6,9 @@ from langchain_core.messages import SystemMessage
 from langgraph.graph import StateGraph
 from langgraph.runtime import Runtime
 
-from little_john_test.context import Context
-from little_john_test.state import InputState, State
-from little_john_test.utils import load_chat_model
+from src.agents.little_john_test.context import Context
+from src.agents.little_john_test.state import InputState, State
+from src.agents.little_john_test.utils import load_chat_model
 
 
 async def chatbot(state: State, runtime: Runtime[Context]) -> dict:

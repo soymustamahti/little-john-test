@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Annotated
 
-from little_john_test import prompts
+from src.agents.little_john_test import prompts
 
 
 @dataclass(kw_only=True)

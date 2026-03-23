@@ -23,3 +23,18 @@ pnpm typecheck
 ```
 
 The app uses the App Router and lives under `app/`.
+
+## Template Workspace
+
+The home page now contains the template CRUD workspace:
+
+- Axios handles HTTP transport
+- TanStack Query owns list and mutation state
+- the page is split into catalog, editor, and live structure preview panels
+
+The frontend expects the API to be available at `http://localhost:2026` by default. Override it
+with:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:2026 pnpm dev
+```
