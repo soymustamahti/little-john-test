@@ -1,0 +1,15 @@
+.git
+.gitignore
+.DS_Store
+node_modules
+**/node_modules
+.pnpm-store
+**/.next
+.env
+**/.env
+.venv
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
