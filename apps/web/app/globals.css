@@ -50,6 +50,19 @@ body {
   font-family: var(--font-space-grotesk), sans-serif;
 }
 
+button:not(:disabled),
+[role="button"],
+select:not(:disabled),
+summary,
+label[for] {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
 ::selection {
   background: rgba(15, 118, 110, 0.2);
 }

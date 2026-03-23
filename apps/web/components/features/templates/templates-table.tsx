@@ -1,22 +1,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/providers/locale-provider";
 import { getTemplateStats, type Template } from "@/types/templates";
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 export function TemplatesTable({
   templates,
   selectedTemplateId,
   isLoading,
   errorMessage,
+  page,
+  pageSize,
+  totalItems,
+  totalPages,
+  onPageChange,
   onCreate,
   onSelect,
 }: {
@@ -24,25 +23,44 @@ export function TemplatesTable({
   selectedTemplateId: string | null;
   isLoading: boolean;
   errorMessage: string | null;
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onCreate: () => void;
   onSelect: (template: Template) => void;
 }) {
+  const { messages, formatDate, formatText } = useLocale();
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="border-b border-[color:var(--color-line)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-2xl">Templates</CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="accent">{messages.templatesTable.badges.layer}</Badge>
+              <Badge>
+                {formatText(messages.templatesTable.badges.schemas, {
+                  count: totalItems,
+                })}
+              </Badge>
+            </div>
+            <CardTitle className="mt-3 text-2xl">
+              {messages.templatesTable.title}
+            </CardTitle>
             <CardDescription>
-              Browse every template, then open one row to edit its structure.
+              {messages.templatesTable.description}
             </CardDescription>
           </div>
-          <Button onClick={onCreate}>Create template</Button>
+          <Button onClick={onCreate}>{messages.templatesTable.createAction}</Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {isLoading ? (
-          <div className="p-6 text-sm text-[color:var(--color-muted)]">Loading templates...</div>
+          <div className="p-6 text-sm text-[color:var(--color-muted)]">
+            {messages.templatesTable.loading}
+          </div>
         ) : null}
 
         {!isLoading && errorMessage ? (
@@ -53,7 +71,7 @@ export function TemplatesTable({
 
         {!isLoading && !errorMessage && !templates.length ? (
           <div className="border-t border-[color:var(--color-line)] p-6 text-sm text-[color:var(--color-muted)]">
-            No templates yet. Seed them from the API package or create one here.
+            {messages.templatesTable.empty}
           </div>
         ) : null}
 
@@ -62,11 +80,24 @@ export function TemplatesTable({
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[color:var(--color-background)]/70 text-[color:var(--color-muted)]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Name</th>
-                  <th className="px-4 py-3 font-medium">Locale</th>
-                  <th className="px-4 py-3 font-medium">Modules</th>
-                  <th className="px-4 py-3 font-medium">Fields</th>
-                  <th className="px-4 py-3 font-medium">Updated</th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.name}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.locale}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.modules}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.fields}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.updated}
+                  </th>
+                  <th className="px-4 py-3 font-medium">
+                    {messages.templatesTable.headers.open}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -89,7 +120,7 @@ export function TemplatesTable({
                             {template.name}
                           </div>
                           <div className="text-xs text-[color:var(--color-muted)]">
-                            {template.description ?? "No description"}
+                            {template.description ?? messages.templatesTable.noDescription}
                           </div>
                         </div>
                       </td>
@@ -107,6 +138,19 @@ export function TemplatesTable({
                       <td className="px-4 py-4 align-top text-[color:var(--color-muted)]">
                         {formatDate(template.updated_at)}
                       </td>
+                      <td className="px-4 py-4 align-top">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onSelect(template);
+                          }}
+                        >
+                          {messages.common.actions.view}
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -115,6 +159,13 @@ export function TemplatesTable({
           </div>
         ) : null}
       </CardContent>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
     </Card>
   );
 }

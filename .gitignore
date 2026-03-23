@@ -30,7 +30,8 @@ apps/web/.env*
 
 # IDE / OS
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 *.swp
 *.swo
 .DS_Store

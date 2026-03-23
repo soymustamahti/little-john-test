@@ -61,47 +61,78 @@ export interface TemplatePayload {
   modules: TemplateModule[];
 }
 
+export interface TemplateDraftLabels {
+  defaults: {
+    module: string;
+    field: string;
+    table: string;
+    column: string;
+  };
+  validation: {
+    nameRequired: string;
+    moduleKeyLabelRequired: string;
+    fieldKeyLabelRequired: string;
+    columnKeyLabelRequired: string;
+  };
+}
+
 function emptyDescription() {
   return "";
 }
 
-export function createEmptyTableColumn(index: number): TableColumnDefinition {
+function buildIndexedLabel(label: string, index: number) {
+  return `${label} ${index}`;
+}
+
+export function createEmptyTableColumn(
+  index: number,
+  labels?: TemplateDraftLabels,
+): TableColumnDefinition {
   return {
     key: `column_${index}`,
-    label: `Column ${index}`,
+    label: buildIndexedLabel(labels?.defaults.column ?? "Column", index),
     value_type: "string",
     required: false,
     description: emptyDescription(),
   };
 }
 
-export function createEmptyScalarField(index: number): ScalarTemplateField {
+export function createEmptyScalarField(
+  index: number,
+  labels?: TemplateDraftLabels,
+): ScalarTemplateField {
   return {
     kind: "scalar",
     key: `field_${index}`,
-    label: `Field ${index}`,
+    label: buildIndexedLabel(labels?.defaults.field ?? "Field", index),
     required: false,
     description: emptyDescription(),
     value_type: "string",
   };
 }
 
-export function createEmptyTableField(index: number): TableTemplateField {
+export function createEmptyTableField(
+  index: number,
+  labels?: TemplateDraftLabels,
+): TableTemplateField {
   return {
     kind: "table",
     key: `table_${index}`,
-    label: `Table ${index}`,
+    label: buildIndexedLabel(labels?.defaults.table ?? "Table", index),
     required: false,
     description: emptyDescription(),
     min_rows: 0,
-    columns: [createEmptyTableColumn(1)],
+    columns: [createEmptyTableColumn(1, labels)],
   };
 }
 
-export function createEmptyModule(index: number): TemplateModule {
+export function createEmptyModule(
+  index: number,
+  labels?: TemplateDraftLabels,
+): TemplateModule {
   return {
     key: `module_${index}`,
-    label: `Module ${index}`,
+    label: buildIndexedLabel(labels?.defaults.module ?? "Module", index),
     fields: [],
   };
 }
@@ -168,25 +199,37 @@ export function cloneDraft(draft: TemplateDraft): TemplateDraft {
   return structuredClone(draft);
 }
 
-export function getDraftValidationError(draft: TemplateDraft): string | null {
+export function getDraftValidationError(
+  draft: TemplateDraft,
+  labels?: TemplateDraftLabels["validation"],
+): string | null {
   if (!draft.name.trim()) {
-    return "Template name is required.";
+    return labels?.nameRequired ?? "Extraction template name is required.";
   }
 
   for (const moduleItem of draft.modules) {
     if (!moduleItem.key.trim() || !moduleItem.label.trim()) {
-      return "Each module needs both a key and a label.";
+      return (
+        labels?.moduleKeyLabelRequired ??
+        "Each module needs both a key and a label."
+      );
     }
 
     for (const field of moduleItem.fields) {
       if (!field.key.trim() || !field.label.trim()) {
-        return "Each field needs both a key and a label.";
+        return (
+          labels?.fieldKeyLabelRequired ??
+          "Each field needs both a key and a label."
+        );
       }
 
       if (field.kind === "table") {
         for (const column of field.columns) {
           if (!column.key.trim() || !column.label.trim()) {
-            return "Each table column needs both a key and a label.";
+            return (
+              labels?.columnKeyLabelRequired ??
+              "Each table column needs both a key and a label."
+            );
           }
         }
       }

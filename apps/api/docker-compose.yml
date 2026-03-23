@@ -44,7 +44,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -sf http://localhost:${PORT:-2026}/health || exit 1",
+          "curl -sf http://localhost:${PORT:-2026}/api/health || exit 1",
         ]
       interval: 30s
       start_period: 10s
