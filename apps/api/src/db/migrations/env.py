@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config, pool
 from src.core.config import get_settings
 from src.db.base import Base
 
-VERSION_TABLE = "extract_agent_alembic_version"
+VERSION_TABLE = "little_john_test_alembic_version"
 
 config = context.config
 
