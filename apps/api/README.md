@@ -33,7 +33,7 @@ Build the API image from the repo root so the Docker build context matches deplo
 that build from the repository root:
 
 ```bash
-docker build -f apps/api/Dockerfile -t little-john-api .
+docker build -f apps/api/Dockerfile -t extract-agent-api .
 ```
 
 For managed PostgreSQL, prefer `DATABASE_URL`. Aegra runs its own migrations before the custom app

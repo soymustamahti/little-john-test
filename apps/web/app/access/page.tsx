@@ -46,7 +46,7 @@ export default async function AccessPage({
               Workspace locked
             </CardTitle>
             <CardDescription className="text-sm text-[color:var(--color-muted)]">
-              Enter the access password to open the Little John operator workspace.
+              Enter the access password to open the Extract Agent operator workspace.
             </CardDescription>
           </div>
         </CardHeader>

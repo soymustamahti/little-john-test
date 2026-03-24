@@ -62,13 +62,13 @@ Build the production image from the repo root so PNPM can use the workspace lock
 ```bash
 docker build -f apps/web/Dockerfile \
   --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.com \
-  -t little-john-web .
+  -t extract-agent-web .
 ```
 
 Run it with:
 
 ```bash
-docker run --rm -p 3000:3000 little-john-web
+docker run --rm -p 3000:3000 extract-agent-web
 ```
 
 `NEXT_PUBLIC_API_BASE_URL` is a build-time setting for the client bundle, so point it at the API

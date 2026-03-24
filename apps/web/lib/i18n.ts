@@ -5,8 +5,8 @@ export const SUPPORTED_LOCALES = ["en", "fr"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "fr";
-export const LOCALE_STORAGE_KEY = "little-john.locale";
-export const LOCALE_COOKIE_KEY = "little-john.locale";
+export const LOCALE_STORAGE_KEY = "extract-agent.locale";
+export const LOCALE_COOKIE_KEY = "extract-agent.locale";
 
 const MESSAGES = {
   en: enMessages,

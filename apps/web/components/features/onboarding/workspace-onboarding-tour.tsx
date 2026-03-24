@@ -13,8 +13,8 @@ import {
 
 import { useLocale } from "@/providers/locale-provider";
 
-const TOUR_STORAGE_KEY = "little-john.onboarding-tour.v2.completed";
-const TOUR_RESTART_EVENT = "little-john:onboarding-tour-restart";
+const TOUR_STORAGE_KEY = "extract-agent.onboarding-tour.v2.completed";
+const TOUR_RESTART_EVENT = "extract-agent:onboarding-tour-restart";
 const DEMO_DOCUMENT_NAME = "convention mandat MSH.pdf";
 const DEMO_DOCUMENT_URL = encodeURI(`/${DEMO_DOCUMENT_NAME}`);
 const DEMO_TEMPLATE_NAME = "Convention de mandat de maîtrise d'ouvrage";
@@ -24,6 +24,7 @@ const DEMO_EXPECTED_ADDRESS = "11 Rue Jaufre Rudel 34080 Montpellier";
 const SHORT_WAIT_TIMEOUT_MS = 4_000;
 const ROUTE_WAIT_TIMEOUT_MS = 120_000;
 const LONG_RUN_TIMEOUT_MS = 300_000;
+const WAITING_STEP_BUTTONS = ["skip"] as const;
 
 function waitForCondition(
   predicate: () => boolean,
@@ -431,7 +432,7 @@ export function WorkspaceOnboardingTour() {
       title: messages.joyride.steps.liveProcessing.title,
       content: messages.joyride.steps.liveProcessing.content,
       placement: "top",
-      buttons: [],
+      buttons: [...WAITING_STEP_BUTTONS],
       dismissKeyAction: false,
       overlayClickAction: false,
       blockTargetInteraction: true,
@@ -462,7 +463,7 @@ export function WorkspaceOnboardingTour() {
       title: messages.joyride.steps.extractionWait.title,
       content: messages.joyride.steps.extractionWait.content,
       placement: "top",
-      buttons: [],
+      buttons: [...WAITING_STEP_BUTTONS],
       dismissKeyAction: false,
       overlayClickAction: false,
       blockTargetInteraction: true,
@@ -517,7 +518,7 @@ export function WorkspaceOnboardingTour() {
       title: messages.joyride.steps.correctionActivity.title,
       content: messages.joyride.steps.correctionActivity.content,
       placement: "top",
-      buttons: [],
+      buttons: [...WAITING_STEP_BUTTONS],
       dismissKeyAction: false,
       overlayClickAction: false,
       blockTargetInteraction: true,
@@ -602,7 +603,7 @@ export function WorkspaceOnboardingTour() {
       options={{
         backgroundColor: "#ffffff",
         blockTargetInteraction: true,
-        buttons: ["primary"],
+        buttons: ["skip", "primary"],
         closeButtonAction: "skip",
         dismissKeyAction: false,
         overlayColor: "rgba(20, 27, 45, 0.56)",

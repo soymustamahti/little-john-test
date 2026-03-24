@@ -1,7 +1,7 @@
 [project]
-name = "little_john_test"
+name = "extract_agent"
 version = "0.1.0"
-description = "little-john-test"
+description = "extract-agent"
 requires-python = ">=3.12"
 
 dependencies = [

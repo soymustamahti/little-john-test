@@ -213,7 +213,7 @@ def build_service(monkeypatch: pytest.MonkeyPatch) -> tuple[
         size_bytes=100,
         sha256="a" * 64,
         storage_provider="cloudflare_r2",
-        storage_bucket="little-john-local",
+        storage_bucket="extract-agent-local",
         storage_key="documents/1/invoice.pdf",
         public_url=None,
         extracted_text="Vendor: Acme Corp",

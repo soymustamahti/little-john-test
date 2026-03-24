@@ -92,7 +92,7 @@ class FakeObjectStorage:
         self.objects[key] = content
         return StoredObject(
             provider="cloudflare_r2",
-            bucket="little-john-local",
+            bucket="extract-agent-local",
             key=key,
             public_url=f"https://files.example.com/{key}",
         )
@@ -195,7 +195,7 @@ async def test_list_documents_returns_paginated_response() -> None:
             size_bytes=10,
             sha256="1" * 64,
             storage_provider="cloudflare_r2",
-            storage_bucket="little-john-local",
+            storage_bucket="extract-agent-local",
             storage_key="documents/1/older.pdf",
             public_url=None,
         )
@@ -210,7 +210,7 @@ async def test_list_documents_returns_paginated_response() -> None:
             size_bytes=10,
             sha256="2" * 64,
             storage_provider="cloudflare_r2",
-            storage_bucket="little-john-local",
+            storage_bucket="extract-agent-local",
             storage_key="documents/2/newer.pdf",
             public_url=None,
         )

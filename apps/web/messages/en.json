@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "Little John Workspace",
+    "title": "Extract Agent Workspace",
     "description": "Document setup workspace for classification and extraction configuration."
   },
   "common": {
@@ -34,7 +34,7 @@
     }
   },
   "shell": {
-    "title": "Little John",
+    "title": "Extract Agent",
     "workspaceLabel": "Workspace",
     "description": "Operator workspace for extraction setup and classification routing.",
     "documentSetup": "Document Setup",
@@ -58,7 +58,7 @@
     "steps": {
       "workspace": {
         "title": "Welcome to the workspace",
-        "content": "Little John is organized around a simple setup flow: define extraction templates, map document categories, then upload source files."
+        "content": "Extract Agent is organized around a simple setup flow: define extraction templates, map document categories, then upload source files."
       },
       "templatesNav": {
         "title": "Start with extraction templates",

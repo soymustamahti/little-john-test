@@ -1,5 +1,5 @@
 {
-  "name": "little-john-test",
+  "name": "extract-agent",
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.18.3",
@@ -9,21 +9,21 @@
   },
   "scripts": {
     "setup": "pnpm install && pnpm api:deps",
-    "dev": "pnpm -r --parallel --filter @little-john-test/api --filter @little-john-test/web dev",
-    "dev:api": "pnpm --filter @little-john-test/api dev",
-    "dev:web": "pnpm --filter @little-john-test/web dev",
+    "dev": "pnpm -r --parallel --filter @extract-agent/api --filter @extract-agent/web dev",
+    "dev:api": "pnpm --filter @extract-agent/api dev",
+    "dev:web": "pnpm --filter @extract-agent/web dev",
     "build": "pnpm -r --if-present build",
-    "build:api": "pnpm --filter @little-john-test/api build",
-    "build:web": "pnpm --filter @little-john-test/web build",
+    "build:api": "pnpm --filter @extract-agent/api build",
+    "build:web": "pnpm --filter @extract-agent/web build",
     "lint": "pnpm -r --if-present lint",
-    "lint:api": "pnpm --filter @little-john-test/api lint",
-    "lint:web": "pnpm --filter @little-john-test/web lint",
+    "lint:api": "pnpm --filter @extract-agent/api lint",
+    "lint:web": "pnpm --filter @extract-agent/web lint",
     "typecheck": "pnpm -r --if-present typecheck",
-    "typecheck:api": "pnpm --filter @little-john-test/api typecheck",
-    "typecheck:web": "pnpm --filter @little-john-test/web typecheck",
+    "typecheck:api": "pnpm --filter @extract-agent/api typecheck",
+    "typecheck:web": "pnpm --filter @extract-agent/web typecheck",
     "check": "pnpm lint && pnpm typecheck && pnpm build",
-    "api:deps": "pnpm --filter @little-john-test/api deps:sync",
-    "docker:up": "pnpm --filter @little-john-test/api docker:up",
-    "docker:down": "pnpm --filter @little-john-test/api docker:down"
+    "api:deps": "pnpm --filter @extract-agent/api deps:sync",
+    "docker:up": "pnpm --filter @extract-agent/api docker:up",
+    "docker:down": "pnpm --filter @extract-agent/api docker:down"
   }
 }

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "Espace Little John",
+    "title": "Espace Extract Agent",
     "description": "Espace de configuration documentaire pour la classification et l'extraction."
   },
   "common": {
@@ -34,7 +34,7 @@
     }
   },
   "shell": {
-    "title": "Little John",
+    "title": "Extract Agent",
     "workspaceLabel": "Espace",
     "description": "Espace opérateur pour la configuration de l'extraction et du routage de classification.",
     "documentSetup": "Configuration documentaire",
@@ -58,7 +58,7 @@
     "steps": {
       "workspace": {
         "title": "Bienvenue dans l'espace",
-        "content": "Little John suit un flux simple : définir les modèles d'extraction, mapper les catégories documentaires, puis téléverser les fichiers source."
+        "content": "Extract Agent suit un flux simple : définir les modèles d'extraction, mapper les catégories documentaires, puis téléverser les fichiers source."
       },
       "templatesNav": {
         "title": "Commencez par les modèles d'extraction",

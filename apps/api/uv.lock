@@ -895,7 +895,7 @@ wheels = [
 ]
 
 [[package]]
-name = "little-john-test"
+name = "extract-agent"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

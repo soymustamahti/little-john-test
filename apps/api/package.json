@@ -1,5 +1,5 @@
 {
-  "name": "@little-john-test/api",
+  "name": "@extract-agent/api",
   "private": true,
   "version": "0.1.0",
   "scripts": {

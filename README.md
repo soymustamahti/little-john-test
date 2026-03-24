@@ -1,4 +1,4 @@
-# little-john-test
+# extract-agent
 
 Prototype repository for an interview exercise: build a document intelligence platform that can
 classify uploaded files, extract structured data from them, validate the results, let the user

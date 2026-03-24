@@ -1,5 +1,5 @@
 {
-  "name": "little-john-test",
+  "name": "extract-agent",
   "dependencies": ["./src"],
   "graphs": {
     "document_classification_agent": "./src/agents/document_classification_agent/graph.py:graph",
