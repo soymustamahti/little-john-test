@@ -17,6 +17,7 @@ import {
 } from "@/lib/api/documents";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import type {
+  DocumentUploadBatchResult,
   DocumentExtraction,
   DocumentExtractionCorrectionActivityPayload,
   DocumentExtractionReviewPayload,
@@ -47,8 +48,20 @@ export function useUploadDocumentsMutation(fallbackErrorMessage: string) {
   return useMutation({
     mutationFn: (files: File[]) =>
       uploadDocumentBatch(files, getApiErrorMessage, fallbackErrorMessage),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
+    onSuccess: (results: DocumentUploadBatchResult[]) => {
+      for (const result of results) {
+        if (result.status !== "success") {
+          continue;
+        }
+
+        queryClient.setQueryData(
+          [...DOCUMENTS_QUERY_KEY, result.document.id],
+          result.document,
+        );
+      }
+
+      // Keep the documents list fresh without delaying the post-upload redirect.
+      void queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     },
   });
 }

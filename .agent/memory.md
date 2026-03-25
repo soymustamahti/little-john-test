@@ -88,6 +88,11 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Fixed an intermittent onboarding-tour upload stall between the upload and
+  process-document steps by decoupling the post-upload redirect from the active
+  documents-list refetch in `apps/web`: uploaded documents now prime the detail
+  query cache immediately and the list invalidation runs in the background so
+  the route push to `/documents/{id}` is no longer blocked by a slow refetch
 - Backported the newer Aegra/OpenInference LangGraph control-flow tracing patch into
   `apps/api` so expected HITL `GraphInterrupt` pauses no longer show up as Langfuse
   errors on the `review_suggested_category` node, and added focused backend tests
