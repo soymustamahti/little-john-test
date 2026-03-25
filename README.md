@@ -104,16 +104,6 @@ The repository now contains explicit context for future agent sessions:
 - [.codex/references/acceptance-checklist.md](./.codex/references/acceptance-checklist.md): evaluator-ready checklist
 - `.codex/skills/*/SKILL.md`: repo-local implementation guides
 
-## Local Reference Repos
-
-Two local repos are intentionally present as reference material:
-
-- `apps/aegra`: framework source, docs, and implementation details
-- `apps/system-prompts-and-models-of-ai-tools`: prompt corpus used to derive stronger prompt patterns
-
-They are there so future implementation work can verify framework behavior directly and design
-prompts from a broader corpus instead of improvising from memory.
-
 ## Workspace
 
 This is a PNPM-managed monorepo.

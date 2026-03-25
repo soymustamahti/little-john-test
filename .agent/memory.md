@@ -88,6 +88,10 @@ and streams progress back to the client.
 
 ## Latest Milestone
 
+- Backported the newer Aegra/OpenInference LangGraph control-flow tracing patch into
+  `apps/api` so expected HITL `GraphInterrupt` pauses no longer show up as Langfuse
+  errors on the `review_suggested_category` node, and added focused backend tests
+  covering both the tracer patch behavior and startup application
 - Reworked the API reranking path so deployment builds no longer pull a local
   `sentence-transformers` and `torch` stack: hybrid retrieval reranking now uses a remote OpenAI
   Responses API call with structured output, controlled by `OPENAI_RERANKING_MODEL`, and falls
